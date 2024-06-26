@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Currency Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-Time Currency Converter</h1>
+        <form id="currency-form">
+            <input type="number" id="amount" placeholder="Amount" required>
+            <input type="text" id="from-currency" placeholder="From Currency (e.g., USD)" required>
+            <input type="text" id="to-currency" placeholder="To Currency (e.g., INR)" required>
+            <button type="submit">Convert</button>
+        </form>
+        <p id="exchange-result">Enter details and click convert</p>
+    </div>
+
+    <script>
+        document.getElementById('currency-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const amount = document.getElementById('amount').value;
+            const fromCurrency = document.getElementById('from-currency').value;
+            const toCurrency = document.getElementById('to-currency').value;
+
+            var myHeaders = new Headers();
+            myHeaders.append("apikey", "60Jnywavsuu6436Ekcqdhdq5BLGMzsj8");
+
+            var requestOptions = {
+                method: 'GET',
+                redirect: 'follow',
+                headers: myHeaders
+            };
+
+            fetch(`https://api.apilayer.com/exchangerates_data/convert?to=${toCurrency}&from=${fromCurrency}&amount=${amount}`, requestOptions)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        document.getElementById('exchange-result').textContent = 
+                            `${amount} ${fromCurrency} = ${result.result} ${toCurrency}`;
+                    } else {
+                        document.getElementById('exchange-result').textContent = 'Failed to fetch exchange rate.';
+                    }
+                })
+                .catch(error => {
+                    console.log('error', error);
+                    document.getElementById('exchange-result').textContent = 'Failed to fetch exchange rate.';
+                });
+        });
+    </script>
+</body>
+</html>
