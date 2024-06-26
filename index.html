@@ -9,14 +9,15 @@
 </head>
 <body>
     <div id="MyClockDisplay" class="clock" onload="showTime()"></div>
+    <button id="toggle-mode" class="toggle-button">Switch to Dark Mode</button>
     <h1>Awesome Currency Converter</h1>
     <p class="convert">
         Convert:
         <input type="number" id="original-currency-amount" placeholder="0" value="1">
     </p>
-    <div>
+    <div class="currency-select">
         <select id="from_currency">
-			<option value="AED">AED</option>
+            <option value="AED">AED</option>
 			<option value="ARS">ARS</option>
 			<option value="AUD">AUD</option>
 			<option value="BGN">BGN</option>
@@ -69,11 +70,11 @@
 			<option value="VND">VND</option>
 			<option value="ZAR">ZAR</option>
         </select>
-        <button id="exchange">
+        <button id="exchange" class="exchange-button">
             <i class="fas fa-exchange-alt"></i>
         </button>
         <select id="to_currency">
-			<option value="AED">AED</option>
+            <option value="AED">AED</option>
 			<option value="ARS">ARS</option>
 			<option value="AUD">AUD</option>
 			<option value="BGN">BGN</option>
@@ -97,7 +98,7 @@
 			<option value="HUF">HUF</option>
 			<option value="IDR">IDR</option>
 			<option value="ILS">ILS</option>
-			<option value="INR">INR</option>
+			<option value="INR" selected>INR</option>
 			<option value="ISK">ISK</option>
 			<option value="JPY">JPY</option>
 			<option value="KRW">KRW</option>
@@ -121,17 +122,17 @@
 			<option value="TRY">TRY</option>
 			<option value="TWD">TWD</option>
 			<option value="UAH">UAH</option>
-			<option value="USD" selected>USD</option>
+			<option value="USD">USD</option>
 			<option value="UYU">UYU</option>
 			<option value="VND">VND</option>
 			<option value="ZAR">ZAR</option>
-		</select>
+        </select>
     </div>
     <p class="exchange">
         Exchange Rate:
-        <input type="text" id="exchange-rate">
+        <input type="text" id="exchange-rate" readonly>
     </p>
-    <button id="exchange_button">Exchange my money now!</button>
+    <button id="exchange_button" class="action-button">Exchange my money now!</button>
     <p id="output-text">
         <span id="from"></span> converted to <span id="to"></span>
     </p>

@@ -1,4 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Sansita+Swashed&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+:root {
+    --primary-color: #002C54;
+    --secondary-color: #1E2761;
+    --light-color: #FFFFFF;
+    --text-color: #FFD662FF;
+    --clock-color: #17D4FE;
+}
 
 html, body {
     margin: 0;
@@ -8,7 +17,8 @@ html, body {
 body {
     text-align: center;
     font-family: sans-serif;
-    background-color: #00539CFF;
+    background-color: var(--primary-color);
+    color: var(--light-color);
     display: flex;
     height: 100vh;
     align-items: center;
@@ -17,14 +27,14 @@ body {
 }
 
 h1 {
-    color: #FFD662FF;
+    color: var(--text-color);
     font-size: 3rem;
 }
 
 .convert, .exchange {
     font-family: 'Sansita Swashed', cursive;
     font-size: 25px;
-    color: #ffffff;
+    color: var(--light-color);
     padding-right: 20px;
 }
 
@@ -41,8 +51,12 @@ button {
     height: 40px;
     font-size: 20px;
     font-weight: 600;
-    color: #00539CFF;
+    color: var(--primary-color);
     font-family: 'Sansita Swashed', cursive;
+    border: 2px solid var(--text-color);
+    background-color: var(--text-color);
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 select {
@@ -60,8 +74,9 @@ select {
     border-radius: 50%;
     margin: 0 20px;
     outline: 0;
-    color: #00539CFF;
-    border: 4px solid #FFD662FF;
+    color: var(--primary-color);
+    border: 4px solid var(--text-color);
+    background-color: var(--text-color);
 }
 
 #exchange:active, button:active {
@@ -72,16 +87,20 @@ select {
     display: none;
     padding: 20px;
     font-size: 30px;
-    color: #ffffff;
+    color: var(--light-color);
 }
 
 span {
-    color: #FFD662FF;
+    color: var(--text-color);
     font-size: 35px;
 }
 
 #exchange-rate {
     cursor: default;
+    width: 150px;
+    height: 30px;
+    font-size: 20px;
+    text-align: center;
 }
 
 footer {
@@ -91,7 +110,7 @@ footer {
 }
 
 a {
-    color: #ffffff;
+    color: var(--light-color);
     bottom: 0;
     font-size: 30px;
     text-decoration: none;
@@ -102,8 +121,35 @@ a {
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    color: #17D4FE;
+    color: var(--clock-color);
     font-size: 60px;
-    font-family: Orbitron;
+    font-family: 'Orbitron', sans-serif;
     letter-spacing: 7px;
+}
+
+.currency-select {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toggle-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 18px;
+    padding: 10px 20px;
+    background-color: var(--text-color);
+    color: var(--primary-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+body.light-mode {
+    --primary-color: #FFFFFF;
+    --secondary-color: #E5E5E5;
+    --light-color: #000000;
+    --text-color: #1E2761;
+    --clock-color: #002C54;
 }

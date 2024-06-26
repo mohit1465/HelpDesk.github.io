@@ -1,4 +1,4 @@
-function showTime(){
+function showTime() {
     var date = new Date();
     var h = date.getHours(); // 0 - 23
     var m = date.getMinutes(); // 0 - 59
@@ -41,6 +41,7 @@ exchange.addEventListener("click", () => {
     calculate();
 });
 
+var to_amount = 0;
 function calculate() {
     const from_currency_value = from_currency.value;
     const to_currency_value = to_currency.value;
@@ -49,14 +50,20 @@ function calculate() {
     .then(res => res.json())
     .then(res => {
         const rate = res.rates[to_currency_value];
-        exchange_rate.value = `${rate}`
-        const to_amount = (input_amount.value * rate).toFixed(3);
-        output_from.innerText= `${input_amount.value} ${from_currency_value}`;
+        exchange_rate.value = `${rate}`;
+        to_amount = (input_amount.value * rate).toFixed(3);
+        output_from.innerText = `${input_amount.value} ${from_currency_value}`;
         output_to.innerText = `${to_amount} ${to_currency_value}`;
-        output_amount.style.display="block";
-    })
+        output_amount.style.display = "block";
+    });
 }
 
 document.getElementById("exchange_button").addEventListener("click", () => {
     calculate();
+});
+
+document.getElementById("toggle-mode").addEventListener("click", () => {
+    document.body.classList.toggle("light-mode");
+    document.getElementById("toggle-mode").innerText =
+        document.body.classList.contains("light-mode") ? "Switch to Dark Mode" : "Switch to Light Mode";
 });
