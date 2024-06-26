@@ -23,11 +23,9 @@ function showTime(){
     document.getElementById("MyClockDisplay").textContent = time;
     
     setTimeout(showTime, 1000);
-    
 }
 
 showTime();
-
 
 var input_amount = document.getElementById("original-currency-amount");
 var from_currency = document.getElementById("from_currency");
@@ -38,14 +36,12 @@ var output_amount = document.getElementById("output-text");
 var output_from = document.getElementById("from");
 var output_to = document.getElementById("to");
 
-
-exchange.addEventListener("click",()=>{
+exchange.addEventListener("click", () => {
     [from_currency.value, to_currency.value] = [to_currency.value, from_currency.value];
     calculate();
-})
+});
 
-var to_amount = 0;
-function calculate(){
+function calculate() {
     const from_currency_value = from_currency.value;
     const to_currency_value = to_currency.value;
     
@@ -54,14 +50,13 @@ function calculate(){
     .then(res => {
         const rate = res.rates[to_currency_value];
         exchange_rate.value = `${rate}`
-        to_amount = (input_amount.value * rate).toFixed(3);
+        const to_amount = (input_amount.value * rate).toFixed(3);
         output_from.innerText= `${input_amount.value} ${from_currency_value}`;
         output_to.innerText = `${to_amount} ${to_currency_value}`;
         output_amount.style.display="block";
     })
 }
 
-
-document.getElementById("exchange_button").addEventListener("click",()=>{
+document.getElementById("exchange_button").addEventListener("click", () => {
     calculate();
 });
