@@ -4,9 +4,9 @@
 :root {
     --primary-color: #002C54;
     --secondary-color: #1E2761;
-    --light-color: #FFFFFF;
-    --text-color: #FFD662FF;
-    --clock-color: #17D4FE;
+    --light-color: #dce3ff;
+    --text-color: #dce3ff;
+    --clock-color: #dce3ff;
 }
 
 html, body {
