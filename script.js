@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function addTaskToUI(taskText, taskDate, taskId, status) {
         const listItem = document.createElement('li');
         listItem.innerHTML = `${taskText} - <em>Due: ${taskDate}</em>
-            <button class="status-btn" onclick="toggleStatus('${taskId}', this)">${status}</button>`;
+            <button class="status-btn" id='status-btn' onclick="toggleStatus('${taskId}', this)">${status}</button>`;
         todoList.appendChild(listItem);
     }
 
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (holidayString >= todayString && holidayDate <= thirtyDaysFromNow) {
                 const listItem = document.createElement('li');
                 listItem.innerHTML = `${holidayData.name} - <em>On: ${holidayData.date}</em>
-                    <button class="status-btn" onclick="toggleHolidayStatus('${doc.id}', this)">${holidayData.status || 'Undone'}</button>`;
+                    <button class="status-btn" id='status-btn' onclick="toggleHolidayStatus('${doc.id}', this)">${holidayData.status || 'Undone'}</button>`;
                 holidayList.appendChild(listItem);
             }
         });
@@ -143,8 +143,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Update button text and UI accordingly
         button.textContent = newStatus === 'Done' ? 'Undone' : 'Done';
-
-        // Optionally reload holidays if you want to reflect status changes
         loadHolidays(); // Uncomment this line if you want to reload holidays every time
     };
 

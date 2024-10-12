@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do List with Holidays</title>
-    
+    <link rel="icon" href="icons/icon-192x192.png" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Satisfy&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Task Manager</h1>
+            <h1>Help Desk</h1>
             <p>Manage your tasks and holidays efficiently</p>
         </header>
         
@@ -21,11 +27,11 @@
                 <input type="date" id="todo-date" />
                 <button id="add-btn">Add Task</button>
             </div>
-            <ul id="todo-list" class="task-list"></ul>
         </div>
         
+        <h2>Holidays</h2>
         <div class="holiday-section">
-            <h2>Holidays</h2>
+            <ul id="todo-list" class="task-list"></ul>
             <ul id="holiday-list" class="holiday-list"></ul>
         </div>
     </div>
