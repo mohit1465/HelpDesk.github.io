@@ -1,155 +1,107 @@
-@import url('https://fonts.googleapis.com/css2?family=Sansita+Swashed&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-
-:root {
-    --primary-color: #002C54;
-    --secondary-color: #1E2761;
-    --light-color: #dce3ff;
-    --text-color: #dce3ff;
-    --clock-color: #dce3ff;
-}
-
-html, body {
-    margin: 0;
-    padding: 0;
-}
-
+/* Reset some default styles */
 body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
     text-align: center;
-    font-family: sans-serif;
-    background-color: var(--primary-color);
-    color: var(--light-color);
-    display: flex;
-    height: 100vh;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+    margin-bottom: 20px;
 }
 
 h1 {
-    color: var(--text-color);
-    font-size: 3rem;
+    font-size: 2.5em;
+    color: #007bff;
 }
 
-.convert, .exchange {
-    font-family: 'Sansita Swashed', cursive;
-    font-size: 25px;
-    color: var(--light-color);
-    padding-right: 20px;
+h2 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
 }
 
-input {
-    width: 150px;
-    height: 30px;
-    font-size: 20px;
-    margin: 5px auto;
-    outline: 0;
+.input-group {
+    display: flex;
+    flex-direction: column; /* Stack inputs vertically on small screens */
+    margin-bottom: 15px;
+}
+
+input[type="text"],
+input[type="date"] {
+    width: 100%; /* Full width for better touch targets */
+    padding: 10px;
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
 }
 
 button {
-    width: 300px;
-    height: 40px;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--primary-color);
-    font-family: 'Sansita Swashed', cursive;
-    border: 2px solid var(--text-color);
-    background-color: var(--text-color);
+    padding: 10px 15px;
+    border: none;
     border-radius: 5px;
+    background-color: #007bff;
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-select {
-    width: 80px;
-    height: 35px;
-    font-size: 20px;
-    text-align: center;
-    padding-left: 10px;
-    outline: 0;
+button:hover {
+    background-color: #0056b3;
 }
 
-#exchange {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin: 0 20px;
-    outline: 0;
-    color: var(--primary-color);
-    border: 4px solid var(--text-color);
-    background-color: var(--text-color);
+.task-list,
+.holiday-list {
+    list-style-type: none;
+    padding: 0;
 }
 
-#exchange:active, button:active {
-    transform: scale(0.9);
-}
-
-#output-text {
-    display: none;
-    padding: 20px;
-    font-size: 30px;
-    color: var(--light-color);
-}
-
-span {
-    color: var(--text-color);
-    font-size: 35px;
-}
-
-#exchange-rate {
-    cursor: default;
-    width: 150px;
-    height: 30px;
-    font-size: 20px;
-    text-align: center;
-}
-
-footer {
-    position: absolute;
-    right: 50px;
-    bottom: 50px;
-}
-
-a {
-    color: var(--light-color);
-    bottom: 0;
-    font-size: 30px;
-    text-decoration: none;
-}
-
-.clock {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--clock-color);
-    font-size: 60px;
-    font-family: 'Orbitron', sans-serif;
-    letter-spacing: 7px;
-}
-
-.currency-select {
+.task-list li,
+.holiday-list li {
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 10px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
 }
 
-.toggle-button {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    font-size: 18px;
-    padding: 10px 20px;
-    background-color: var(--text-color);
-    color: var(--primary-color);
+.status-btn {
     border: none;
     border-radius: 5px;
+    padding: 5px 10px;
+    background-color: #28a745;
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-body.light-mode {
-    --primary-color: #FFFFFF;
-    --secondary-color: #E5E5E5;
-    --light-color: #000000;
-    --text-color: #1E2761;
-    --clock-color: #002C54;
+.status-btn:hover {
+    background-color: #218838;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+    .input-group {
+        flex-direction: column;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    button {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
 }
