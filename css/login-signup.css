@@ -1,0 +1,370 @@
+:root {
+    --background-color: #f4f9f9;
+    --text-color: #000f1c;
+    --text-color-light: #ffffff;
+    --accent-color: #e1e1e1;
+    --primary-color: #000f1c;
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    --btn-border-bg: #f96441;
+    --input-border: rgba(188,188,188,1);
+    --input-shadow: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] {
+    --background-color: #000f1c;
+    --text-color: #ecf0f1;
+    --text-color-light: #000f1c;
+    --input-bg: #2b2e4a;
+    --input-border: #34495e;
+    --btn-border-bg: #f96441;
+}
+
+*{
+  box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Raleway', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    transition: background-color var(--transition-speed);
+}
+
+
+@media (min-width: 850px) {
+
+  .authContainer {
+      display: flex;
+      background-color: var(--background-color);
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      height: 100%;
+      margin: auto;
+    }
+
+  .side-box {
+      position: relative;
+      width: 40%;
+      background-color: var(--accent-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+  }
+
+  .switch-text {
+      position: absolute;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      text-align: right;
+  }
+
+  .switch-text a{
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 25px 0 0 25px;
+      transition: all .3s ease-in-out;
+  }
+
+  .active{
+      background-color: var(--background-color);
+      border: var(--background-color) 1px solid;
+      color: var(--text-color);
+      transition: all .3s ease-in-out;
+  }
+
+  .notactive{
+      border: var(--background-color) 1px solid;
+      color: #000f1c;
+      transition: all .3s ease-in-out;
+  }
+
+  .side-box img {
+      width: 100%;
+  }
+
+  .auth-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: var(--background-color);
+    width: 60%;
+  }
+
+  #logo{
+    width: 200px;
+  }
+
+  .form-section{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .form-section h2{
+    text-decoration: none;
+    margin-bottom: 0px;
+  }
+
+  form{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .input-group{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 150%;
+  }
+
+  .input-group input{
+    width: 150%;
+    padding: 10px 5px;
+    margin: 2px 0;
+    border: none;
+    background-color: transparent;
+    border: 1px solid var(--input-border);
+    border-radius: 9px;
+    box-shadow: 3px 8px 12px var(--input-shadow);
+    outline: none;
+  }
+
+  .btn{
+    width: 130%;
+    padding: 10px 5px;
+    outline: none;
+    margin: 10px 0;
+    background-color: var(--btn-border-bg);
+    border: none;
+    color: #ecf0f1;
+    border-radius: 25px;
+    transition: all .3s ease-in-out;
+  }
+
+  @keyframes mymove {
+    0% {margin-left: 0px;}
+    50% {margin-left: 20px;}
+    100% {margin-left: 0px;}
+  }
+
+  .google-signin-btn{
+    width: 250px;
+    height: 45px;
+    outline: none;
+    margin: 10px 0;
+    border: none;
+    background-color: var(--background-color);
+    color: var(--text-color-light);
+    border-radius: 25px;
+    transition: all .3s ease-in-out;
+    border: var(--input-border) 1px solid;
+  }
+
+  .google-signin-btn img{
+    height: 40px;
+  }
+
+  .google-signin-btn:hover{
+    background-color: var(--input-border);
+  }
+
+  .bottomBtns {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 0;
+  }
+
+  .bottomBtns a {
+    flex: 1;
+    padding: 20px 0;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s ease;
+    border-radius: 30px 30px 0 0;
+  }
+
+  .hidden{
+    display: none;
+  }
+  
+  #switchToLoginMob,
+  #switchToSignupMob {
+    display: none;
+  }
+
+}
+
+
+
+
+@media (max-width: 850px) {
+  .side-box{
+    display: none;
+  }
+
+  .hidden{
+    display: none;
+  }
+
+  .authContainer {
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    padding-top: 3rem;
+  }
+  
+  /* Auth Box Styling */
+  .auth-box {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    animation: fadeIn 1.2s ease-in-out;
+    position: relative;
+  }
+  
+  .auth-header img {
+    width: 100px;
+    margin-bottom: 1rem;
+  }
+  
+  /* Form Section Styling */
+  .form-section h2 {
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+  }
+  
+  .form-section p {
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .input-group {
+    margin-bottom: 1rem;
+  }
+  
+  .input-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .input-group input:focus {
+    border-color: var(--btn-border-bg);
+    outline: none;
+  }
+  
+  /* Button Styles */
+  .btn {
+    background-color: var(--btn-border-bg);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .more-methods p {
+    color: var(--text-color);
+    margin: 2rem 0;
+    font-size: 0.85rem;
+  }
+  
+  .google-signin-btn {
+    background-color: var(--background-color);
+    border: 1px solid var(--input-border);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    transition: border-color 0.3s ease;
+    transition: all .3s ease-in-out;
+  }
+  
+  .google-signin-btn:hover {
+    border-color: var(--btn-border-bg);
+  }
+  
+  .google-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  #switchToLoginMob, #switchToSignupMob {
+    color: var(--text-color);
+    font-size: 0.8rem;
+    text-decoration: none;
+    margin-top: 3rem;
+    display: block;
+  }
+  
+  #switchToLoginMob span, #switchToSignupMob span{
+    color: var(--btn-border-bg);
+    transition: all .2s ease-in-out;
+  }
+  
+
+  .notactive{
+    display: none;
+  }
+  .active{
+    display: block;
+  }
+}
+
+
+::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+    height: 8px; /* Height of the scrollbar (for horizontal scrollbar) */
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--background-color); /* Background color of the track */
+    border-radius: 10px; /* Rounded corners for the track */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--buttons-bg), var(--primary-color)); /* Gradient for the thumb */
+    border-radius: 10px; /* Rounded corners for the thumb */
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin; /* Use thin scrollbar */
+    scrollbar-color: var(--primary-color) var(--background-color); /* Color for the thumb and track */
+  }
+  
