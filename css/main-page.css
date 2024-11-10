@@ -37,7 +37,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 70px;
+  padding: 10px 60px;
   background-color: var(--header-bg);
   color: var(--primary-color);
   backdrop-filter: blur(20px);
@@ -234,7 +234,7 @@ body {
   cursor: pointer;
   font-size: 14px;
   background-color: var(--buttons-bg);
-  color: var(--text-color);
+  color: #ecf0f1;
   transition: background-color 0.3s ease;
 }
 
@@ -564,6 +564,135 @@ section{
 
 
 
+#ContactUs {
+  background: var(--background-color);
+  padding: 80px 20px;
+  position: relative;
+}
+
+.contact-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.contact-details, .contact-form-wrapper {
+  flex: 1 1 100%;
+}
+
+.contact-details h2 {
+  color: var(--primary-color);
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.contact-details p {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+
+.contact-info {
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.contact-info a {
+  color: var(--buttons-bg);
+  text-decoration: none;
+}
+
+.contact-info a:hover {
+  text-decoration: underline;
+}
+
+.social-media {
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.social-media a {
+  color: var(--buttons-bg);
+  text-decoration: none;
+}
+
+.social-media a:hover {
+  text-decoration: underline;
+}
+
+.contact-form-wrapper {
+  padding: 5px;
+  border-radius: 8px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  resize: none;
+}
+
+#button {
+  background-color: var(--buttons-bg);
+  color: var(--text-color-dark);
+  border: none;
+  padding: 15px 25px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+#button:hover {
+  background-color: var(--primary-color);
+  transform: translateY(-3px);
+}
+
+.map {
+  margin-top: 30px;
+  padding: 5px;
+}
+
+.map iframe {
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .contact-container {
+    flex-direction: column;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Feedback {
   padding: 100px 20px;
   transition: all 0.3s ease-in-out;
@@ -613,7 +742,6 @@ section{
   filter: hue-rotate(100deg) saturate(150%);
 }
 
-/* Highlight the selected emoji */
 .emoji.selected {
   transform: scale(1.2);
   filter: hue-rotate(100deg) saturate(150%);
@@ -673,9 +801,12 @@ section{
 }
 
 
-#ContactUs{
-  height: 500px;
-}
+
+
+
+
+
+
 
 .hidden{
   display: none;

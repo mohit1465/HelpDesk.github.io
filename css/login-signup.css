@@ -138,6 +138,7 @@ body {
     margin: 2px 0;
     border: none;
     background-color: transparent;
+    color: var(--text-color);
     border: 1px solid var(--input-border);
     border-radius: 9px;
     box-shadow: 3px 8px 12px var(--input-shadow);
@@ -273,6 +274,7 @@ body {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #ccc;
+    color: var(--text-color);
     font-size: 1rem;
     transition: border-color 0.3s ease;
   }
