@@ -40,21 +40,6 @@ function redirectToLogin() {
     window.location.href = 'login-signup.html';
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Initialize feedback storage
 const feedback = {
     UI: null,
     Apps: null,
@@ -203,3 +188,36 @@ const feedback = {
   // Call this function on page load to ensure feedback collection is initialized
   initializeFeedbackCollection();
   
+
+
+
+
+
+const btn = document.getElementById('button');
+const form = document.getElementById('form');
+
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      btn.value = 'Sending...';
+
+      const serviceID = 'default_service';
+      const templateID = 'template_ggudpb1';
+
+      emailjs.send(serviceID, templateID, {
+        message: document.getElementById('message').value,
+        reply_to: user.email
+      }).then(() => {
+        btn.value = 'Send Message';
+        alert('Message sent successfully!');
+      }, (err) => {
+        btn.value = 'Send Message';
+        alert('Error: ' + JSON.stringify(err));
+      });
+    } else {
+      alert('Please log in to send a message.');
+    }
+  });
+});

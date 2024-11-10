@@ -60,25 +60,20 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 function SectionMenu(section, element) {
-    // Hide all sections
     const sections = document.querySelectorAll('.section');
     sections.forEach(sec => {
         sec.classList.add('hidden');
     });
     
-    // Show the selected section
     const selectedSection = document.getElementById(section);
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
     }
 
-    // Remove 'active' class from all nav items
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
         item.classList.remove('active');
     });
-
-    // Add 'active' class to the clicked nav item
     element.classList.add('active');
 }
 

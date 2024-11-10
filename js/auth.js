@@ -1,4 +1,4 @@
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
 
 const auth = getAuth(); // Initialize Firebase Authentication
@@ -125,13 +125,3 @@ function onLoadfun(){
   document.getElementById('switchToLoginMob').classList.add('active');
   document.getElementById('switchToLoginMob').classList.remove('notactive');
 }
-
-
-
-
-
-
-
-
-
-
