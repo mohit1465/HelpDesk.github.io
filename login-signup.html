@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/login-signup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>Login / Signup | Join Us</title>
+</head>
+
+<body>
+  <div class="authContainer">
+    <div class="side-box">
+      <img src="assets/PrimeX side login.png" alt="sideImage">
+      <p class="switch-text">
+        <a href="#" id="switchToSignup" class="notactive">Sign Up</a>
+        <a href="#" id="switchToLogin" class="active">Login</a>
+      </p>
+    </div>
+
+    <div class="auth-box">
+      <div class="auth-header">
+        <img src="assets/PrimeX logo light.gif" alt="PrimeX Logo" id="logo">
+      </div>
+
+      <div id="login-form" class="form-section">
+        <h2>Welcome Back!</h2>
+        <p>We missed you! Let’s get you back.</p>
+        <form id="loginForm" autocomplete="off">
+          <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Your Awesome Email" required>
+          </div>
+          <div class="input-group">
+            <input type="password" id="loginPassword" placeholder="Super Secret Password" required>
+          </div>
+          <button type="submit" class="btn" 
+          onmouseover="this.style.animation='none'; setTimeout(() => this.style.animation='mymove 1s forwards', 10);">Let’s Go 🚀</button>
+        </form>
+        <div class="more-methods">
+          <p>······ Or Login with ······</p>
+        </div>
+        <button class="google-signin-btn" id="googleLoginicon">
+          <img src="assets/Google_Icon.webp" alt="Login with Google" class="google-icon">
+        </button>
+        <a href="#" id="switchToSignupMob" class="active"> Want to join Us? <span>Sign Up</span></a>
+      </div>
+
+      <div id="signup-form" class="form-section hidden">
+        <h2>Join Us!</h2>
+        <p class="tagline">Be part of something amazing.</p>
+        <form id="signupForm" autocomplete="off">
+          <div class="input-group">
+            <input type="text" id="signupName" placeholder="Your Full Name" required>
+          </div>
+          <div class="input-group">
+            <input type="email" id="signupEmail" placeholder="Your Email" required>
+          </div>
+          <div class="input-group">
+            <input type="password" id="signupPassword" placeholder="Choose a Password" required>
+          </div>
+          <button type="submit" class="btn" 
+          onmouseover="this.style.animation='none'; setTimeout(() => this.style.animation='mymove 1s forwards', 10);">Join the Adventure 🎉</button>
+        </form>
+        <div class="more-methods">
+          <p>······ Or Signup with ······</p>
+        </div>
+        <button class="google-signin-btn" id="googleSignInicon">
+          <img src="assets/Google_Icon.webp" alt="Sign in with Google" class="google-icon">
+        </button>
+        <a href="#" id="switchToLoginMob" class="notactive"> Have an account already? <span>Login</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+
+
+  <script type="module" src="js/app.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js"></script>
+</body>
+
+</html>

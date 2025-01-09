@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Transform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/image-editor.css">
+    <style>
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="leftContainer">
+            <div class="logo-container">
+                <img src="" alt="PrimeX Logo" class="logo" id="logo">
+            </div>
+        </div>
+
+        <div class="rightContainer">
+            <div class="icons">
+                <a class="icon-link">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                        <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                            <mask class="moon" id="moon-mask">
+                                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                                <circle cx="24" cy="10" r="6" fill="black" />
+                            </mask>
+                            <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+                            <g class="sun-beams" stroke="currentColor">
+                                <line x1="12" y1="1" x2="12" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="23" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                <line x1="1" y1="12" x2="3" y2="12" />
+                                <line x1="21" y1="12" x2="23" y2="12" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                            </g>
+                        </svg>
+                    </button>
+                </a>
+                <a class="icon-link" onclick="toggleBox(event)">
+                    <div class="menu-icon">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="MainContainer">
+        <section class="leftMainContainer">
+            <button data-id="filterControl" id="filterButton" title="Apply Filter" class="leftMenuBtns"><i class="fa-solid fa-droplet"></i></button>
+
+            <button data-id="controls" id="cropButton" title="Orientation" class="leftMenuBtns"><i class="fa-solid fa-crop-simple"></i></button>
+
+            <div id="leftSubSideBar" class="leftSubSideBar">
+                <div id="controls" class="sub-div">
+                    <h3>Flip</h3>
+                    <div class="flipBtns">
+                        <button id="flipHorizontal">Flip Horizontal</button>
+                        <button id="flipVertical">Flip Vertical</button>
+                    </div>
+                    <h3>Rotate</h3>
+                    <div class="rotateBtns">
+                        <button id="rotateLeft">Rotate Left</button>
+                        <button id="rotateRight">Rotate Right</button>
+                    </div>
+                    <button id="applyOriAllBtn">Apply to all</button>
+                </div>
+
+                <div id="filterControl" class="sub-div">
+                    <h3>Filter</h3>
+                    <div class="sliders">
+                        <div class="slider-container">
+                            <label for="brightness">Brightness</label>
+                            <input type="range" id="brightness" min="0" max="200" value="100">
+                            <input type="number" id="brightnessValue" min="0" max="200" value="100">
+                        </div>
+                        <div class="slider-container">
+                            <label for="contrast">Contrast</label>
+                            <input type="range" id="contrast" min="0" max="200" value="100">
+                            <input type="number" id="contrastValue" min="0" max="200" value="100">
+                        </div>
+                        <div class="slider-container">
+                            <label for="saturation">Saturation</label>
+                            <input type="range" id="saturation" min="0" max="200" value="100">
+                            <input type="number" id="saturationValue" min="0" max="200" value="100">
+                        </div>
+                        <div class="slider-container">
+                            <label for="blur">Blur</label>
+                            <input type="range" id="blur" min="0" max="10" value="0">
+                            <input type="number" id="blurValue" min="0" max="10" value="0">
+                        </div>
+                        <div class="slider-container">
+                            <label for="hue">Hue</label>
+                            <input type="range" id="hue" min="0" max="200" value="100">
+                            <input type="number" id="hueValue" min="0" max="200" value="100">
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="invert">
+                            <label for="invert">Invert Colors</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="sepia">
+                            <label for="sepia">Sepia</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="grayscale">
+                            <label for="grayscale">Grayscale</label>
+                        </div>
+
+                        <button id="applyFilterAllBtn">Apply to all</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="midMainContainer">
+            <img id="preview" alt="Preview" />
+            <img src="assets/PrimeX Image Edit Upload file light.png" alt="PrimeX Uplaod" class="uplaodImage" id="uploadImage">
+            <div id="imageData"><p>File Size: 200px</p><p>Width: 250px</p><p>Height: 347px</p></div>
+        </section>
+
+        <section class="rightMainContainer">
+            <div class="file-upload-container">
+                <label for="imageUpload" class="file-upload-label">
+                <div class="file-upload-area">
+                    <p>Click here to upload</p>
+                    <span>Accepted formats: .zip, .png, .jpg, .jpeg, .pdf</span>
+                </div>
+                </label>
+                <input type="file" id="imageUpload" multiple accept=".zip, .png, .jpg, .jpeg, .pdf" />
+            </div>
+              
+            <div id="downloadContainer">
+                <button id="downloadButton">Download</button>
+                <div id="downloadOptions" class="hidden" style="margin-top: 10px;">
+                    <input type="text" id="imageSelection" placeholder="Enter (e.g., 1, 3-5)">
+                    <select id="exportType">
+                        <option value="png">PNG</option>
+                        <option value="jpg">JPG</option>
+                        <option value="pdf">PDF</option>
+                        <option value="zip">ZIP</option>
+                    </select>
+                    <button id="confirmDownload">Confirm</button>
+                </div>
+            </div>
+            <h2 class="imagesTitle">Images</h2>
+            <div id="imageGallery"></div>
+        </section>
+    </section>
+    
+    <div class="outer-box">
+        <h3>More Apps</h3>
+        <div class="boxes">
+            <div class="inner-box" onclick="window.open('index.html', '_blank')">
+                <img src="assets/Resizeic.webp" alt="Image Resizer">
+                <p>Home</p>
+            </div>
+            <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
+                <img src="assets/Resizeic.webp" alt="Image Resizer">
+                <p>Image Resizer</p>
+            </div>
+            <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
+                <img src="assets/Text Editor logo light.png" alt="Text Editor">
+                <p>Text Editor</p>
+            </div>
+            <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+                <img src="assets/Text Editor logo light.png" alt="Text Editor">
+                <p>Image Editor</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="dropZone">
+        <h1>
+            Release Your File Here ...
+        </h1>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+    <script src="js/image-editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Text Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/matchesonscrollbar.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="css/text-editor.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="leftContainer">
+            <div class="logo-container">
+                <img src="assets/Text Editor logo light.png" alt="PrimeX Logo" class="logo" id="logo">
+            </div>
+            <nav class="leftBtns">
+                <div class="leftBtn">
+                    <div class="file-dropbtn">File</div>
+                    <div class="file-dropdown-content">
+                        <a href="#" id="new-file">New</a>
+                        <a href="#" id="open-file">Open</a>
+                        <a href="#" id="save-file">Save</a>
+                        <a href="#" id="save-as-file">Save As</a>
+                        <a href="#" id="change-name">Change Name</a>
+                    </div>
+                </div>
+                <div class="leftBtn">
+                    <a href="#" id="save-online">Save Online</a>
+                </div>
+                <div class="leftBtn">
+                    <a href="#" id="load-file">Load Online</a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="rightContainer">
+            <div class="icons">
+                <a class="icon-link">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                        <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                            <mask class="moon" id="moon-mask">
+                                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                                <circle cx="24" cy="10" r="6" fill="black" />
+                            </mask>
+                            <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+                            <g class="sun-beams" stroke="currentColor">
+                                <line x1="12" y1="1" x2="12" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="23" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                <line x1="1" y1="12" x2="3" y2="12" />
+                                <line x1="21" y1="12" x2="23" y2="12" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                            </g>
+                        </svg>
+                    </button>
+                </a>
+                <a class="icon-link">
+                    <i class="fa fa-user" id="metaMenu"></i>
+                    <div id="profileInfo-box" class="profile-overlay">
+                        <div id="profileInfo">
+                            <p>User: John Doe</p>
+                            <p>Email: john.doe@example.com</p>
+                        </div>
+                        <div id="profilefiles">
+                            <a href="#">My Files</a><br>
+                            <a href="#">Settings</a><br>
+                        </div>
+                    </div>
+                </a>
+                <a class="icon-link" onclick="toggleBox(event)">
+                    <div class="menu-icon">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="mainContainer">
+        <div class="box directory" id="leftDiv">
+            <div class="dirTop">
+              <h3>Directory Section</h3>
+              <div>
+                <a id="new-file" title="Add File"><i class="material-icons">insert_drive_file</i></a>
+                <a onclick="addFolder('New Folder')" title="Add Folder"><i class="material-icons" style="font-size: 25px;">create_new_folder</i></a>
+              </div>
+            </div>
+            <ul id="dirTabs">
+            </ul>
+            <div class="context-menu" id="context-menu">
+                <ul>
+                    <li>Delete</li>
+                </ul>
+            </div>
+        </div>
+        <div class="box editorBox" id="middleDiv">
+            <button class="btn btn-left" onclick="toggleDiv('leftDiv')"><i class="fa fa-folder"></i></button>
+            <button class="btn btn-right" onclick="toggleDiv('rightDiv')"><i class='fas fa-running'></i></button>
+            <div class="editor-container">
+                <div class="tabs" id="tabs"></div>
+                <textarea id="editor"></textarea>
+                <div id="suggestions"></div>
+            </div>
+        </div>
+        <div class="box" id="rightDiv">
+            <div class="file-info">
+                <div id="cursor-position">Ln: 1, Col: 1</div>
+                <div id="total-lines">Total Ln: 1</div>
+                <div id="file-size">File Size: 0 KB</div>
+            </div>
+            <div>
+                <div class="Output">
+                    <iframe id="outputFrame"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="footer-content">
+        </div>
+    </footer>
+
+
+
+    
+
+    <div class="outer-box">
+        <h3>More Apps</h3>
+        <div class="boxes">
+            <div class="inner-box" onclick="window.open('index.html', '_blank')">
+                <img src="assets/Resizeic.webp" alt="Image Resizer">
+                <p>Home</p>
+            </div>
+            <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
+                <img src="assets/Resizeic.webp" alt="Image Resizer">
+                <p>Image Resizer</p>
+            </div>
+            <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
+                <img src="assets/Text Editor logo light.png" alt="Text Editor">
+                <p>Text Editor</p>
+            </div>
+            <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+                <img src="assets/Text Editor logo light.png" alt="Text Editor">
+                <p>Image Editor</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" style="display: none;">
+    <script src="js/data.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/html-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/matchesonscrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/mode/overlay.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script> <!-- Added Firestore SDK -->
+  
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+    <script src="js/firebase-config.js"></script>
+    
+    <script src="js/text-editor.js"></script>
+</body>
+</html>

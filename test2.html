@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Image with Points and Lines</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            position: relative;
+            max-width: 800px;
+        }
+
+        .image {
+            width: 100%;
+            height: auto;
+        }
+
+        .point {
+            position: absolute;
+            background-color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .line {
+            position: absolute;
+            width: 2px;
+            background-color: #333;
+        }
+
+        /* First point */
+        .point1 {
+            top: 5%;
+            left: -10%;
+            right: 60%;
+        }
+
+        .line1 {
+            top: 20%;
+            left: 50%;
+            height: 2px;
+            width: 60%;
+            transform: translateX(50%);
+        }
+
+        /* Second point */
+        .point2 {
+            top: 35%;
+            left: 60%;
+            right: -10%;
+        }
+
+        .line2 {
+            top: 50%;
+            left: 50%;
+            height: 2px;
+            width: 60%;
+            transform: translateX(50%);
+        }
+
+        /* Third point */
+        .point3 {
+            top: 71%;
+            left: -10%;
+            right: 60%;
+        }
+
+        .line3 {
+            top: 80%;
+            left: 50%;
+            height: 2px;
+            width: 60%;
+            transform: translateX(50%);
+        }
+
+        @media (max-width: 768px) {
+            .point {
+                font-size: 0.8rem;
+                left: 90%; /* Adjust for smaller screens */
+            }
+
+            .line {
+                width: 40%; /* Adjust for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="assets/whatsnew line light.png" alt="Vertical Serpentine Dotted Line" class="image">
+
+        <div class="point point1"><p>Our upgraded text editor offers a minimalistic and distraction-free environment for crafting your documents with ease. Whether it’s a quick note or a detailed report, PrimeX has you covered.</p></div>
+
+        <div class="point point2"><p>Resize images without compromising on quality! Whether you’re prepping images for social media, presentations, or projects, our resizer makes it effortless.</p></div>
+
+        <div class="point point3"> <p>PrimeX includes a dedicated section for students. Access educational resources, study tools, and more—all in one place. Perfect for learners aiming for success.</p></div>
+    </div>
+
+
+
+</body>
+</html>
