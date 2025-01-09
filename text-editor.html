@@ -117,7 +117,7 @@
             <div class="editor-container">
                 <div class="tabs" id="tabs"></div>
                 <textarea id="editor"></textarea>
-                <div class="suggestions"></div>
+                <div id="suggestions"></div>
             </div>
         </div>
         <div class="box" id="rightDiv">
@@ -126,7 +126,11 @@
                 <div id="total-lines">Total Ln: 1</div>
                 <div id="file-size">File Size: 0 KB</div>
             </div>
-            <div>Currently we can only provide HTML file Output.</div>
+            <div>
+                <div class="Output">
+                    <iframe id="outputFrame"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -137,10 +141,17 @@
     </footer>
 
 
+
+    
+
     <div class="outer-box">
         <h3>More Apps</h3>
         <div class="boxes">
-            <div class="inner-box" onclick='window.open("https://mohit1465.github.io/Learner.github.io/image-resizer/image-resizer.html", "_blank");'>
+            <div class="inner-box" onclick="window.open('index.html', '_blank')">
+                <img src="assets/Resizeic.webp" alt="Image Resizer">
+                <p>Home</p>
+            </div>
+            <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
                 <img src="assets/Resizeic.webp" alt="Image Resizer">
                 <p>Image Resizer</p>
             </div>
@@ -148,9 +159,12 @@
                 <img src="assets/Text Editor logo light.png" alt="Text Editor">
                 <p>Text Editor</p>
             </div>
+            <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+                <img src="assets/Text Editor logo light.png" alt="Text Editor">
+                <p>Image Editor</p>
+            </div>
         </div>
     </div>
-
 
     <input type="file" id="file-input" style="display: none;">
     <script src="js/data.js"></script>

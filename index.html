@@ -16,8 +16,8 @@
         </div>
         <nav class="nav">
           <a href="#" class="nav-item" onclick="SectionMenu('Feedback', this)">Feedback</a>
-          <a href="#" class="nav-item" onclick="SectionMenu('ContactUs', this)">Contact Us</a>
-          <a href="#" class="nav-item active" onclick="SectionMenu('whatsNew', this)">What’s New</a>
+          <a id="ContactUsLink" class="nav-item" onclick="SectionMenu('ContactUs', this)">Contact Us</a>
+          <a id="whatsNewLink" class="nav-item active" onclick="SectionMenu('whatsNew', this)">What’s New</a>
         </nav>
         <div class="icons">
             <a class="icon-link">
@@ -61,7 +61,8 @@
         <div class="user-menu" id="user-menu">
             <!-- Profile Header -->
             <div class="profile-header">
-                <img src="https://via.placeholder.com/80" alt="User Photo">
+                <img src="assets/profile.png" alt="User Photo">
+                <h3 class="profile-initial" id="profile-initial"></h3>
                 <div id="user-name-email">
                   <h2><span id="userData">Welcome</span></h2>
                   <p id="userEmail"></p>
@@ -155,13 +156,12 @@
         </div>
     
         <!-- Thank You Message -->
-        <div id="thank-you-message" class="hidden">
-          <h3>Thank you for your feedback! 💖</h3>
+        <div id="thank-you" class="hidden">
+          <h3 id="thank-you-main">Thank you for your feedback! 💖</h3>
           <p>We appreciate your input and will work to improve your experience.</p>
         </div>
       </div>
     </section>
-
 
     <section id="ContactUs" class="section hidden">
       <div class="contact-container">
@@ -205,10 +205,6 @@
         </div>
       </div>
     </section>
-    
-    
-
-
 
     <section id="whatsNew" class="section" >
         <div class="container">
@@ -266,27 +262,35 @@
         </div>
       </section>
 
+
+
     <section class="UserDashboard">
 
-      
     </section>
       
 
 
-
     <div class="outer-box">
-        <h3>More Apps</h3>
-        <div class="boxes">
-            <div class="inner-box" onclick='window.open("https://mohit1465.github.io/Learner.github.io/image-resizer/image-resizer.html", "_blank");'>
-                <img src="assets/Resizeic.webp" alt="Image Resizer">
-                <p>Image Resizer</p>
-            </div>
-            <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
-                <img src="assets/Text Editor logo light.png" alt="Text Editor">
-                <p>Text Editor</p>
-            </div>
-        </div>
-    </div>
+      <h3>More Apps</h3>
+      <div class="boxes">
+          <div class="inner-box" onclick="window.open('index.html', '_blank')">
+              <img src="assets/Resizeic.webp" alt="Image Resizer">
+              <p>Home</p>
+          </div>
+          <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
+              <img src="assets/Resizeic.webp" alt="Image Resizer">
+              <p>Image Resizer</p>
+          </div>
+          <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
+              <img src="assets/Text Editor logo light.png" alt="Text Editor">
+              <p>Text Editor</p>
+          </div>
+          <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+              <img src="assets/Text Editor logo light.png" alt="Text Editor">
+              <p>Image Editor</p>
+          </div>
+      </div>
+  </div>
 
     <footer class="footer">
         <div class="container">
@@ -294,8 +298,8 @@
                 <div class="footer-section about">
                     <img src="assets/PrimeX logo light.gif" alt="PrimeX Logo" class="footerLogo" id="footerLogo">
                     <div class="button-group">
-                        <a href="#" class="button">Join Us</a>
-                        <a href="#" class="buttonfooter">What’s New</a>
+                        <a href="#" id="ContactUsTriggerBtn" class="button">Join Us</a>
+                        <a href="#" id="whatsNewTriggerBtn" class="buttonfooter">What’s New</a>
                     </div>
                     <div class="social-icons">
                         <a href="https://api.whatsapp.com/send?phone=918307521465&text=Hello%20there,%20I%20am%20Mohit%20here,%20May%20we%20talk." target="_blank"><img src="assets/Whatsapp logo.png" alt="Whatsapp"></a>
@@ -308,9 +312,9 @@
                     <h3>Quick Links</h3>
                     <ul>
                         <li><a href="#">Home</a></li>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#" onclick="SectionMenu('whatsNew', 'whatsNewLink')">Features</a></li>
+                        <li><a href="#" onclick="SectionMenu('ContactUs', 'ContactUsLink')">Careers</a></li>
+                        <li><a href="#" onclick="SectionMenu('ContactUs', 'ContactUsLink')">Contact Us</a></li>
                     </ul>
                 </div>
             </div>
