@@ -36,15 +36,105 @@ document.getElementById('metaMenu').addEventListener('click', toggleMenu);
 document.getElementById('save-online').addEventListener('click', saveFileOnline);
 document.getElementById('load-file').addEventListener('click', loadFileOnline);
 
-editor.on('inputRead', function(instance, changeObj) {
-    const cursor = editor.getCursor();
-    const token = editor.getTokenAt(cursor);
-    const searchTerm = token.string.trim();
+const suggestionsBox = document.getElementById('suggestions');
 
-    if (searchTerm) {
-        updateFilteredSuggestions(searchTerm);
-    } else {
-        updateSuggestions(currentTabId);
+editor.on('change', function(cm, change) {
+    const activeTab = document.querySelector('.tab.active');
+    const fileType = activeTab.id.split('.').pop();
+    if (suggestions.common[fileType]) {
+        const lastWord = getLastWord(cm);
+        
+        if (/^\s*$/.test(lastWord)) {
+            hideSuggestions();
+        } else {
+            const matchedSuggestions = filterSuggestions(lastWord, suggestions.common[fileType]);
+            if (matchedSuggestions.length > 0) {
+                showSuggestions(matchedSuggestions, suggestions.common[fileType]);
+            } else {
+                hideSuggestions();
+            }
+        }
+    }
+});
+
+function getLastWord(cm) {
+    const cursor = cm.getCursor();
+    const line = cm.getLine(cursor.line);
+    const words = line.substring(0, cursor.ch).split(/\s+/);
+    return words[words.length - 1];
+}
+
+function filterSuggestions(input, suggestionGroup) {
+    return Object.keys(suggestionGroup).filter(suggestionKey => {
+        const suggestionValue = suggestionGroup[suggestionKey];
+        return suggestionValue.toLowerCase().includes(input.toLowerCase()) || isSimilar(input, suggestionValue);
+    });
+}
+
+
+function isSimilar(input, suggestion) {
+    const inputLower = input.toLowerCase();
+    const suggestionLower = suggestion.toLowerCase();
+
+    if (suggestionLower.startsWith(inputLower)) {
+        return true;
+    }
+
+    let i = 0, j = 0;
+    while (i < inputLower.length && j < suggestionLower.length) {
+        if (inputLower[i] === suggestionLower[j]) {
+            i++;
+        }
+        j++;
+    }
+
+    return i === inputLower.length;
+}
+
+function showSuggestions(filteredSuggestions, fullSuggestions) {
+    suggestionsBox.innerHTML = '';
+    filteredSuggestions.forEach(suggestionKey => {
+        const suggestionItem = document.createElement('p');
+        suggestionItem.textContent = suggestionKey;
+        suggestionItem.addEventListener('click', function() {
+            insertSuggestion(suggestionKey, fullSuggestions[suggestionKey]);
+        });
+        suggestionsBox.appendChild(suggestionItem);
+    });
+    updateCaretPosition();
+    suggestionsBox.style.display = 'block';
+}
+
+function hideSuggestions() {
+    suggestionsBox.style.display = 'none';
+}
+
+function insertSuggestion(suggestionKey, suggestionValue) {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const words = line.split(/\s+/);
+
+    words[words.length - 1] = suggestionValue;
+    const updatedLine = words.join(' ');
+
+    editor.replaceRange(updatedLine, {line: cursor.line, ch: 0}, {line: cursor.line, ch: line.length});
+    hideSuggestions();
+    editor.focus();
+}
+
+function updateCaretPosition() {
+    const cursorPos = editor.getCursor();
+    const charCoords = editor.charCoords(cursorPos, 'local');
+    
+    const editorWrapper = editor.getWrapperElement();
+    
+    suggestionsBox.style.left = `${charCoords.left + editorWrapper.offsetLeft}px`;
+    suggestionsBox.style.top = `${charCoords.bottom + editorWrapper.offsetTop + 5}px`;
+}
+
+document.addEventListener('click', function(event) {
+    if (!editor.getWrapperElement().contains(event.target) && !suggestionsBox.contains(event.target)) {
+        hideSuggestions();
     }
 });
 
@@ -180,7 +270,7 @@ function selectTabByFileName(fileName) {
 function removeFileFromDirectory(fileName) {
     const allDirectoryItems = document.querySelectorAll('#dirTabs li');
     allDirectoryItems.forEach(item => {
-        if (item.textContent === fileName) {
+        if (item.dataset.fileName === fileName) {
             item.remove();
         }
     });
@@ -196,7 +286,6 @@ function setActiveTab(tab) {
     currentTabId = tab.id;
 
     editor.setValue(tabContents[currentTabId] || '');
-    updateSuggestions(currentTabId);
 
     document.getElementById('editor').value = tabContents[currentTabId] || '';
     const allItems = document.querySelectorAll('.directory li');
@@ -232,47 +321,6 @@ function createCloseButton(tab) {
         }
     };
     return closeBtn;
-}
-
-function updateSuggestions(filename) {
-    const extension = filename.split('.').pop();
-    const suggestionContainer = document.querySelector('.suggestions');
-    suggestionContainer.innerHTML = '';
-
-    if (suggestions[`.${extension}`]) {
-        suggestions[`.${extension}`].forEach(suggestion => {
-            const suggestionDiv = document.createElement('div');
-            suggestionDiv.textContent = suggestion;
-            suggestionDiv.onclick = () => {
-                editor.replaceSelection(suggestion);
-                editor.focus(); 
-            };
-            suggestionContainer.appendChild(suggestionDiv);
-        });
-    }
-}
-
-function updateFilteredSuggestions(searchTerm) {
-    const activeTab = document.querySelector('.tab.active');
-    const extension = activeTab.id.split('.').pop();
-    const suggestionContainer = document.querySelector('.suggestions');
-    suggestionContainer.innerHTML = '';
-
-    if (suggestions[`.${extension}`]) {
-        const filteredSuggestions = suggestions[`.${extension}`].filter(suggestion =>
-            suggestion.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        filteredSuggestions.forEach(suggestion => {
-            const suggestionDiv = document.createElement('div');
-            suggestionDiv.textContent = suggestion;
-            suggestionDiv.onclick = () => {
-                editor.replaceSelection(suggestion);
-                editor.focus(); 
-            };
-            suggestionContainer.appendChild(suggestionDiv);
-        });
-    }
 }
 
 async function saveFile() {
@@ -359,10 +407,11 @@ async function handleFileOpen() {
 
 function changeFileNameAndExtension() {
     const activeTab = document.querySelector('.tab.active');
+    console.log(activeTab.id);
     const selectedList = document.querySelector('#dirTabs .selected');
 
     if (activeTab && selectedList) {
-        const newFullName = prompt('Enter the new file name and extension (e.g., myFile.js):');
+        const newFullName = prompt('Enter the new file name and extension (e.g., myFile.js):', "&{activeTab.id}");
         if (newFullName) {
             const nameParts = newFullName.split('.');
 
@@ -423,7 +472,6 @@ function changeFileNameAndExtension() {
                 }
             };
             activeTab.appendChild(closeBtn);
-            updateSuggestions(newId);
         }
     }
 }
@@ -437,7 +485,42 @@ editor.on('change', () => {
     const lineCount = editor.lineCount();
     document.getElementById('total-lines').textContent = `Total Ln: ${lineCount}`;
     document.getElementById('file-size').textContent = `File Size: ${(new Blob([editor.getValue()]).size / 1024).toFixed(2)} KB`;
+
+    const activeTab = document.querySelector('.tab.active');
+    const fileExtension = activeTab.id.split('.').pop();
+    updateOutput(fileExtension);
+
+    if (!currentFileHandle) {
+        return;
+    }
+    else{
+        const writable = currentFileHandle.createWritable();
+        writable.write(editor.getValue());
+        writable.close();
+        alert('File saved successfully.');
+    }
 });
+
+function updateOutput(fileExtension) {
+    const content = editor.getValue();
+    const outputFrame = document.getElementById('outputFrame');
+    const outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document;
+
+    outputDocument.open();
+    outputDocument.write('');
+    
+    if (fileExtension === 'html') {
+        outputDocument.write(content);
+    } else if (fileExtension === 'css') {
+        outputDocument.write('<style>' + content + '</style>');
+    } else if (fileExtension === 'js') {
+        outputDocument.write('<script>' + content + '<\/script>');
+    } else {
+        outputDocument.write('<h3 style="text-align:center;">Currently we can only provide HTML file Output.</h3>');
+    }
+
+    outputDocument.close();
+}
 
 function redirectToLogin() {
     const pageName = window.location.pathname.split("/").pop();
@@ -640,7 +723,14 @@ document.addEventListener("DOMContentLoaded", function() {
     loadUserFiles();
 });
 
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+}
+
 window.onload = () => {
+    if (isMobileDevice()) {
+        document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
+    }
     addTab('Untitled.txt');
     const savedTheme = localStorage.getItem('currentTheme') || 'light';
     setTheme(savedTheme);
@@ -668,6 +758,7 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
+
 function toggleMenu() {
     const profileInfo = document.getElementById('profileInfo-box');
     
@@ -693,14 +784,12 @@ function toggleDiv(divId) {
     const leftDiv = document.getElementById('leftDiv');
     const rightDiv = document.getElementById('rightDiv');
 
-    // Toggle visibility of the selected div
     if (div.style.display === 'none') {
         div.style.display = 'block';
     } else {
         div.style.display = 'none';
     }
 
-    // Adjust the middle div's width based on visibility of left or right
     if (leftDiv.style.display === 'none' && rightDiv.style.display === 'none') {
         middleDiv.style.width = '100%';
     } else if (leftDiv.style.display === 'none') {
@@ -757,30 +846,21 @@ dirTabs.addEventListener('contextmenu', function(event) {
     }
 });
 
-document.addEventListener('click', hideContextMenu);
-
-document.querySelector('.context-menu ul li').addEventListener('click', function() {
-    if (clickedItem) {
-        const fileName = clickedItem.dataset.fileName;
-        removeFile(fileName);
-        hideContextMenu();
-    }
-});
-
 function removeFile(fileName) {
     const tab = document.getElementById(fileName);
+    console.log(fileName);
 
     if (!tab) {
         alert('File not found.');
         return;
     }
-    
+
     if (document.querySelectorAll('.tab').length > 1) {
-        removeFileFromDirectory(fileName)
         if (confirm(`Are you sure you want to close the tab: ${fileName}?`)) {
+            removeFileFromDirectory(fileName);
             delete tabContents[fileName];
             tab.remove();
-            
+
             if (tab.classList.contains('active')) {
                 const remainingTabs = document.querySelectorAll('.tab');
                 if (remainingTabs.length > 0) {
@@ -792,6 +872,44 @@ function removeFile(fileName) {
         alert('At least one tab must be open.');
     }
 }
+
+function removeItem(item) {
+    if (item.classList.contains('folder')) {
+        const folderName = item.textContent.trim();
+        const confirmDeletion = confirm(`Are you sure you want to delete the folder: ${folderName}? This will delete all files and folders inside it.`);
+
+        if (confirmDeletion) {
+            const subfolders = item.querySelectorAll('.folder');
+            subfolders.forEach(subfolder => removeItem(subfolder)); // Recursive removal of subfolders
+
+            const files = item.querySelectorAll('ul li[data-file-name]');
+            console.log(files);
+            files.forEach(file => removeFile(file.dataset.fileName)); // Remove files in the folder
+
+            item.remove(); // Remove the folder itself
+            alert(`Folder ${folderName} and all its contents have been deleted.`);
+        }
+    } else {
+        // If the item is a file, remove it directly
+        const fileName = item.dataset.fileName;
+        removeFile(fileName);
+    }
+}
+
+document.querySelectorAll('.context-menu ul li').forEach(function (menuItem) {
+    menuItem.addEventListener('click', function () {
+        if (clickedItem) {
+            removeItem(clickedItem);
+            hideContextMenu(); // Assuming this is the function to hide context menu
+        }
+    });
+});
+
+
+
+
+
+
 
 
 

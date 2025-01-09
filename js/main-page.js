@@ -1,5 +1,7 @@
-const themeToggleBtn = document.getElementById('theme-toggle');
 const body = document.body;
+const themeToggleBtn = document.getElementById('theme-toggle');
+const logoimg = document.getElementById('logo');
+const footerlogoimg = document.getElementById('footerLogo');
 
 function toggleBox(event) {
     const outerBox = document.querySelector('.outer-box');
@@ -42,29 +44,12 @@ function toggleUserMenu() {
     });
 }
 
-themeToggleBtn.addEventListener('click', () => {
-    const currentTheme = body.getAttribute('data-theme');
-    const logoimg = document.getElementById('logo');
-    const footerlogoimg = document.getElementById('footerLogo');
-    if (currentTheme === 'dark') {
-        body.removeAttribute('data-theme');
-        logoimg.src = 'assets/PrimeX logo light.gif';
-        footerlogoimg.src = 'assets/PrimeX logo light.gif'
-        localStorage.setItem('currentTheme', currentTheme);
-    } else {
-        body.setAttribute('data-theme', 'dark');
-        logoimg.src = 'assets/PrimeX logo dark.gif';
-        footerlogoimg.src = 'assets/PrimeX logo dark.gif'
-        localStorage.setItem('currentTheme', currentTheme);
-    }
-});
-
 function SectionMenu(section, element) {
     const sections = document.querySelectorAll('.section');
     sections.forEach(sec => {
         sec.classList.add('hidden');
     });
-    
+
     const selectedSection = document.getElementById(section);
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
@@ -74,21 +59,76 @@ function SectionMenu(section, element) {
     navItems.forEach(item => {
         item.classList.remove('active');
     });
-    element.classList.add('active');
+
+    let targetElement;
+    if (element instanceof HTMLElement) {
+        targetElement = element;
+    } else {
+        targetElement = document.getElementById(element);
+    }
+
+    if (targetElement) {
+        targetElement.classList.add('active');
+    }
 }
 
 
-document.addEventListener(`DOMContentLoaded`, onLoadfun);
 
-function onLoadfun(){
-  const body = document.body;
-  const logoimg = document.getElementById('logo');
-  const Theme = localStorage.getItem('currentTheme');
-  if (Theme === 'dark') {
-    body.setAttribute('data-theme', 'dark');
-    logoimg.src = 'assets/PrimeX logo dark.gif'
-  } else {
-      body.removeAttribute('data-theme');
-      logoimg.src = 'assets/PrimeX logo light.gif'
-  }
+document.getElementById('whatsNewTriggerBtn').addEventListener('click', function() {
+    SectionMenu('whatsNew', document.getElementById('whatsNewLink'));
+});
+
+document.getElementById('ContactUsTriggerBtn').addEventListener('click', function() {
+    SectionMenu('ContactUs', document.getElementById('ContactUsLink'));
+});
+
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 }
+
+function setTheme(theme) {
+    if (theme === 'dark') {
+        body.setAttribute('data-theme', 'dark');
+        logoimg.src = 'assets/PrimeX logo dark.gif';
+        footerlogoimg.src = 'assets/PrimeX logo dark.gif'
+    } else {
+        body.removeAttribute('data-theme');
+        logoimg.src = 'assets/PrimeX logo light.gif';
+        footerlogoimg.src = 'assets/PrimeX logo light.gif'
+    }
+}
+
+window.onload = () => {
+    if (isMobileDevice()) {
+        document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
+    }
+    const savedTheme = localStorage.getItem('currentTheme') || 'dark';
+    setTheme(savedTheme);
+};
+
+themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+
+    if (currentTheme === 'dark') {
+        body.removeAttribute('data-theme');
+        logoimg.src = 'assets/PrimeX logo light.gif';
+        footerlogoimg.src = 'assets/PrimeX logo light.gif'
+        localStorage.setItem('currentTheme', 'light');
+    } else {
+        body.setAttribute('data-theme', 'dark');
+        logoimg.src = 'assets/PrimeX logo dark.gif';
+        footerlogoimg.src = 'assets/PrimeX logo dark.gif'
+        localStorage.setItem('currentTheme', 'dark');
+    }
+});
+
+
+
+
+
+
+
+
+
+

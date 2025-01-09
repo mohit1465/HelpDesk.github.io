@@ -1,20 +1,34 @@
 auth.onAuthStateChanged(user => {
+    const profileImage = document.querySelector('.profile-header img');
     if (user) {
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
                 const userData = doc.data();
+
+                profileImage.style.display = 'none';
+
+                const firstLetter = userData.name.charAt(0).toUpperCase();
+                const nameLetterElement = document.getElementById('profile-initial');
+                nameLetterElement.textContent = firstLetter;
+
                 document.getElementById('user-name-email').innerHTML = `
                     <h2 style="margin-bottom:0px;" id='userData'>${userData.name}</h2>
                     <p style="margin-top:5px;" id='userEmail'>Email: ${userData.email}</p>`;
 
                 document.getElementById('auth-check-option').innerHTML = `
                     <button onclick="logoutUser()" class="edit-profile" style="margin: 1px 0;">Logout</button>`;
+
+            
+
             }
         }).catch(error => {
             console.error('Error fetching user data:', error);
             alert('Error fetching user data.');
         });
     } else {
+      profileImage.style.display = 'block';
+      document.getElementById('profile-initial').style.display = 'none';
+      
         document.getElementById('user-name-email').innerHTML = `
             <h2 id='login-magic' onclick='redirectToLogin()' style='margin-bottom: 0px'>Login to See, <span>Magic</span></h2>`;
         document.getElementById('auth-check-option').innerHTML = `
@@ -76,34 +90,36 @@ const feedback = {
     });
   }
   
-  // Handle form submission for feedback
-  document.getElementById('feedback-form').addEventListener('submit', function (event) {
-    event.preventDefault(); // Prevent form submission
   
-    // Check if the user is logged in
+  thankbtn = document.getElementById('thank-you');
+  thankmessage = document.getElementById('thank-you-main');
+
+  document.getElementById('feedback-form').addEventListener('submit', function (event) {
+    event.preventDefault();
     auth.onAuthStateChanged(user => {
       if (user) {
-        // Check if the user has already submitted emoji feedback
         db.collection('feedback').doc(user.email).get().then((doc) => {
           const feedbackData = doc.data();
   
           if (feedbackData && feedbackData.emojiSubmitted) {
-            // If emoji feedback has already been submitted, only allow text submission
             handleTextSubmission(user, feedbackData.textSubmissions);
           } else {
-            // If this is the first submission, allow both emoji and text feedback
             handleFirstSubmission(user);
           }
         }).catch(error => {
           console.error('Error fetching feedback data:', error);
         });
       } else {
-        alert('Please log in to submit feedback.');
+        thankmessage.innerHTML = ('Please log in to submit feedback. 🔑');
+        thankbtn.classList.remove('hidden');
+        setTimeout(() => {
+          thankbtn.classList.add('hidden');
+        }, 4000);
+        
       }
     });
   });
   
-  // Handle first-time submission of both emoji and text feedback
   function handleFirstSubmission(user) {
     const userFeedback = {
       UI: feedback.UI,
@@ -116,7 +132,6 @@ const feedback = {
       textSubmissions: 1,
     };
   
-    // Update the 'all' section with cumulative scores
     db.collection('feedback').doc('all').set({
       totalFeedbacks: firebase.firestore.FieldValue.increment(1),
       feedbackUI: firebase.firestore.FieldValue.increment(Number(feedback.UI)),
@@ -125,44 +140,53 @@ const feedback = {
       feedbackExperience: firebase.firestore.FieldValue.increment(Number(feedback.Experience)),
     }, { merge: true });
   
-    // Add feedback to the user's email document
     db.collection('feedback').doc(user.email).set(userFeedback).then(() => {
-      // Disable further emoji submissions and allow only text feedback
       disableEmojiFeedback();
-      alert('Feedback submitted successfully!');
+      thankmessage.innerHTML = ('Thank you for your feedback! 💖');
+      setTimeout(() => {
+        thankbtn.classList.remove('hidden');
+      }, 4000);
+      thankbtn.classList.add('hidden');
+
     }).catch((error) => {
       console.error('Error submitting feedback:', error);
     });
   }
   
-  // Handle subsequent text-only submissions
   function handleTextSubmission(user, currentTextSubmissions) {
     const comments = document.getElementById('feedback').value;
   
-    // Check if the user has reached the maximum of 5 text submissions
     if (currentTextSubmissions < 5) {
       const feedbackKey = `feedbackText${currentTextSubmissions + 1}`;
   
-      // Update the user's feedback with the new text submission
       db.collection('feedback').doc(user.email).update({
         [feedbackKey]: comments,
         textSubmissions: currentTextSubmissions + 1,
       }).then(() => {
-        alert('Text feedback submitted successfully!');
+      thankmessage.innerHTML = ('Text feedback submitted successfully! 👏');
+      thankbtn.classList.remove('hidden');
+      setTimeout(() => {
+        thankbtn.classList.add('hidden');
+      }, 4000);
+
       }).catch(error => {
         console.error('Error submitting text feedback:', error);
       });
     } else {
-      alert('You have reached the maximum of 5 text submissions.');
+      thankmessage.innerHTML = ('You have reached the maximum of 5 text submissions. 👀');
+      setTimeout(() => {
+        thankbtn.classList.remove('hidden');
+      }, 4000);
+      thankbtn.classList.add('hidden');
+
     }
   }
   
-  // Disable emoji feedback on page load if the user has already submitted
   auth.onAuthStateChanged(user => {
     if (user) {
       db.collection('feedback').doc(user.email).get().then((doc) => {
         if (doc.exists && doc.data().emojiSubmitted) {
-          disableEmojiFeedback();  // Disable emoji feedback if already submitted
+          disableEmojiFeedback();
         }
       }).catch(error => {
         console.error('Error fetching feedback data:', error);
@@ -170,7 +194,6 @@ const feedback = {
     }
   });
   
-  // Initialize feedback collection for the first time if not present
   function initializeFeedbackCollection() {
     db.collection('feedback').doc('all').get().then((doc) => {
       if (!doc.exists) {
@@ -185,7 +208,6 @@ const feedback = {
     });
   }
   
-  // Call this function on page load to ensure feedback collection is initialized
   initializeFeedbackCollection();
   
 
