@@ -29,6 +29,8 @@ body {
   color: var(--text-color);
   margin: 0;
   font-family: 'Quicksand', sans-serif;
+  overflow: hidden;
+  overflow-y: scroll;
 }
 
 .header {
@@ -48,6 +50,7 @@ body {
 .logo-container {
   width: 100px;
   overflow: hidden; /* Hide the overflow */
+  cursor: pointer;
 }
 
 .logo {
@@ -64,6 +67,7 @@ body {
 }
 
 .nav-item {
+  cursor: pointer;
   text-decoration: none;
   font-size: 16px;
   color: var(--primary-color);
@@ -72,15 +76,11 @@ body {
   padding: 12px 0;
 }
 
-
-
-
-
 .theme-toggle {
   background: none;
   border: none;
-  cursor: pointer;
   width: 25px;
+  cursor: pointer;
 }
 
 /* Sun and moon animation */
@@ -132,7 +132,6 @@ body {
 .nav-item:hover {
   font-size: 17px;
   color: #fa6441;
-  cursor: pointer;
 }
 
 .menu-icon {
@@ -162,12 +161,9 @@ body {
 }
 
 .icon-link {
+  cursor: pointer;
   text-decoration: none;
   color: var(--primary-color);
-}
-
-.icon-link:hover{
-  cursor: pointer;
 }
 
 .icon-link i{
@@ -176,7 +172,6 @@ body {
 }
 
 .icon-link i:hover{
-  cursor: pointer;
   color: #fa6441;
 }
 
@@ -203,11 +198,28 @@ body {
 }
 
 .profile-header img {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
+  padding: 8px;
   border-radius: 50%;
-  border: 2px solid var(--buttons-bg);
+  border: 2px solid #007bff;
 }
+
+.profile-initial {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: #007bff; /* You can choose any color you like */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0;
+}
+
 
 .profile-header h2 {
   font-size: 20px;
@@ -222,6 +234,7 @@ body {
 }
 
 .buttons {
+  cursor: pointer;
   display: flex;
   justify-content: center;
   margin-bottom: 10px;
@@ -231,7 +244,6 @@ body {
   padding: 10px 20px;
   border: none;
   border-radius: 20px;
-  cursor: pointer;
   font-size: 14px;
   background-color: var(--buttons-bg);
   color: #ecf0f1;
@@ -265,7 +277,6 @@ body {
   padding: 15px;
   color: var(--primary-color);
   text-align: center;
-  cursor: pointer;
   transition: background-color 0.3s ease;
   border: 1px solid var(--header-border);
   border-radius: 10px;
@@ -331,12 +342,48 @@ body {
   border-radius: 30px;
   padding-top: 10px;
   margin-bottom: -10px;
+  object-fit: contain;
 }
 
 section{
   padding-top: 140px;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
 #whatsNew {
   background-color: var(--background-color);
   color: var(--text-color);
@@ -399,10 +446,37 @@ section{
 }
 
 .cta-buttons {
+  cursor: pointer;
   margin-top: 30px;
 }
 
+[data-theme="dark"] #whatsNew {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+[data-theme="dark"] #whatsNew h2, [data-theme="dark"] #whatsNew h3 {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .button {
+  color: var(--text-color);
+} */
+
+
+
+
+
+
+
+
+
+
+
+
+
 .button {
+  cursor: pointer;
   background-color: var(--buttons-bg);
   color: var(--text-color-dark);
   padding: 15px 25px;
@@ -420,19 +494,6 @@ section{
 
 .button:hover {
   opacity: 0.8;
-}
-
-[data-theme="dark"] #whatsNew {
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
-[data-theme="dark"] #whatsNew h2, [data-theme="dark"] #whatsNew h3 {
-  color: var(--primary-color);
-}
-
-[data-theme="dark"] .button {
-  color: var(--text-color);
 }
 
 .footer {
@@ -465,12 +526,14 @@ section{
 }
 
 .footer-section h3 {
+  cursor: pointer;
   color: var(--text-color);
   margin-bottom: 15px;
 }
 
 .footer-section p,
 .footer-section ul {
+  cursor: pointer;
   color: var(--text-color);
   font-size: 1rem;
   line-height: 1.8;
@@ -507,12 +570,11 @@ section{
 }
 
 .terms {
+  cursor: pointer;
   margin-top: 10px;
   color: var(--buttons-bg);
-  cursor: pointer;
 }
 
-/* Button group and social icons */
 .button-group {
   display: flex; 
   justify-content: flex-start; /* Align buttons in a row */
@@ -543,6 +605,7 @@ section{
 
 .footerLogo{
   width: 250px;
+  cursor: pointer;
 }
 
 .social-icons img {
@@ -552,17 +615,6 @@ section{
   background-color: var(--header-bg);
   border: var(--header-border) 1px solid;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 #ContactUs {
   background: var(--background-color);
@@ -656,7 +708,6 @@ section{
   border: none;
   padding: 15px 25px;
   font-size: 1.1rem;
-  cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
@@ -668,6 +719,7 @@ section{
 .map {
   margin-top: 30px;
   padding: 5px;
+  cursor: pointer;
 }
 
 .map iframe {
@@ -679,19 +731,6 @@ section{
     flex-direction: column;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #Feedback {
   padding: 100px 20px;
@@ -733,7 +772,6 @@ section{
 
 .emoji {
   font-size: 40px;
-  cursor: pointer;
   transition: transform 0.2s ease, filter 0.3s ease;
 }
 
@@ -772,13 +810,13 @@ section{
 }
 
 .btn-submit {
+  cursor: pointer;
   background-color: var(--buttons-bg);
   color: #ecf0f1;
   padding: 10px 20px;
   margin-top: 60px;
   border: none;
   border-radius: 25px;
-  cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
 }
@@ -787,42 +825,23 @@ section{
   background-color: var(--buttons-bg);
 }
 
-#thank-you-message {
+#thank-you {
+  transition: all .9s ease-in-out;
   color: var(--text-color);
 }
 
-#thank-you-message h3 {
+#thank-you h3 {
   font-size: 22px;
   margin-top: 60px;
 }
 
-#thank-you-message p {
+#thank-you p {
   font-size: 16px;
 }
-
-
-
-
-
-
-
-
 
 .hidden{
   display: none;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 @media (max-width: 850px) {
   .header {
@@ -920,8 +939,8 @@ section{
     margin-top: 30px;
   }
   .boxes .inner-box {
-      width: 100px;
-      height: 100px;
+    width: 100px;
+    height: 100px;
   }
   .boxes{
     padding: 20px;
@@ -933,9 +952,9 @@ section{
 
   .emoji {
     font-size: 30px;
-    cursor: pointer;
     transition: transform 0.2s ease;
   }
+
 }
 
 
