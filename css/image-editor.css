@@ -190,7 +190,7 @@ body{
     display: flex;
     flex-direction: column; /* To manage the internal content layout */
     overflow: hidden; /* Hide overflow of the outer box */
-    z-index: 102;
+    z-index: 2002;
     padding: 20px;
 }
 
