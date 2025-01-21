@@ -383,7 +383,7 @@ section{
 
 
 
-/* 
+
 #whatsNew {
   background-color: var(--background-color);
   color: var(--text-color);
@@ -461,7 +461,7 @@ section{
 
 [data-theme="dark"] .button {
   color: var(--text-color);
-} */
+} 
 
 
 
