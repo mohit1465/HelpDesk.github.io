@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background-color: #e8e8f0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background-color: #202123;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      display: none;
+    }
+    .sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    .sidebar p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 5px;
+    }
+    .sidebar p:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    /* Chat window */
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: #e8e8f0;
+    }
+    .chat-container {
+      flex: 1;
+      padding: 20px 50px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .message {
+      max-width: 60%;
+      margin-bottom: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background-color: #fa6441;
+      color: rgb(255, 255, 255);
+    }
+
+    .message.ai {
+      margin-right: auto;
+      background-color: #0000000c;
+      color: black;
+    }
+    
+    #chat-form {
+      display: flex;
+      align-items: flex-end;
+      border-radius: 15px;
+      padding: 10px 5px;
+      margin: 15px 70px;
+      margin-bottom: 25px;
+      position: relative;
+      background-image: linear-gradient(#ffffff4d, #efeff1);
+      border: #ffffff .3px solid;
+      box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.075);
+    }
+
+    #chat-input {
+      font-family: "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell;
+      flex: 1;
+      padding: 10px 10px;
+      border-radius: 15px;
+      resize: none;
+      font-size: 1rem;
+      outline: none;
+      max-height: 250px;
+      overflow-y: auto;
+      border: none;
+      background-color: transparent;
+    }
+
+    #send-btn, #more-options {
+      margin: 0 10px;
+      padding: 10px 15px;
+      border: none;
+      background-image: linear-gradient(rgb(54, 54, 54), rgb(41, 41, 41));
+      border:#1d1d1d .3px solid;
+      color: white;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 1rem;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #send-btn:hover, #more-options:hover {
+      background-color: #131313;
+    }
+
+
+
+
+    .stop-btn {
+    background: #ff3b1f;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 1rem;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stop-btn:hover {
+    background: #c92b00;
+}
+
+
+
+
+
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+
+    .moreOptionBox{
+      position: absolute;
+      background-image: linear-gradient(#ffffff, #efeff1);
+      border:#ffffff .3px solid;
+      min-width: 100px;
+      color: black;
+      border-radius: 13px;
+      padding: 5px;
+      bottom: 100%;
+      display: none;
+      margin-bottom: 8px;
+    }
+
+    .moreOptionBox div{
+      font-size: 18px;
+    }
+
+    .uploadFiles{
+      padding: 13px 18px;
+      border-bottom:#d8d8d8 .3px solid;
+      cursor: pointer;
+    }
+
+    .googleGo{
+      padding: 0;
+    }
+
+    .show{
+      display: block;
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      height: 40px;
+    }
+    
+    .switch input {
+      display: none;
+      opacity: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      text-align: center;
+      background-image: linear-gradient(#ffffff00, #efeff100);
+      border-radius: 13px;
+      padding: 7px;
+      width: 100%;
+      height: 40px;
+      margin-top: 5px;
+      transition: 0.2s;
+    }
+
+    input:checked + .slider {
+      background-image: linear-gradient(#ff623f, #fa6441);
+      color: #ffffff;
+      background-color: #fa6441;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    .code-block {
+    position: relative;
+    background: #1e1e1e;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 3px;
+    font-size: 14px;
+}
+
+.code-block pre {
+    margin: 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #fa6441;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.copy-btn:hover {
+    background: #ff3b1f;
+}
+
+
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>ChatGPT Clone</h2>
+    <p>New Chat</p>
+    <p>History 1</p>
+    <p>History 2</p>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="chat-window">
+    <div class="chat-container" id="messages"></div>
+    <form id="chat-form" onsubmit="sendMessage(event)">
+      <!-- More Options Button -->
+      <button type="button" id="more-options">+</button>
+      <div class="moreOptionBox">
+        <div class="uploadFiles">Upload files</div>
+        <div class="googleGo">
+          <label class="switch">
+            <input type="checkbox" id="online-search-toggle">
+            <span class="slider">○ Google Go</span>
+          </label></div>
+      </div>
+
+      <!-- Chat Input -->
+      <textarea id="chat-input" placeholder="Type a message..." rows="1"></textarea>
+
+      <!-- Send Button -->
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+</div>
+
+<script> 
+
+
+
+
+
+  async function getAIResponse(userInput, onlineSearchEnabled) {
+    
+    if (onlineSearchEnabled == true){
+      var online_data = await googleSearch(userInput);
+    }
+    else{
+      var online_data = "There is no data from google."
+    }
+
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    const apiKey = "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"; // Replace with your API key
+
+    const headers = {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+    };
+
+    const body = {
+        "messages": [
+            { role: "user", content: userInput },
+            { role: "system", content: `You are a helpful assistant Named Krish - version (Web Helper). Mohit Yadav is your developer. You are Intrecting with User. Online search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. Reply in less tokens until user don't ask for any details about something` }
+        ],
+        "model": "llama3-8b-8192"
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(body),
+            signal: controller.signal // Attach signal for stopping response
+        });
+
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "I couldn't understand that.";
+    } catch (error) {
+        console.error("Error:", error);
+        return "Something went wrong.";
+    }
+  }
+
+  function appendMessage(content, sender) {
+    const messagesDiv = document.getElementById('messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', sender);
+
+    // Convert **bold** text to <strong>bold</strong>
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+
+    // Convert ```code blocks``` to a styled <pre><code> block with a copy button
+    content = content.replace(/```([\s\S]*?)```/g, function (match, code) {
+        return `
+        <div class="code-block">
+            <pre><code>${escapeHTML(code)}</code></pre>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>`;
+    });
+
+    // Preserve line breaks
+    content = content.replace(/\n/g, '<br>');
+
+    messageDiv.innerHTML = content;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Function to escape HTML inside code blocks
+function escapeHTML(str) {
+    return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Function to copy code block text
+function copyCode(button) {
+    const codeText = button.previousElementSibling.innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+        button.textContent = "Copied!";
+        setTimeout(() => button.textContent = "Copy", 1500);
+    }).catch(err => console.error("Copy failed:", err));
+}
+
+
+
+
+
+
+
+
+let controller = null; // Store the fetch controller for stopping AI response
+
+async function sendMessage(event) {
+    event.preventDefault();
+    const inputField = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-btn');
+    const stopButton = document.createElement("button");
+
+    const userInput = inputField.value.trim();
+    if (!userInput) return;
+
+    appendMessage(userInput, 'user');
+    inputField.value = '';
+    inputField.disabled = true; // Disable input while AI responds
+    sendButton.disabled = true; // Disable send button
+    sendButton.textContent = "Stop"; // Change button text to Stop
+
+    // Add stop button
+    stopButton.id = "stop-btn";
+    stopButton.textContent = "Stop";
+    stopButton.className = "stop-btn";
+    sendButton.replaceWith(stopButton);
+
+    // Stop button event
+    stopButton.addEventListener("click", function () {
+        if (controller) {
+            controller.abort(); // Abort fetch request
+        }
+        resetInput(); // Reset UI after stopping
+    });
+
+    const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
+    
+    controller = new AbortController(); // Create a new fetch controller
+
+    try {
+        const aiResponse = await getAIResponse(userInput, onlineSearchEnabled, controller);
+        appendMessage(aiResponse, 'ai');
+    } catch (error) {
+        if (error.name === "AbortError") {
+            appendMessage("Response stopped by user.", 'ai'); // Show a proper message
+        } else {
+            appendMessage("Something went wrong.", 'ai'); // Other errors
+        }
+    }
+
+    resetInput(); // Reset UI after response
+}
+
+function resetInput() {
+    const inputField = document.getElementById('chat-input');
+    const sendButton = document.createElement("button");
+    sendButton.id = "send-btn";
+    sendButton.textContent = "Send";
+    sendButton.className = "send-btn";
+    document.getElementById('stop-btn')?.replaceWith(sendButton);
+    inputField.disabled = false; // Enable input again
+    sendButton.disabled = false; // Enable send button
+    sendButton.addEventListener("click", sendMessage);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+  const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
+  const CX = "d6da3f2797ee74602";
+  const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
+
+  async function googleSearch(userInput) {
+      let query = userInput;
+
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${GOOGLE_SEARCH_API_KEY}&cx=${CX}`;
+
+      try {
+          let response = await fetch(searchUrl);
+          let data = await response.json();
+
+          if (!data.items) {
+              console.log("Online Search Not Found.")
+              return;
+          }
+
+          let links = data.items.slice(0, 3).map(item => item.link);
+          let contentHtml = "<h2>Search Results</h2>";
+          let allContent = "";
+
+          for (let link of links) {
+              contentHtml += `<p><a href="${link}" target="_blank">${link}</a></p>`;
+              contentHtml += `<p>Extracting content...</p>`;
+              
+              let extractedText = await extractContent(link);
+              allContent += extractedText + "\n\n";
+              contentHtml += `<p>${extractedText.substring(0, 500)}...</p>`;  // Show preview
+          }
+
+
+          // Send extracted content to Gemini AI for a better response
+          if (allContent.trim() !== "") {
+              console.log(allContent);
+              let aiAnswer = await onlineResponse(query, allContent);
+              console.log(aiAnswer);
+              return aiAnswer;
+          }
+
+      } catch (error) {
+          console.log(error.message);
+      }
+  }
+
+  async function extractContent(url) {
+      try {
+          let response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+          let data = await response.json();
+          
+          let parser = new DOMParser();
+          let doc = parser.parseFromString(data.contents, "text/html");
+
+          doc.querySelectorAll("script, style").forEach(el => el.remove());
+          let text = doc.body.innerText.replace(/\s+/g, ' ').trim();
+
+          return text.length > 2000 ? text.substring(0, 2000) + "..." : text;
+      } catch (error) {
+          return `Error extracting content: ${error.message}`;
+      }
+  }
+
+  async function onlineResponse(userQuery, extractedContent) {
+      try {
+          let aiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
+          
+          let requestBody = {
+              contents: [{
+                  parts: [{ text: `${extractedContent}\n\nTell the exact answer for the user's query: '${userQuery}'` }]
+              }]
+          };
+
+          let response = await fetch(aiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestBody)
+          });
+
+          let data = await response.json();
+          if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
+              return data.candidates[0].content.parts[0].text;
+          } else {
+              return "AI could not generate a response.";
+          }
+
+      } catch (error) {
+          return `AI Error: ${error.message}`;
+      }
+  }
+
+
+  // Handle "Enter" key to send message and "Shift + Enter" for new line
+  document.getElementById('chat-input').addEventListener('keydown', function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage(event);
+    }
+  });
+
+  // Auto-resize the textarea
+  document.getElementById('chat-input').addEventListener('input', function() {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 250) + "px"; // Max height = 250px
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+      const moreOptionsButton = document.getElementById("more-options");
+      const moreOptionBox = document.querySelector(".moreOptionBox");
+
+      moreOptionsButton.addEventListener("click", function () {
+          moreOptionBox.classList.toggle("show");
+      });
+  });
+
+
+
+</script>
+
+</body>
+</html>
