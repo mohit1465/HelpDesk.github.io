@@ -57,7 +57,7 @@
     }
     .chat-container {
       flex: 1;
-      padding: 20px 50px;
+      padding: 20px 70px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -89,7 +89,7 @@
       align-items: flex-end;
       border-radius: 15px;
       padding: 10px 5px;
-      margin: 15px 70px;
+      margin: 15px 90px;
       margin-bottom: 25px;
       position: relative;
       background-image: linear-gradient(#ffffff4d, #efeff1);
@@ -266,6 +266,16 @@
 
 
 
+.copyBtnResponseBox{
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.copyBtnResponse{
+    font-size: 15px;
+}
+
   </style>
 </head>
 <body>
@@ -305,12 +315,98 @@
 
 <script> 
 
+let controller = null; // Store fetch controller for stopping AI response
 
+// Load previous chat history from localStorage
+function loadChatHistory() {
+    const messagesDiv = document.getElementById('messages');
+    const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
+    return chatHistory; // Return previous messages for AI context
+}
 
+// Save chat history to localStorage
+function saveMessageToHistory(content, sender) {
+    let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+    chatHistory.push({ content, sender });
+    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+}
 
-  async function getAIResponse(userInput, onlineSearchEnabled) {
+// Function to clear chat history (optional)
+function clearChatHistory() {
+    localStorage.removeItem("chatHistory");
+    document.getElementById('messages').innerHTML = ""; // Clear UI
+}
+
+// Send Message
+async function sendMessage(event) {
+    event.preventDefault();
+    const inputField = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-btn');
+    const stopButton = document.createElement("button");
+
+    const userInput = inputField.value.trim();
+    if (!userInput) return;
+
+    appendMessage(userInput, 'user');
+    saveMessageToHistory(userInput, 'user'); // Save user message
+    inputField.value = '';
+    inputField.disabled = true; // Disable input while AI responds
+    sendButton.disabled = true;
+    sendButton.textContent = "Stop";
+
+    // Add stop button
+    stopButton.id = "stop-btn";
+    stopButton.textContent = "Stop";
+    stopButton.className = "stop-btn";
+    sendButton.replaceWith(stopButton);
+
+    // Stop button event
+    stopButton.addEventListener("click", function () {
+        if (controller) {
+            controller.abort(); // Abort fetch request
+        }
+        resetInput(); // Reset UI after stopping
+    });
+
+    const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
+    controller = new AbortController(); // New controller for stopping
+
+    try {
+        const pastMessages = loadChatHistory(); // Get previous chat history
+        const aiResponse = await getAIResponse(userInput, onlineSearchEnabled, pastMessages, controller);
+        appendMessage(aiResponse, 'ai');
+        saveMessageToHistory(aiResponse, 'ai'); // Save AI response
+    } catch (error) {
+        if (error.name === "AbortError") {
+            appendMessage("Response stopped by user.", 'ai'); // Show proper message
+        } else {
+            appendMessage("Something went wrong.", 'ai');
+        }
+    }
+
+    resetInput(); // Reset UI after response
+}
+
+function resetInput() {
+    const inputField = document.getElementById('chat-input');
+    const sendButton = document.createElement("div");
+    sendButton.id = "send-btn";
+    sendButton.textContent = "Send";
+    sendButton.className = "send-btn";
+    document.getElementById('stop-btn')?.replaceWith(sendButton);
+    inputField.disabled = false;
+    sendButton.disabled = false;
+    sendButton.addEventListener("click", sendMessage);
+}
+
+async function getAIResponse(userInput, onlineSearchEnabled, pastMessages, controller) {
     
+    let messages = pastMessages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.content
+    }));
+
     if (onlineSearchEnabled == true){
       var online_data = await googleSearch(userInput);
     }
@@ -329,7 +425,7 @@
     const body = {
         "messages": [
             { role: "user", content: userInput },
-            { role: "system", content: `You are a helpful assistant Named Krish - version (Web Helper). Mohit Yadav is your developer. You are Intrecting with User. Online search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. Reply in less tokens until user don't ask for any details about something` }
+            { role: "system", content: `You are a helpful assistant Named Krish - version (Web Helper). Mohit Yadav is your developer. You are Intrecting with User. Online search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. Reply in less tokens until user don't ask for any details about something. This is the past conversation between you and the user:\n\n${JSON.stringify(messages, null, 2)}` }
         ],
         "model": "llama3-8b-8192"
     };
@@ -350,7 +446,22 @@
     }
   }
 
-  function appendMessage(content, sender) {
+// Load chat history when the page loads
+document.addEventListener("DOMContentLoaded", ()=>{
+    
+    const messagesDiv = document.getElementById('messages');
+    const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+    
+    chatHistory.forEach(msg => {
+        appendMessage(msg.content, msg.sender);
+    });
+
+    return chatHistory; // Return previous messages for AI context
+});
+
+
+
+function appendMessage(content, sender) {
     const messagesDiv = document.getElementById('messages');
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
@@ -371,9 +482,45 @@
     // Preserve line breaks
     content = content.replace(/\n/g, '<br>');
 
+    // Set inner HTML after processing content
     messageDiv.innerHTML = content;
     messagesDiv.appendChild(messageDiv);
+
+    // Add "Copy Response" button under AI responses (but outside the message box)
+    if (sender === "ai") {
+        const copyBtnDiv = document.createElement("div");
+        copyBtnDiv.classList.add("copyBtnResponseBox");
+        
+        const copyBtn = document.createElement("button");
+
+        copyBtn.textContent = "Copy";
+        copyBtn.classList.add("copyBtnResponse");
+        copyBtn.onclick = () => copyText(removeHtmlTags(content));
+
+        // Append copy button inside div
+        copyBtnDiv.appendChild(copyBtn);
+
+        // Add the copy button div after the messageDiv
+        messagesDiv.appendChild(copyBtnDiv);
+    }
+
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+
+
+// Function to copy text
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        console.log("Response copied to clipboard!");
+    }).catch(err => console.error("Failed to copy:", err));
+}
+
+// Function to remove HTML tags for clean text copying
+function removeHtmlTags(html) {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || "";
 }
 
 // Function to escape HTML inside code blocks
@@ -389,85 +536,6 @@ function copyCode(button) {
         setTimeout(() => button.textContent = "Copy", 1500);
     }).catch(err => console.error("Copy failed:", err));
 }
-
-
-
-
-
-
-
-
-let controller = null; // Store the fetch controller for stopping AI response
-
-async function sendMessage(event) {
-    event.preventDefault();
-    const inputField = document.getElementById('chat-input');
-    const sendButton = document.getElementById('send-btn');
-    const stopButton = document.createElement("button");
-
-    const userInput = inputField.value.trim();
-    if (!userInput) return;
-
-    appendMessage(userInput, 'user');
-    inputField.value = '';
-    inputField.disabled = true; // Disable input while AI responds
-    sendButton.disabled = true; // Disable send button
-    sendButton.textContent = "Stop"; // Change button text to Stop
-
-    // Add stop button
-    stopButton.id = "stop-btn";
-    stopButton.textContent = "Stop";
-    stopButton.className = "stop-btn";
-    sendButton.replaceWith(stopButton);
-
-    // Stop button event
-    stopButton.addEventListener("click", function () {
-        if (controller) {
-            controller.abort(); // Abort fetch request
-        }
-        resetInput(); // Reset UI after stopping
-    });
-
-    const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
-    
-    controller = new AbortController(); // Create a new fetch controller
-
-    try {
-        const aiResponse = await getAIResponse(userInput, onlineSearchEnabled, controller);
-        appendMessage(aiResponse, 'ai');
-    } catch (error) {
-        if (error.name === "AbortError") {
-            appendMessage("Response stopped by user.", 'ai'); // Show a proper message
-        } else {
-            appendMessage("Something went wrong.", 'ai'); // Other errors
-        }
-    }
-
-    resetInput(); // Reset UI after response
-}
-
-function resetInput() {
-    const inputField = document.getElementById('chat-input');
-    const sendButton = document.createElement("button");
-    sendButton.id = "send-btn";
-    sendButton.textContent = "Send";
-    sendButton.className = "send-btn";
-    document.getElementById('stop-btn')?.replaceWith(sendButton);
-    inputField.disabled = false; // Enable input again
-    sendButton.disabled = false; // Enable send button
-    sendButton.addEventListener("click", sendMessage);
-}
-
-
-
-
-
-
-
-
-
-
-
 
   const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
   const CX = "d6da3f2797ee74602";
@@ -582,8 +650,6 @@ function resetInput() {
           moreOptionBox.classList.toggle("show");
       });
   });
-
-
 
 </script>
 
