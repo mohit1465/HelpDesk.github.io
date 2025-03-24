@@ -412,6 +412,7 @@ body {
 
 #share-btn {
     background: rgb(0, 162, 255);
+    color: #ffffff;
 }
 
 #share-btn:hover {
@@ -453,6 +454,7 @@ body {
 
 #delete-btn {
     background: red;
+    color: #ffffff;
 }
 
 #delete-btn:hover {
