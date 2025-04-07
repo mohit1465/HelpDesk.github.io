@@ -7,23 +7,9 @@
     <link rel="stylesheet" href="css/main-page.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
-
-
-
-
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-    <!-- AOS (Animate On Scroll) library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-    
-
-
-
-
-
-
 
 </head>
 <body>
@@ -33,31 +19,31 @@
             <img src="assets/PrimeX logo light.gif" alt="PrimeX Logo" class="logo" id="logo">
         </div>
         <nav class="nav">
-          <a href="#" class="nav-item" onclick="SectionMenu('Feedback', this)">Feedback</a>
-          <a id="ContactUsLink" class="nav-item" onclick="SectionMenu('ContactUs', this)">Contact Us</a>
-          <a id="whatsNewLink" class="nav-item active" onclick="SectionMenu('whatsNew', this)">What’s New</a>
+        <a href="#" class="nav-item" onclick="SectionMenu('Feedback', this)">Feedback</a>
+        <a id="ContactUsLink" class="nav-item" onclick="SectionMenu('ContactUs', this)">Contact Us</a>
+        <a id="whatsNewLink" class="nav-item active" onclick="SectionMenu('whatsNew', this)">What’s New</a>
         </nav>
         <div class="icons">
             <a class="icon-link">
-              <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-                  <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
-                      <mask class="moon" id="moon-mask">
-                          <rect x="0" y="0" width="100%" height="100%" fill="white"/>
-                          <circle cx="24" cy="10" r="6" fill="black"/>
-                      </mask>
-                      <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"/>
-                      <g class="sun-beams" stroke="currentColor">
-                          <line x1="12" y1="1" x2="12" y2="3"/>
-                          <line x1="12" y1="21" x2="12" y2="23"/>
-                          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                          <line x1="1" y1="12" x2="3" y2="12"/>
-                          <line x1="21" y1="12" x2="23" y2="12"/>
-                          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                      </g>
-                  </svg>
-              </button>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                    <mask class="moon" id="moon-mask">
+                        <rect x="0" y="0" width="100%" height="100%" fill="white"/>
+                        <circle cx="24" cy="10" r="6" fill="black"/>
+                    </mask>
+                    <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"/>
+                    <g class="sun-beams" stroke="currentColor">
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </g>
+                </svg>
+            </button>
             </a>
             <a class="icon-link" onclick="toggleUserMenu()"><i class="fa fa-user" id="fa-user"></i>
             </a>
@@ -82,9 +68,9 @@
                 <img src="assets/profile.png" alt="User Photo">
                 <h3 class="profile-initial" id="profile-initial"></h3>
                 <div id="user-name-email">
-                  <h2><span id="userData">Welcome</span></h2>
-                  <p id="userEmail"></p>
-              </div>
+                <h2><span id="userData">Welcome</span></h2>
+                <p id="userEmail"></p>
+            </div>
             </div>
     
             <div class="buttons" id="auth-check-option">
@@ -110,118 +96,118 @@
     </header>
 
     <section id="Feedback" class="section hidden">
-      <div class="container">
+    <div class="container">
         <h2>We Value Your Feedback!</h2>
         <p>Help us improve by sharing your thoughts on the following areas:</p>
     
         <!-- Feedback for UI -->
         <div class="feedback-section">
-          <h3>Do you like our User Interface (UI)?</h3>
-          <div class="emoji-rating" data-question="UI">
+        <h3>Do you like our User Interface (UI)?</h3>
+        <div class="emoji-rating" data-question="UI">
             <span class="emoji" data-value="1">😠</span>
             <span class="emoji" data-value="2">😞</span>
             <span class="emoji" data-value="3">😐</span>
             <span class="emoji" data-value="4">😊</span>
             <span class="emoji" data-value="5">😍</span>
-          </div>
+        </div>
         </div>
     
         <!-- Feedback for Apps -->
         <div class="feedback-section">
-          <h3>How satisfied are you with our different apps/tools?</h3>
-          <div class="emoji-rating" data-question="Apps">
+        <h3>How satisfied are you with our different apps/tools?</h3>
+        <div class="emoji-rating" data-question="Apps">
             <span class="emoji" data-value="1">😠</span>
             <span class="emoji" data-value="2">😞</span>
             <span class="emoji" data-value="3">😐</span>
             <span class="emoji" data-value="4">😊</span>
             <span class="emoji" data-value="5">😍</span>
-          </div>
+        </div>
         </div>
     
         <!-- Feedback for Response Time -->
         <div class="feedback-section">
-          <h3>Are you happy with our response time?</h3>
-          <div class="emoji-rating" data-question="ResponseTime">
+        <h3>Are you happy with our response time?</h3>
+        <div class="emoji-rating" data-question="ResponseTime">
             <span class="emoji" data-value="1">😠</span>
             <span class="emoji" data-value="2">😞</span>
             <span class="emoji" data-value="3">😐</span>
             <span class="emoji" data-value="4">😊</span>
             <span class="emoji" data-value="5">😍</span>
-          </div>
+        </div>
         </div>
     
         <!-- Feedback for Overall Experience -->
         <div class="feedback-section">
-          <h3>How was your overall experience using our platform?</h3>
-          <div class="emoji-rating" data-question="Experience">
+        <h3>How was your overall experience using our platform?</h3>
+        <div class="emoji-rating" data-question="Experience">
             <span class="emoji" data-value="1">😠</span>
             <span class="emoji" data-value="2">😞</span>
             <span class="emoji" data-value="3">😐</span>
             <span class="emoji" data-value="4">😊</span>
             <span class="emoji" data-value="5">😍</span>
-          </div>
+        </div>
         </div>
     
         <!-- Additional Comments -->
         <div class="feedback-section">
-          <h3>Any suggestions or comments?</h3>
-          <form id="feedback-form">
+        <h3>Any suggestions or comments?</h3>
+        <form id="feedback-form">
             <textarea id="feedback" name="feedback" placeholder="Your comments here..." required></textarea>
             <div class="submit-button">
-              <button type="submit" class="btn-submit">Submit Feedback</button>
+            <button type="submit" class="btn-submit">Submit Feedback</button>
             </div>
-          </form>
+        </form>
         </div>
     
         <!-- Thank You Message -->
         <div id="thank-you" class="hidden">
-          <h3 id="thank-you-main">Thank you for your feedback! 💖</h3>
-          <p>We appreciate your input and will work to improve your experience.</p>
+        <h3 id="thank-you-main">Thank you for your feedback! 💖</h3>
+        <p>We appreciate your input and will work to improve your experience.</p>
         </div>
-      </div>
+    </div>
     </section>
 
     <section id="ContactUs" class="section hidden">
-      <div class="contact-container">
+    <div class="contact-container">
         <div class="contact-details">
-          <h2>Contact Us</h2>
-          <p>We are here to help. Feel free to reach out to us via email or through our social media channels.</p>
+        <h2>Contact Us</h2>
+        <p>We are here to help. Feel free to reach out to us via email or through our social media channels.</p>
     
-          <div class="contact-info">
+        <div class="contact-info">
             <div>
-              <strong>Email:</strong> <a href="mailto:mohit8307521465@gmail.com">mohit8307521465@gmail.com</a>
+            <strong>Email:</strong> <a href="mailto:mohit8307521465@gmail.com">mohit8307521465@gmail.com</a>
             </div>
             <div>
-              <strong>Phone:</strong> +91 83075 21465
+            <strong>Phone:</strong> +91 83075 21465
             </div>
             <div>
-              <strong>Location:</strong> Kothal Khurd, Mahendergarh, Haryana, India
+            <strong>Location:</strong> Kothal Khurd, Mahendergarh, Haryana, India
             </div>
-          </div>
+        </div>
     
-          <div class="social-media">
+        <div class="social-media">
             <h3>Follow Us</h3>
             <a href="https://github.com/mohit1465" target="_blank">Github</a> |
             <a href="https://www.linkedin.com/in/mohit-designs/" target="_blank">LinkedIn</a>
-          </div>
+        </div>
         </div>
     
         <div class="contact-form-wrapper">
-          <form id="form">
+        <form id="form">
             <div class="field">
-              <label for="message">Your Message</label>
-              <textarea name="message" id="message" rows="5" placeholder="Write your message here..." required></textarea>
+            <label for="message">Your Message</label>
+            <textarea name="message" id="message" rows="5" placeholder="Write your message here..." required></textarea>
             </div>
     
             <input type="submit" id="button" value="Send Message">
-          </form>
+        </form>
     
-          <div class="map">
+        <div class="map">
             <h3>Our Location</h3>
             <div style="width: 100%"><iframe width="100%" height="500px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?width=100%25&amp;height=2000&amp;hl=en&amp;q=Girdhari%20Chauk,%20Kothal%20Khurd,%20Mahender%20garh,%20654G+C45,%20Magar%20Rd,%20Bundebaj%20Nagar,%20Kothal%20Khurd,%20Haryana%20123028+(PrimeX)&amp;t=p&amp;z=9&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"><a href="https://www.gps.ie/">gps devices</a></iframe></div>
-          </div>
         </div>
-      </div>
+        </div>
+    </div>
     </section>
 
 
@@ -234,351 +220,231 @@
 
 
     <section id="whatsNew" class="section">
-      <div class="container">
+    <div class="container">
         <div class="section-header" data-aos="fade-up">
-          <h2>What's New in <span class="highlight">Version 1.1</span></h2>
-          <p class="subtitle">We're thrilled to introduce PrimeX, the evolved version of DotOne, with powerful new features designed to boost your productivity and creativity!</p>
+        <h2>What's New in <span class="highlight">Version 1.1</span></h2>
+        <p class="subtitle">We're thrilled to introduce PrimeX, the evolved version of DotOne, with powerful new features designed to boost your productivity and creativity!</p>
         </div>
         
         <div class="features-container">
-          <div class="feature" data-aos="fade-up">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-edit"></i>
-              </div>
-              <h3>Text Editor</h3>
-              <p>Our upgraded text editor offers a minimalistic and distraction-free environment for crafting your documents with ease. Whether it's a quick note or a detailed report, PrimeX has you covered.</p>
-              <ul class="feature-list">
-                <li>Dark mode support</li>
-                <li>Multiple export formats</li>
-                <li>Auto-save functionality</li>
-                <li>Markdown and rich text support</li>
-              </ul>
-              <a href="#text-editor" class="feature-btn">Try Text Editor <i class="fas fa-arrow-right"></i></a>
+        
+            <div class="feature" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-text">
+                <div class="feature-icon">
+                    <i class="fas fa-crop-alt"></i>
+                </div>
+                <h3>Image Resizer</h3>
+                <p>Resize images without compromising on quality! Whether you're prepping images for social media, presentations, or projects, our resizer makes it effortless.</p>
+                <ul class="feature-list">
+                    <li>Batch processing</li>
+                    <li>Smart aspect ratio preservation</li>
+                    <li>Multiple output formats</li>
+                    <li>Advanced compression options</li>
+                </ul>
+                <a href="#image-resizer" class="feature-btn">Try Image Resizer <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-image">
+                <div class="image-overlay"></div>
+                <img src="assets/Image resizer banner.png" alt="Image Resizer Preview" />
+                </div>
             </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="Text Editor Preview" />
+
+            <div class="feature" data-aos="fade-up">
+                <div class="feature-text">
+                <div class="feature-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h3>Text Editor</h3>
+                <p>Our upgraded text editor offers a minimalistic and distraction-free environment for crafting your documents with ease. Whether it's a quick note or a detailed report, PrimeX has you covered.</p>
+                <ul class="feature-list">
+                    <li>Dark mode support</li>
+                    <li>Multiple export formats</li>
+                    <li>Auto-save functionality</li>
+                    <li>Markdown and rich text support</li>
+                </ul>
+                <a href="#text-editor" class="feature-btn">Try Text Editor <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-image">
+                <div class="image-overlay"></div>
+                <img src="assets/Text editor banner.png" alt="Text Editor Preview" />
+                </div>
             </div>
-          </div>
-          
-          <div class="feature" data-aos="fade-up" data-aos-delay="100">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-crop-alt"></i>
-              </div>
-              <h3>Image Resizer</h3>
-              <p>Resize images without compromising on quality! Whether you're prepping images for social media, presentations, or projects, our resizer makes it effortless.</p>
-              <ul class="feature-list">
-                <li>Batch processing</li>
-                <li>Smart aspect ratio preservation</li>
-                <li>Multiple output formats</li>
-                <li>Advanced compression options</li>
-              </ul>
-              <a href="#image-resizer" class="feature-btn">Try Image Resizer <i class="fas fa-arrow-right"></i></a>
+
+            <div class="feature" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-text">
+                    <div class="feature-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3>Image Editing Tools</h3>
+                    <p>Edit your images like a pro with our powerful browser-based editor. From basic tweaks to advanced filters—we got you covered.</p>
+                    <ul class="feature-list">
+                        <li>Crop, rotate, and resize</li>
+                        <li>Advanced filters & adjustments</li>
+                        <li>Text and sticker overlays</li>
+                        <li>Layer-based editing</li>
+                    </ul>
+                    <a href="#image-editor" class="feature-btn">Edit Images <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-image">
+                    <div class="image-overlay"></div>
+                    <img src="assets/Image editor banner.png" alt="Image Editor Preview" />
+                </div>
             </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="Image Resizer Preview" />
+
+            <div class="feature" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-text">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Krish AI Assistant</h3>
+                    <p>Meet Krish—your personal AI assistant for daily productivity. Ask, command, and create with smart, context-aware intelligence.</p>
+                    <ul class="feature-list">
+                        <li>Speech-to-text & text-to-speech</li>
+                        <li>Task automation & reminders</li>
+                        <li>Smart content generation</li>
+                        <li>Multi-language support</li>
+                    </ul>
+                    <a href="#krish-ai" class="feature-btn">Try Krish AI <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-image">
+                    <div class="image-overlay"></div>
+                    <img src="assets/Krish AI banner.png" alt="Krish AI Preview" />
+                </div>
             </div>
-          </div>
-          
-          <div class="feature" data-aos="fade-up" data-aos-delay="200">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <h3>Learner Platform</h3>
-              <p>PrimeX includes a dedicated section for students. Access educational resources, study tools, and more—all in one place. Perfect for learners aiming for success.</p>
-              <ul class="feature-list">
-                <li>Interactive flashcards</li>
-                <li>Progress tracking</li>
-                <li>Custom study schedules</li>
-                <li>Collaborative learning tools</li>
-              </ul>
-              <a href="#learner-platform" class="feature-btn">Start Learning <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="Learner Platform Preview" />
-            </div>
-          </div>
-          
-          <div class="feature" data-aos="fade-up" data-aos-delay="300">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-exchange-alt"></i>
-              </div>
-              <h3>File Conversion Tools</h3>
-              <p>Convert your images and documents to various formats with ease. Now you can create PDFs, resize images, and more—all in one tool!</p>
-              <ul class="feature-list">
-                <li>Batch conversion</li>
-                <li>OCR technology</li>
-                <li>Metadata preservation</li>
-                <li>Custom conversion profiles</li>
-              </ul>
-              <a href="#file-conversion" class="feature-btn">Convert Files <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="File Conversion Preview" />
-            </div>
-          </div>
-          
-          <!-- New feature -->
-          <div class="feature" data-aos="fade-up" data-aos-delay="400">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-palette"></i>
-              </div>
-              <h3>Color Picker & Palette Generator</h3>
-              <p>Our new color tools help designers and creatives find the perfect colors for their projects. Extract colors from images or generate harmonious palettes.</p>
-              <ul class="feature-list">
-                <li>Color extraction from images</li>
-                <li>Palette generation</li>
-                <li>Color harmony rules</li>
-                <li>Export to design software</li>
-              </ul>
-              <a href="#color-picker" class="feature-btn">Try Color Tools <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="Color Picker Preview" />
-            </div>
-          </div>
-          
-          <!-- New feature -->
-          <div class="feature" data-aos="fade-up" data-aos-delay="500">
-            <div class="feature-text">
-              <div class="feature-icon">
-                <i class="fas fa-tasks"></i>
-              </div>
-              <h3>Project Management</h3>
-              <p>Keep track of your tasks and projects with our intuitive project management tools. Set deadlines, assign tasks, and track progress all in one place.</p>
-              <ul class="feature-list">
-                <li>Kanban boards</li>
-                <li>Task dependencies</li>
-                <li>Calendar integration</li>
-                <li>Team collaboration features</li>
-              </ul>
-              <a href="#project-management" class="feature-btn">Manage Projects <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="feature-image">
-              <div class="image-overlay"></div>
-              <img src="https://placehold.co/600x400" alt="Project Management Preview" />
-            </div>
-          </div>
-        </div>
         
         <!-- Testimonials section -->
         <div class="testimonials" data-aos="fade-up">
-          <h3 class="section-title">What Users Are Saying</h3>
-          <div class="testimonials-container">
+        <h3 class="section-title">What Users Are Saying</h3>
+        <div class="testimonials-container">
             <div class="testimonial" data-aos="zoom-in" data-aos-delay="100">
-              <div class="testimonial-avatar">
+            <div class="testimonial-avatar">
                 <img src="https://placehold.co/100x100" alt="User Avatar" />
-              </div>
-              <div class="quote">"PrimeX has transformed how I manage my creative workflow. The text editor alone is worth the upgrade!"</div>
-              <div class="author">— Sarah J., Graphic Designer</div>
-              <div class="rating">
+            </div>
+            <div class="quote">"PrimeX has transformed how I manage my creative workflow. The text editor alone is worth the upgrade!"</div>
+            <div class="author">— Sarah J., Graphic Designer</div>
+            <div class="rating">
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
-              </div>
+            </div>
             </div>
             <div class="testimonial" data-aos="zoom-in" data-aos-delay="200">
-              <div class="testimonial-avatar">
+            <div class="testimonial-avatar">
                 <img src="https://placehold.co/100x100" alt="User Avatar" />
-              </div>
-              <div class="quote">"As a student, the learning platform has been invaluable for organizing my study materials and staying on track."</div>
-              <div class="author">— Marcus T., Graduate Student</div>
-              <div class="rating">
+            </div>
+            <div class="quote">"As a student, the learning platform has been invaluable for organizing my study materials and staying on track."</div>
+            <div class="author">— Marcus T., Graduate Student</div>
+            <div class="rating">
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star-half-alt"></i>
-              </div>
+            </div>
             </div>
             <div class="testimonial" data-aos="zoom-in" data-aos-delay="300">
-              <div class="testimonial-avatar">
+            <div class="testimonial-avatar">
                 <img src="https://placehold.co/100x100" alt="User Avatar" />
-              </div>
-              <div class="quote">"The batch image processing saved me hours of tedious work. I can't imagine going back to my old workflow."</div>
-              <div class="author">— Elena P., Content Creator</div>
-              <div class="rating">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-              </div>
             </div>
-          </div>
+            <div class="quote">"The batch image processing saved me hours of tedious work. I can't imagine going back to my old workflow."</div>
+            <div class="author">— Elena P., Content Creator</div>
+            <div class="rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+            </div>
+            </div>
+        </div>
         </div>
         
         <!-- Version roadmap -->
         <div class="roadmap" data-aos="fade-up">
-          <h3 class="section-title">What's Coming Next</h3>
-          <div class="timeline">
+        <h3 class="section-title">What's Coming Next</h3>
+        <div class="timeline">
             <div class="timeline-item" data-aos="fade-right" data-aos-delay="100">
-              <div class="version">v1.2</div>
-              <div class="features">
+            <div class="version">v1.2</div>
+            <div class="features">
                 <ul>
-                  <li>AI-powered writing assistant</li>
-                  <li>Advanced data visualization tools</li>
-                  <li>Cloud synchronization across devices</li>
+                <li>AI-powered writing assistant</li>
+                <li>Advanced data visualization tools</li>
+                <li>Cloud synchronization across devices</li>
                 </ul>
                 <a class="roadmap-btn">Coming Soon!</a>
-              </div>
+            </div>
             </div>
             <div class="timeline-item" data-aos="fade-right" data-aos-delay="200">
-              <div class="version">v1.3</div>
-              <div class="features">
+            <div class="version">v1.3</div>
+            <div class="features">
                 <ul>
-                  <li>Collaborative editing in real-time</li>
-                  <li>Extended template library</li>
-                  <li>Custom plugin support</li>
+                <li>Collaborative editing in real-time</li>
+                <li>Extended template library</li>
+                <li>Custom plugin support</li>
                 </ul>
                 <a class="roadmap-btn">Coming Soon!</a>
-              </div>
+            </div>
             </div>
             <div class="timeline-item" data-aos="fade-right" data-aos-delay="300">
-              <div class="version">v2.0</div>
-              <div class="features">
+            <div class="version">v2.0</div>
+            <div class="features">
                 <ul>
-                  <li>Complete UI redesign</li>
-                  <li>Mobile app release</li>
-                  <li>Advanced automation features</li>
+                <li>Complete UI redesign</li>
+                <li>Mobile app release</li>
+                <li>Advanced automation features</li>
                 </ul>
                 <a class="roadmap-btn">Coming Soon!</a>
-              </div>
             </div>
-          </div>
+            </div>
         </div>
-      
+        </div>
+    
         <div class="cta-section" data-aos="zoom-in">
-          <div class="cta-particles"></div>
-          <h3>Experience the New PrimeX!</h3>
-          <p>Explore the new tools and features we've built just for you. Get started now and transform the way you work.</p>
-          <div class="cta-buttons">
+        <div class="cta-particles"></div>
+        <h3>Experience the New PrimeX!</h3>
+        <p>Explore the new tools and features we've built just for you. Get started now and transform the way you work.</p>
+        <div class="cta-buttons">
             <a href="#" class="button primary">Explore Now</a>
             <a href="#" class="button secondary">Learn More</a>
             <a href="#" class="button tertiary">Watch Demo</a>
-          </div>
         </div>
-      </div>
+        </div>
+    </div>
     </section>
     
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--     
-    <section id="whatsNew" class="section" >
-        <div class="container">
-          <h2>What's New in <span style="color: #fa6441;">Version 1.1</span></h2>
-          <p>We’re thrilled to introduce PrimeX, the evolved version of DotOne, with powerful new features designed to boost your productivity and creativity!</p>
-          
-          <div class="feature">
-            <div class="feature-text">
-              <h3>Text Editor</h3>
-              <p>Our upgraded text editor offers a minimalistic and distraction-free environment for crafting your documents with ease. Whether it’s a quick note or a detailed report, PrimeX has you covered.</p>
-            </div>
-            <div class="feature-image">
-              <img src="assets/Desktop - 1.png" alt="Text Editor Preview" />
-            </div>
-          </div>
-      
-          <div class="feature">
-            <div class="feature-text">
-              <h3>Image Resizer</h3>
-              <p>Resize images without compromising on quality! Whether you’re prepping images for social media, presentations, or projects, our resizer makes it effortless.</p>
-            </div>
-            <div class="feature-image">
-              <img src="assets/Desktop - 1.png" alt="Text Editor Preview" />
-            </div>
-          </div>
-      
-          <div class="feature">
-            <div class="feature-text">
-              <h3>Learner Platform</h3>
-              <p>PrimeX includes a dedicated section for students. Access educational resources, study tools, and more—all in one place. Perfect for learners aiming for success.</p>
-            </div>
-            <div class="feature-image">
-              <img src="assets/Desktop - 1.png" alt="Text Editor Preview" />
-            </div>
-          </div>
-      
-          <div class="feature">
-            <div class="feature-text">
-              <h3>File Conversion Tools</h3>
-              <p>Convert your images and documents to various formats with ease. Now you can create PDFs, resize images, and more—all in one tool!</p>
-            </div>
-            <div class="feature-image">
-              <img src="assets/Desktop - 1.png" alt="Text Editor Preview" />
-            </div>
-          </div>
-      
-          <div class="cta-section">
-            <h3>Experience the New PrimeX!</h3>
-            <p>Explore the new tools and features we've built just for you. Get started now and transform the way you work.</p>
-            <div class="cta-buttons">
-              <a href="#" class="button">Explore Now</a>
-              <a href="#" class="button secondary">Learn More</a>
-            </div>
-          </div>
-        </div>
-      </section> -->
-
-
 
     <section class="UserDashboard">
 
     </section>
-      
-
+    
 
     <div class="outer-box">
-      <h3>More Apps</h3>
-      <div class="boxes">
-          <div class="inner-box" onclick="window.open('index.html', '_blank')">
-              <img src="assets/Resizeic.webp" alt="Image Resizer">
-              <p>Home</p>
-          </div>
-          <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
-              <img src="assets/Resizeic.webp" alt="Image Resizer">
-              <p>Image Resizer</p>
-          </div>
-          <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
-              <img src="assets/Text Editor logo light.png" alt="Text Editor">
-              <p>Text Editor</p>
-          </div>
-          <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
-              <img src="assets/Text Editor logo light.png" alt="Text Editor">
-              <p>Image Editor</p>
-          </div>
-          <div class="inner-box" onclick="window.open('Krish.html', '_blank')">
-              <img src="assets/Text Editor logo light.png" alt="Text Editor">
-              <p>Krish AI (Beta)</p>
-          </div>
-      </div>
-  </div>
+    <h3>More Apps</h3>
+    <div class="boxes">
+        <div class="inner-box" onclick="window.open('index.html', '_blank')">
+            <img src="assets/Home.png" alt="Image Resizer">
+            <p>Home</p>
+        </div>
+        <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
+            <img src="assets/Image Resizer.png" alt="Image Resizer">
+            <p>Image Resizer</p>
+        </div>
+        <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
+            <img src="assets/Text Editor.png" alt="Text Editor">
+            <p>Text Editor</p>
+        </div>
+        <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+            <img src="assets/Image Editor.png" alt="Text Editor">
+            <p>Image Editor</p>
+        </div>
+        <div class="inner-box" onclick="window.open('Krish.html', '_blank')">
+            <img src="assets/Krish AI.png" alt="Text Editor">
+            <p>Krish AI (Beta)</p>
+        </div>
+    </div>
+</div>
 
     <footer class="footer">
         <div class="container">
@@ -621,9 +487,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-      
+    
     <script type="text/javascript">
-      emailjs.init('dk4Y6WYcZ9aX-72OH')
+    emailjs.init('dk4Y6WYcZ9aX-72OH')
     </script>
 
     <script src="js/firebase-config.js"></script>
@@ -637,14 +503,14 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
-      // Initialize AOS (Animate On Scroll)
-      document.addEventListener('DOMContentLoaded', function() {
+    // Initialize AOS (Animate On Scroll)
+    document.addEventListener('DOMContentLoaded', function() {
         AOS.init({
-          duration: 800,
-          easing: 'ease-in-out',
-          mirror: false
+        duration: 800,
+        easing: 'ease-in-out',
+        mirror: false
         });
-      });
+    });
     </script>
 
 

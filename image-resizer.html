@@ -8,41 +8,101 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>Image Resizer and Compressor</h1>
-        <input type="file" id="imageInput" accept="image/*">
-        <br><br>
-        <div class="input-group">
-            <label for="widthInput">Width:</label>
-            <input type="number" id="widthInput" min="1">
-            <select id="widthUnit">
-                <option value="px">Pixels</option>
-                <option value="cm">Centimeters</option>
-                <option value="in">Inches</option>
-            </select>
+    <header class="header">
+        <div class="logo-container">
+            <img src="assets/PrimeX logo light.gif" alt="PrimeX Logo" class="logo" id="logo">
         </div>
-        <div class="input-group">
-            <label for="heightInput">Height:</label>
-            <input type="number" id="heightInput" min="1">
-            <select id="heightUnit">
-                <option value="px">Pixels</option>
-                <option value="cm">Centimeters</option>
-                <option value="in">Inches</option>
-            </select>
+        <div class="icons">
+            <a class="icon-link">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                    <mask class="moon" id="moon-mask">
+                        <rect x="0" y="0" width="100%" height="100%" fill="white"/>
+                        <circle cx="24" cy="10" r="6" fill="black"/>
+                    </mask>
+                    <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"/>
+                    <g class="sun-beams" stroke="currentColor">
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </g>
+                </svg>
+            </button>
+            </a>
+            <a class="icon-link" onclick="toggleBox(event)">
+                <div class="menu-icon">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </a>
         </div>
-        <br><br>
-        <label for="qualityInput">Quality (1-100):</label>
-        <input type="number" id="qualityInput" min="1" max="100" value="75">
-        <br><br>
-        <button id="resizeButton" class="button">Resize & Compress</button>
-        <br><br>
-        <img id="imagePreview" src="assets/resize-image.png" alt="Your Image">
-        <br><br>
-        <a id="downloadButton" class="button" style="display: none;" download="resized-image.jpg">Download Image</a>
-        <br><br>
-        <div id="imageInfo"></div>
-    </div>
-
+    
+    </header>
+    
+        <div class="container">
+            <h1>Image Resizer and Compressor</h1>
+            
+            <div class="file-input-container">
+                <label for="imageInput" class="file-input-label">
+                    <span>Select Image</span>
+                </label>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            
+            <div class="dimension-controls">
+                <div class="input-group">
+                    <label for="widthInput">Width:</label>
+                    <input type="number" id="widthInput" min="1">
+                    <select id="widthUnit">
+                        <option value="px">Pixels</option>
+                        <option value="cm">Centimeters</option>
+                        <option value="in">Inches</option>
+                    </select>
+                </div>
+                
+                <button id="aspectLockBtn" class="aspect-lock" title="Lock aspect ratio">🔓</button>
+                
+                <div class="input-group">
+                    <label for="heightInput">Height:</label>
+                    <input type="number" id="heightInput" min="1">
+                    <select id="heightUnit">
+                        <option value="px">Pixels</option>
+                        <option value="cm">Centimeters</option>
+                        <option value="in">Inches</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="slider-container">
+                <label for="qualityInput">Quality:</label>
+                <div class="slider-value" id="qualityValue">75%</div>
+                <input type="range" id="qualityInput" min="1" max="100" value="75" class="quality-slider">
+            </div>
+            
+            <div class="actions">
+                <button id="resizeButton" class="button">Resize & Compress</button>
+                <button id="resetButton" class="button button-secondary">Reset</button>
+            </div>
+            
+            <div class="preview-container">
+                <img id="imagePreview" src="assets/resize-image.png" alt="Your Image">
+                <a id="downloadButton" class="button" style="display: none;" download="resized-image.jpg">Download Image</a>
+            </div>
+            
+            <div id="imageInfo"></div>
+        </div>
     <script src="js/image-resizer.js"></script>
 </body>
 </html>
