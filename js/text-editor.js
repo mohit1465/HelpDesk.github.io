@@ -411,7 +411,7 @@ function changeFileNameAndExtension() {
     const selectedList = document.querySelector('#dirTabs .selected');
 
     if (activeTab && selectedList) {
-        const newFullName = prompt('Enter the new file name and extension (e.g., myFile.js):', "&{activeTab.id}");
+        const newFullName = prompt('Enter the new file name and extension (e.g., myFile.js):', activeTab.id);
         if (newFullName) {
             const nameParts = newFullName.split('.');
 
