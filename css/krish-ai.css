@@ -176,7 +176,9 @@ body {
     color: #fa6441;
 }
 
+
 .outer-box {
+    font-family: 'Quicksand', sans-serif;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -192,23 +194,24 @@ body {
     flex-direction: column; /* To manage the internal content layout */
     overflow: hidden; /* Hide overflow of the outer box */
     z-index: 102;
-}
-
-.outer-box h3{
+  }
+  
+  .outer-box h3{
+    margin-top: 20px;
     text-align: center;
     font-size: 25px;
-}
-
-.boxes {
+  }
+  
+  .boxes {
     flex-grow: 1; /* Take available space */
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding: 20px 150px;
     overflow-y: auto; /* Enable vertical scrolling */
-}
-
-.boxes .inner-box {
+  }
+  
+  .boxes .inner-box {
     width: 150px;
     height: 150px;
     border-radius: 10px;
@@ -219,21 +222,22 @@ body {
     align-items: center;
     font-weight: bold;
     text-align: center;
-}
-
-.boxes .inner-box:hover{
+  }
+  
+  .boxes .inner-box:hover{
     background-color: #7e7e7e1c;
-}
-
-.inner-box img{ 
+  }
+  
+  .inner-box img{ 
     width: 70%;
     height: 70%;
     border-radius: 30px;
     padding-top: 10px;
-    margin-bottom: -10px;
+    margin-bottom: 10px;
     object-fit: contain;
-}
+  }
 
+  
 #AI-logo{
     font-size: 30px;
     text-decoration: none;
