@@ -1,0 +1,282 @@
+:root {
+    --background-color: #f4f9f9;
+    --text-color: #000f1c;
+    --text-color-dark: #f4f9f9;
+    --buttons-bg: #fa6441;
+    --primary-color : #000f1c;
+    --header-border: #dddddd;
+    --header-bg: #ffffff26;
+    --footer-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --background-color: #000f1c;
+    --text-color: #ecf0f1;
+    --text-color-dark: #000f1c;
+    --buttons-bg: #fa6441;
+    --primary-color : #f4f9f9;
+    --header-border: #283745;
+    --header-bg: #000f1cd1;
+    --footer-bg: #000000;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 60px;
+    color: var(--primary-color);
+
+}
+
+.search-bar {
+    flex: 1;
+    margin: 0 20px;
+    display: flex;
+    align-items: center;
+}
+
+.search-bar input {
+    position: absolute;
+    right: 220px;
+    width: 400px;
+    padding: 10px 10px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+}
+
+.icons {
+    display: flex;
+    color: var(--primary-color);
+    gap: 30px;
+}
+
+.icon-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+.icon-link i{
+    font-size: 20px;
+    transition: all .3s ease-in-out;
+}
+
+.icon-link i:hover{
+    color: #fa6441;
+}
+
+.logo-container {
+    width: 100px;
+    overflow: hidden; /* Hide the overflow */
+    cursor: pointer;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+    object-fit: cover; /* Crop the excess empty space */
+    margin: 10% 0; /* Adjust the cropping as per the need */
+    top: 0;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    width: 25px;
+    cursor: pointer;
+}
+
+/* Sun and moon animation */
+.sun-and-moon > :is(.moon, .sun, .sun-beams) {
+    transform-origin: center;
+}
+
+.sun-and-moon > :is(.moon, .sun) {
+    fill: var(--text-color);
+}
+
+.sun-and-moon > .sun-beams {
+    stroke: var(--text-color);
+    stroke-width: 2px;
+}
+
+[data-theme="dark"] .sun-and-moon > .sun {
+    transform: scale(1.75);
+}
+
+[data-theme="dark"] .sun-and-moon > .sun-beams {
+    opacity: 0;
+}
+
+[data-theme="dark"] .sun-and-moon > .moon > circle {
+    transform: translateX(-7px);
+}
+
+.sun-and-moon .moon > circle {
+    transition: transform 0.25s ease-out;
+}
+
+/* Animation preferences */
+@media (prefers-reduced-motion: no-preference) {
+    .sun-and-moon > .sun {
+        transition: transform 0.5s ease-in-out;
+    }
+
+    .sun-and-moon > .sun-beams {
+        transition: opacity 0.3s ease-in-out;
+    }
+}
+
+.nav-item.active {
+    color: #fa6441;
+    border-bottom: 2px solid #fa6441;
+}
+
+.nav-item:hover {
+    font-size: 17px;
+    color: #fa6441;
+}
+
+.menu-icon {
+    display: grid;
+    grid-template-columns: repeat(3, 5px);
+    grid-template-rows: repeat(3, 5px);
+    gap: 3px;
+    transition: all .3s ease-in-out;
+}
+
+.dot {
+    width: 5px;
+    height: 5px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    transition: all .3s ease-in-out;
+}
+
+.menu-icon:hover .dot{
+    background-color: #fa6441;
+}
+
+.icons {
+    display: flex;
+    color: var(--primary-color);
+    gap: 30px;
+}
+
+.icon-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+.icon-link i{
+    font-size: 20px;
+    transition: all .3s ease-in-out;
+}
+
+.icon-link i:hover{
+    color: #fa6441;
+}
+
+
+
+/* Sidebar Styles */
+.container {
+    display: flex;
+    flex: 1;
+    background-color: var(--header-bg);
+}
+
+.sidebar {
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.sidebar div {
+    width: 40px;
+    height: 40px;
+    margin: 10px 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.sidebar .addbtn {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    bottom: 45px;
+    background-color: var(--text-color);
+    color: var(--text-color-dark);
+    font-size: 24px;
+    align-self: center;
+}
+
+.sidebar-icons img{
+    height: 25px;
+   filter: invert(100%)
+}
+
+
+
+
+
+
+
+
+
+/* Main Content Styles */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 30px 0 0 30px;
+    background-color: var(--footer-bg);
+    border: 1px solid var(--header-border);
+    overflow-y: auto;
+}
+
+.section-title {
+    font-weight: bold;
+    margin: 20px 0 10px;
+}
+
+.grid {
+    display: grid;
+    gap: 10px;
+}
+
+.grid-trending {
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 20px;
+}
+
+.grid-hitlist {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid div {
+    background-color: #ddd;
+    border-radius: 10px;
+    height: 100px;
+}
