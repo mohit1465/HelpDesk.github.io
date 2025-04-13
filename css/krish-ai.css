@@ -645,11 +645,21 @@ body {
     font-size: 18px;
 }
 
-.uploadFiles{
-    padding: 13px 18px;
-    border-bottom:#d8d8d8 .3px solid;
+.upload-container {
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 }
+
+.upload-container input[type="file"] {
+    display: none;
+}  
+
 
 .googleGo{
     padding: 0;

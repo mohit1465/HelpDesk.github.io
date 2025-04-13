@@ -64,7 +64,7 @@ themeToggleBtn.addEventListener('click', () => {
 
 // =================================================================================================================
 
-
+let aiDescriptionFinal = '';
 let controller = null;
 
 const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
@@ -212,8 +212,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const moreOptionsButton = document.getElementById("more-options");
     const moreOptionBox = document.querySelector(".moreOptionBox");
 
-    moreOptionsButton.addEventListener("click", function () {
+    moreOptionsButton.addEventListener("click", function (e) {
+        e.stopPropagation(); // So it doesn't immediately close when clicked
         moreOptionBox.classList.toggle("show");
+    });
+
+    // Click outside to close
+    document.addEventListener("click", function (event) {
+        if (!moreOptionBox.contains(event.target) && !moreOptionsButton.contains(event.target)) {
+            moreOptionBox.classList.remove("show");
+        }
     });
 });
 
@@ -332,7 +340,7 @@ async function getAIResponse(userInput, onlineSearchEnabled, pastMessages, contr
     const body = {
         "messages": [
             { role: "user", content: userInput },
-            { role: "system", content: `You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer. You are Intrecting with User. Online Google search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. Reply in less tokens until user don't ask for any details about something. This is the past conversation between you and the user:\n\n${JSON.stringify(messages, null, 2)}` }
+            { role: "system", content: `You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer. You are Intrecting with User. Online Google search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. ${aiDescriptionFinal}. Reply in less tokens until user don't ask for any details about something. This is the past conversation between you and the user:\n\n${JSON.stringify(messages, null, 2)}` }
         ],
         "model": "llama3-8b-8192"
     };
@@ -360,6 +368,7 @@ async function getAIResponse(userInput, onlineSearchEnabled, pastMessages, contr
 // Send Message
 async function sendMessage(event) {
     event.preventDefault();
+    const fileInput = document.getElementById('imageInput');
     const inputField = document.getElementById('chat-input');
     const sendButton = document.getElementById('send-btn');
     const stopButton = document.createElement("button");
@@ -380,9 +389,6 @@ async function sendMessage(event) {
     stopButton.className = "stop-btn";
     sendButton.replaceWith(stopButton);
 
-    inputField.style.height = 'auto'; 
-
-
     // Stop button event
     stopButton.addEventListener("click", function () {
         if (controller) {
@@ -390,6 +396,14 @@ async function sendMessage(event) {
         }
         resetInput(); // Reset UI after stopping
     });
+
+    inputField.style.height = 'auto'; 
+    
+    if (fileInput.files[0]) {
+        await analyzeImage();
+    }
+
+    fileInput.value = '';
 
     const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
     controller = new AbortController(); // New controller for stopping
@@ -477,7 +491,6 @@ function appendMessage(content, sender) {
 }
 
 
-
 // Function to remove HTML tags for clean text copying
 function removeHtmlTags(html) {
     const tempDiv = document.createElement("div");
@@ -521,4 +534,94 @@ function copyCode(button) {
 
     }).catch(err => console.error("Copy failed:", err));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Analyze Image with Gemini
+    async function analyzeImage() {
+      const fileInput = document.getElementById('imageInput');
+      const prompt = "Explain what's in this image.";
+    
+      const file = fileInput.files[0];
+      const mimeType = file.type;
+    
+      const reader = new FileReader();
+    
+      return new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          const base64Image = reader.result.split(',')[1];
+    
+          const payload = {
+            contents: [{
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: base64Image
+                  }
+                }
+              ]
+            }]
+          };
+    
+          const API_KEY = "AIzaSyAmV6FOsxZT7T5IDVLLcwqWLPosDlmMQ7w";
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    
+          try {
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+    
+            const data = await res.json();
+            aiDescription = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            aiDescriptionFinal = 'User Gave image also in which : '+ aiDescription;
+            resolve(true);
+          } catch (err) {
+            console.error(err);
+            reject(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
