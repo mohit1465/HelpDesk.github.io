@@ -69,7 +69,7 @@ let controller = null;
 
 const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
 const CX = "d6da3f2797ee74602";
-const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
+// const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
 
 
 // Load previous chat history from localStorage for the current conversation
@@ -585,8 +585,7 @@ function copyCode(button) {
             }]
           };
     
-          const API_KEY = "AIzaSyAmV6FOsxZT7T5IDVLLcwqWLPosDlmMQ7w";
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
     
           try {
             const res = await fetch(endpoint, {
