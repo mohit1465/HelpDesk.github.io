@@ -1,3 +1,7 @@
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+const document = dom.window.document;
+
 const body = document.body;
 const themeToggleBtn = document.getElementById('theme-toggle');
 const logoimg = document.getElementById('logo');
