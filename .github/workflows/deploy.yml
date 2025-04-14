@@ -18,14 +18,13 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Navigate to js folder and install dependencies
+      - name: Install dependencies
         run: |
-          cd js  # Change directory to the 'js' folder where package.json is located
-          npm install  # Install dependencies from package.json inside 'js' folder
+          npm install  # Install all dependencies, including jsdom
 
       - name: Run krish-ai.js
         run: |
           echo "Running krish-ai.js script"
-          node js/krish-ai.js  # Ensure to run it with the correct path
+          node js/krish-ai.js  # Run your script
         env:
           GENAI_API_KEY: ${{ secrets.GENAI_API_KEY }}
