@@ -535,91 +535,134 @@ function copyCode(button) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Analyze Image with Gemini
-    async function analyzeImage() {
-      const fileInput = document.getElementById('imageInput');
-      const prompt = "Explain what's in this image.";
-    
-      const file = fileInput.files[0];
-      const mimeType = file.type;
-    
-      const reader = new FileReader();
-    
-      return new Promise((resolve, reject) => {
-        reader.onload = async () => {
-          const base64Image = reader.result.split(',')[1];
-    
-          const payload = {
-            contents: [{
-              parts: [
-                { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: mimeType,
-                    data: base64Image
-                  }
-                }
-              ]
-            }]
-          };
-    
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
-    
-          try {
-            const res = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+async function analyzeImage() {
+    const fileInput = document.getElementById('imageInput');
+    const prompt = "Explain what's in this image.";
+    const files = fileInput.files;
+    let imageDescriptions = [];
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+
+        const mimeType = file.type;
+        const reader = new FileReader();
+
+        try {
+            const description = await new Promise((resolve, reject) => {
+                reader.onload = async () => {
+                    const base64Image = reader.result.split(',')[1];
+
+                    const payload = {
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inline_data: {
+                                        mime_type: mimeType,
+                                        data: base64Image
+                                    }
+                                }
+                            ]
+                        }]
+                    };
+
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
+
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await res.json();
+                        const aiDescription = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                        resolve({
+                            fileName: file.name,
+                            description: aiDescription
+                        });
+                    } catch (err) {
+                        console.error(err);
+                        reject(err);
+                    }
+                };
+                reader.readAsDataURL(file);
             });
-    
-            const data = await res.json();
-            aiDescription = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-            aiDescriptionFinal = 'User Gave image also in which : '+ aiDescription;
-            resolve(true);
-          } catch (err) {
-            console.error(err);
-            reject(false);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+            imageDescriptions.push(description);
+        } catch (error) {
+            console.error(`Error analyzing image ${file.name}:`, error);
+        }
     }
+
+    // Format the final description
+    if (imageDescriptions.length > 0) {
+        let formattedDescription = "User Gave image also in which :\n";
+        imageDescriptions.forEach((desc, index) => {
+            formattedDescription += `${index + 1}. ${desc.fileName} : ${desc.description}\n`;
+        });
+        aiDescriptionFinal = formattedDescription;
+    }
+
+    return imageDescriptions.length > 0;
+}
+
+
+// Image upload handling
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('imageInput');
+    const imageGrid = document.querySelector('.imageGrid');
+    const chatForm = document.getElementById('chat-form');
+
+    imageInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'uploadedImg';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = file.name;
+                    
+                    const closeBtn = document.createElement('div');
+                    closeBtn.className = 'imgcrossBtn';
+                    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    closeBtn.onclick = function() {
+                        imageContainer.remove();
+                        // Adjust form margin if no images left
+                        if (imageGrid.children.length === 0) {
+                            chatForm.style.margin = '15px 90px';
+                        }
+                    };
+                    
+                    const fileName = document.createElement('div');
+                    fileName.className = 'imageFileName';
+                    fileName.textContent = file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name;
+                    
+                    imageContainer.appendChild(closeBtn);
+                    imageContainer.appendChild(img);
+                    imageContainer.appendChild(fileName);
+                    imageGrid.appendChild(imageContainer);
+
+                    // Adjust form margin when images are added
+                    chatForm.style.margin = '90px 90px';
+                    chatForm.style.marginBottom = '25px';
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Reset the input to allow uploading the same file again
+        imageInput.value = '';
+    });
+});
+
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

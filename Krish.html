@@ -93,12 +93,21 @@
 <div class="chat-window">
     <div class="chat-container" id="messages"></div>
     <form id="chat-form" onsubmit="sendMessage(event)">
+
+    <div class="extraImage">
+        <div class="uploadedImages">
+            <div class="imageGrid">
+                <!-- Images will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
     <!-- More Options Button -->
     <button type="button" id="more-options">+</button>
     <div class="moreOptionBox">
         <div class="upload-container">
-          <label class="btn btn-primary" for="imageInput">Upload Image</label>
-          <input type="file" id="imageInput" accept="image/*" />
+          <label class="btn btn-primary" for="imageInput">Upload Images</label>
+          <input type="file" id="imageInput" accept="image/*" multiple />
         </div>
         
         <div class="googleGo">
