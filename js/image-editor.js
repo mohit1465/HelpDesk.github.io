@@ -14,10 +14,8 @@ window.onload = () => {
 function setTheme(theme) {
     if (theme === 'dark') {
         body.setAttribute('data-theme', 'dark');
-        logoimg.src = 'assets/Text Editor logo dark.png';
     } else {
         body.removeAttribute('data-theme');
-        logoimg.src = 'assets/Text Editor logo light.png';
     }
 }
 
@@ -30,12 +28,10 @@ themeToggleBtn.addEventListener('click', () => {
 
     if (currentTheme === 'dark') {
         body.removeAttribute('data-theme');
-        logoimg.src = 'assets/Text Editor logo light.png';
         localStorage.setItem('currentTheme', 'light'); // Save theme
     } else {
         // Switch to dark theme
         body.setAttribute('data-theme', 'dark');
-        logoimg.src = 'assets/Text Editor logo dark.png';
         localStorage.setItem('currentTheme', 'dark'); // Save theme
     }
 });

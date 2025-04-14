@@ -25,21 +25,39 @@ const body = document.body;
 
 
 
+        window.onload = () => {
+            if (isMobileDevice()) {
+                document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
+            }
+            const savedTheme = localStorage.getItem('currentTheme') || 'light';
+            setTheme(savedTheme);
+        };
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme');
+            }
+        }
+        
+        function isMobileDevice() {
+            return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+        }
+        
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = body.getAttribute('data-theme');
-
+        
             if (currentTheme === 'dark') {
                 body.removeAttribute('data-theme');
-                editor.setOption('theme', 'light'); // Update CodeMirror theme
                 localStorage.setItem('currentTheme', 'light'); // Save theme
             } else {
                 // Switch to dark theme
                 body.setAttribute('data-theme', 'dark');
-                editor.setOption('theme', 'dracula'); // Update CodeMirror theme
                 localStorage.setItem('currentTheme', 'dark'); // Save theme
             }
         });
-
+        
 
 
         function toggleBox(event) {

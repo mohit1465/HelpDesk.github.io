@@ -49,7 +49,7 @@ body {
 
 .logo-container {
     height: 7vh;
-    width: 120px;
+    width: 55px;
     overflow: hidden; /* Hide the overflow */
     cursor: pointer;
 }

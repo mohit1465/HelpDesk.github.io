@@ -51,33 +51,32 @@ window.onload = () => {
     }
     const savedTheme = localStorage.getItem('currentTheme') || 'dark';
     setTheme(savedTheme);
-    console.log(savedTheme);
 };
 
-function setTheme(savedTheme) {
-    if (savedTheme === 'dark') {
+function setTheme(theme) {
+    if (theme === 'dark') {
         body.setAttribute('data-theme', 'dark');
-        logoimg.src = 'assets/PrimeX logo dark.gif';
     } else {
         body.removeAttribute('data-theme');
-        logoimg.src = 'assets/PrimeX logo light.gif';
     }
 }
 
-themeToggleBtn.addEventListener('click', () => {
-    const currentThemeNow = body.getAttribute('data-theme');
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+}
 
-    if (currentThemeNow === 'dark') {
+themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+
+    if (currentTheme === 'dark') {
         body.removeAttribute('data-theme');
-        logoimg.src = 'assets/PrimeX logo light.gif';
-        localStorage.setItem('currentTheme', 'light');
+        localStorage.setItem('currentTheme', 'light'); // Save theme
     } else {
+        // Switch to dark theme
         body.setAttribute('data-theme', 'dark');
-        logoimg.src = 'assets/PrimeX logo dark.gif';
-        localStorage.setItem('currentTheme', 'dark');
+        localStorage.setItem('currentTheme', 'dark'); // Save theme
     }
 });
-
 
 // =================================================================================================================
 
