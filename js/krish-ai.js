@@ -1,7 +1,10 @@
+// At the very top of your krish-ai.js file, ensure this import is only done once
 const { JSDOM } = require('jsdom');
+
+// If you need to simulate a browser-like environment, create a virtual window
 const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
-const document = dom.window.document;
-const { JSDOM } = require('jsdom');
+const window = dom.window;
+const document = window.document;
 
 // Now you can use window and document like you would in a browser
 window.addEventListener('click', function(event) {
