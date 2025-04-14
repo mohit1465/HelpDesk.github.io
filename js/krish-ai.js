@@ -86,7 +86,7 @@ let controller = null;
 
 const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
 const CX = "d6da3f2797ee74602";
-// const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
+const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
 
 
 // Load previous chat history from localStorage for the current conversation
