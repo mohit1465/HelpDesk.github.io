@@ -1,6 +1,16 @@
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
 const document = dom.window.document;
+const { JSDOM } = require('jsdom');
+
+// Now you can use window and document like you would in a browser
+window.addEventListener('click', function(event) {
+  console.log("Window clicked!");
+});
+
+// You can simulate events manually if needed
+window.dispatchEvent(new window.Event('click'));
+
 
 const body = document.body;
 const themeToggleBtn = document.getElementById('theme-toggle');
