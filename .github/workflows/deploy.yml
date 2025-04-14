@@ -1,0 +1,29 @@
+name: Deploy to Node.js Server  # You can change the name to anything descriptive
+
+on:
+  push:
+    branches:
+      - main  # This means the workflow runs when you push to the 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # This is the operating system where the job will run
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # This step checks out your code so it's available to run
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3  # This step sets up Node.js (you can specify your version)
+        with:
+          node-version: '16'  # Replace with your required Node.js version
+
+      - name: Install dependencies
+        run: npm install  # This installs any dependencies listed in package.json
+
+      - name: Run JavaScript file
+        run: |
+          echo "Running the JS script"
+          node js/krish-ai.js  # Replace with the path to your JS file
+        env:
+          GENAI_API_KEY: ${{ secrets.GENAI_API_KEY }}  # This injects your secret into the environment
