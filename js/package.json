@@ -1,14 +1,14 @@
 {
-  "name": "helpdesk-ai",  // Replace with your project name
+  "name": "helpdesk-ai", 
   "version": "1.0.0",
   "description": "AI-based helpdesk project",
-  "main": "js/krish-ai.js",  // Entry point for your app
+  "main": "js/krish-ai.js", 
   "scripts": {
-    "start": "node js/krish-ai.js"  // You can run this script using 'npm start'
+    "start": "node js/krish-ai.js" 
   },
   "dependencies": {
-    "axios": "^0.21.1",  // Add any packages you are using, such as axios
-    "dotenv": "^10.0.0"   // If you're using .env files to manage environment variables
+    "axios": "^0.21.1", 
+    "dotenv": "^10.0.0"  
   },
   "devDependencies": {},
   "author": "",
