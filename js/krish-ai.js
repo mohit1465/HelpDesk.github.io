@@ -371,6 +371,7 @@ async function sendMessage(event) {
     const inputField = document.getElementById('chat-input');
     const sendButton = document.getElementById('send-btn');
     const stopButton = document.createElement("button");
+    const uploadedImages = document.querySelector('.uploadedImages');
 
     const userInput = inputField.value.trim();
     if (!userInput) return;
@@ -400,9 +401,16 @@ async function sendMessage(event) {
     
     if (fileInput.files[0]) {
         await analyzeImage();
+        fileInput.value = '';
+        
+        // Clear all uploaded images
+        if (uploadedImages) {
+            const imageGrid = uploadedImages.querySelector('.imageGrid');
+            if (imageGrid) {
+                imageGrid.innerHTML = '';
+            }
+        }
     }
-
-    fileInput.value = '';
 
     const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
     controller = new AbortController(); // New controller for stopping
@@ -625,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 reader.onload = function(e) {
                     const imageContainer = document.createElement('div');
+                    imageContainer.id = 'uploadedImg';
                     imageContainer.className = 'uploadedImg';
                     
                     const img = document.createElement('img');
@@ -662,6 +671,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset the input to allow uploading the same file again
         imageInput.value = '';
+        const elements = document.querySelectorAll("uploadedImg");
+        elements.forEach((element) => {
+          element.remove();
+        });
+        
     });
 });
 
