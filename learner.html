@@ -27,11 +27,7 @@
                     <li data-section="resources"><i class="fas fa-book-open"></i>Resources</li>
                     <li data-section="messages"><i class="fas fa-message"></i>Messages</li>
                     <li data-section="settings"><i class="fas fa-gear"></i>Settings</li>
-                    <li class="user-profile">
-                        <img src="https://via.placeholder.com/32" alt="Profile">
-                        <span>John Doe</span>
-                        <span class="user-role">Student</span>
-                    </li>
+                    <li data-section="user-menu" class="user-profile"><i class="fas fa-user"></i><h3>Profile</h3></li>
                 </ul>
             </nav>
             <div class="menu-toggle">
@@ -55,8 +51,8 @@
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="section-content active">
                     <div class="welcome-banner">
-                        <h1>Welcome back, John!</h1>
-                        <p class="date">Thursday, May 3</p>
+                        <h1 id="dashboardName">Welcome back</h1>
+                        <p class="date"></p>
                     </div>
 
                     <div class="quick-stats">
@@ -223,14 +219,28 @@
                         </div>
                     </div>
                 </section>
+
+                <section id="user-menu" class="section-content">
+                    <div id="profileInfo">
+                    </div>
+                </section>
             </div>
         </main>
     </div>
     
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-  
-  <script src="js/learner_config.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+    <!-- PDF Make scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    
+    <!-- Application scripts -->
+    <script src="js/firebase-config.js"></script>
+
+    <script src="js/learner_config.js"></script>
     <script src="js/learner.js"></script>
     </body>
 </html>

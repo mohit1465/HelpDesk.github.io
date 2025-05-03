@@ -1,3 +1,66 @@
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        db.collection('users').doc(user.uid).get().then(doc => {
+            if (doc.exists) {
+                const userData = doc.data();
+                document.getElementById('profileInfo').innerHTML = `
+                    <h2>${userData.name}</h2>
+                    <p>Email: ${userData.email}</p>
+                    <button onclick="logoutUser()">Logout</button>`;
+
+                document.getElementById('dashboardName').innerHTML = `
+                    Hey, Welcome ${userData.name}`;
+
+            } else {
+                document.getElementById('profileInfo').innerHTML = `
+                    <h2>No user data found</h2>
+                    <p>Please complete your profile.</p>
+                    <button onclick="logoutUser()">Logout</button>`;
+            }
+        }).catch(error => {
+            console.error('Error fetching user data:', error);
+            alert('Error fetching user data.');
+        });
+    } else {
+        document.getElementById('profileInfo').innerHTML = `
+            <h2>No user data found</h2>
+            <p>Please login</p>
+            <a onclick="redirectToLogin()">Login | Signup</a>`;
+    }
+});
+
+function logoutUser() {
+    auth.signOut().then(() => {
+    alert("Logged out successfully!");
+    });
+}
+
+function redirectToLogin() {
+    const pageName = window.location.pathname.split("/").pop();
+    localStorage.setItem('lastPage', pageName);
+    const confirmation = confirm("Before you Leave must save your files locally.")
+    if (confirmation) {
+        window.location.href = 'login-signup.html';
+    }
+}
+
+
+function updateDate() {
+    const currentDate = new Date();
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const dayOfWeek = daysOfWeek[currentDate.getDay()];
+    const month = months[currentDate.getMonth()];
+    const day = currentDate.getDate();
+    
+    const formattedDate = `${dayOfWeek}, ${month} ${day}`;
+    document.querySelector('.date').textContent = formattedDate;
+  }
+
+updateDate();
+
 document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.querySelector('.menu-toggle');
     if (menuToggle) {
