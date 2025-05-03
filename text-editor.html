@@ -112,8 +112,27 @@
             </div>
         </div>
         <div class="box editorBox" id="middleDiv">
-            <button class="btn btn-left" onclick="toggleDiv('leftDiv')"><i class="fa fa-folder"></i></button>
-            <button class="btn btn-right" onclick="toggleDiv('rightDiv')"><i class='fas fa-running'></i></button>
+            <div class="btn-container">
+                <button class="mobile-file-btn" onclick="toggleMobileMenu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <button class="btn btn-left" onclick="toggleDiv('leftDiv')">
+                    <i class="fa fa-folder"></i>
+                </button>
+                <button class="btn btn-right" onclick="toggleDiv('rightDiv')">
+                    <i class='fas fa-running'></i>
+                </button>
+            </div>
+            <div class="mobile-menu-popup" id="mobileMenu">
+                <a href="#" id="new-file-mobile">New</a>
+                <a href="#" id="open-file-mobile">Open</a>
+                <a href="#" id="save-file-mobile">Save</a>
+                <a href="#" id="save-as-file-mobile">Save As</a>
+                <a href="#" id="change-name-mobile">Change Name</a>
+                <hr>
+                <a href="#" id="save-online-mobile">Save Online</a>
+                <a href="#" id="load-file-mobile">Load Online</a>
+            </div>
             <div class="editor-container">
                 <div class="tabs" id="tabs"></div>
                 <textarea id="editor"></textarea>

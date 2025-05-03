@@ -723,14 +723,7 @@ document.addEventListener("DOMContentLoaded", function() {
     loadUserFiles();
 });
 
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-}
-
 window.onload = () => {
-    if (isMobileDevice()) {
-        document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
-    }
     addTab('Untitled.txt');
     const savedTheme = localStorage.getItem('currentTheme') || 'light';
     setTheme(savedTheme);
@@ -780,26 +773,82 @@ document.addEventListener('click', function(event) {
 
 function toggleDiv(divId) {
     const div = document.getElementById(divId);
-    const middleDiv = document.getElementById('middleDiv');
     const leftDiv = document.getElementById('leftDiv');
     const rightDiv = document.getElementById('rightDiv');
-
-    if (div.style.display === 'none') {
-        div.style.display = 'block';
-    } else {
-        div.style.display = 'none';
-    }
-
-    if (leftDiv.style.display === 'none' && rightDiv.style.display === 'none') {
+    const middleDiv = document.getElementById('middleDiv');
+    
+    const isMobileView = window.matchMedia('(max-width: 850px)').matches;
+    
+    if (isMobileView) {
+        // For mobile view
         middleDiv.style.width = '100%';
-    } else if (leftDiv.style.display === 'none') {
-        middleDiv.style.width = '75%';
-    } else if (rightDiv.style.display === 'none') {
-        middleDiv.style.width = '75%';
+        leftDiv.style.display = 'block';  // Ensure display is block for slide effect
+        rightDiv.style.display = 'block'; // Ensure display is block for slide effect
+
+        if (divId === 'leftDiv') {
+            div.classList.toggle('show');
+            rightDiv.classList.remove('show');
+        } else if (divId === 'rightDiv') {
+            div.classList.toggle('show');
+            leftDiv.classList.remove('show');
+        }
     } else {
-        middleDiv.style.width = '30%';
+        // For desktop view
+        if (div.style.display === 'none') {
+            div.style.display = 'block';
+        } else {
+            div.style.display = 'none';
+        }
+
+        if (leftDiv.style.display === 'none' && rightDiv.style.display === 'none') {
+            middleDiv.style.width = '100%';
+        } else if (leftDiv.style.display === 'none' || rightDiv.style.display === 'none') {
+            middleDiv.style.width = '75%';
+        } else {
+            middleDiv.style.width = '30%';
+        }
     }
 }
+
+// Add window resize event listener to handle width changes
+window.addEventListener('resize', function() {
+    const middleDiv = document.getElementById('middleDiv');
+    const isMobileView = window.matchMedia('(max-width: 850px)').matches;
+    
+    if (isMobileView) {
+        middleDiv.style.width = '100%';
+    }
+});
+
+// Initial check on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const middleDiv = document.getElementById('middleDiv');
+    const isMobileView = window.matchMedia('(max-width: 850px)').matches;
+    
+    if (isMobileView) {
+        middleDiv.style.width = '100%';
+    }
+});
+
+// Add event listener to close sidebars when clicking outside
+document.addEventListener('click', function(event) {
+    if (window.innerWidth <= 850) {
+        const leftDiv = document.getElementById('leftDiv');
+        const rightDiv = document.getElementById('rightDiv');
+        const btnLeft = document.querySelector('.btn-left');
+        const btnRight = document.querySelector('.btn-right');
+
+        // Close left sidebar if clicking outside
+        if (!leftDiv.contains(event.target) && !btnLeft.contains(event.target)) {
+            leftDiv.classList.remove('show');
+        }
+
+        // Close right sidebar if clicking outside
+        if (!rightDiv.contains(event.target) && !btnRight.contains(event.target)) {
+            rightDiv.classList.remove('show');
+        }
+    }
+});
 
 function toggleBox(event) {
     const outerBox = document.querySelector('.outer-box');
@@ -905,11 +954,53 @@ document.querySelectorAll('.context-menu ul li').forEach(function (menuItem) {
     });
 });
 
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.classList.toggle('show');
+}
 
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileFileBtn = document.querySelector('.mobile-file-btn');
+    
+    if (!mobileMenu.contains(event.target) && !mobileFileBtn.contains(event.target)) {
+        mobileMenu.classList.remove('show');
+    }
+});
 
+// Add event listeners for mobile menu items
+document.getElementById('new-file-mobile').addEventListener('click', function() {
+    document.getElementById('new-file').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('open-file-mobile').addEventListener('click', function() {
+    document.getElementById('open-file').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('save-file-mobile').addEventListener('click', function() {
+    document.getElementById('save-file').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('save-as-file-mobile').addEventListener('click', function() {
+    document.getElementById('save-as-file').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('change-name-mobile').addEventListener('click', function() {
+    document.getElementById('change-name').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('save-online-mobile').addEventListener('click', function() {
+    document.getElementById('save-online').click();
+    toggleMobileMenu();
+});
 
+document.getElementById('load-file-mobile').addEventListener('click', function() {
+    document.getElementById('load-file').click();
+    toggleMobileMenu();
+});
