@@ -1,6 +1,8 @@
 let currentTabId = 'Untitled.txt';
 let currentFileHandle = null;
 let selectedDirectoryItem = null;
+let currentSearchState = null;
+let searchTimeout = null;
 
 const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
     lineNumbers: true,
@@ -727,6 +729,7 @@ window.onload = () => {
     addTab('Untitled.txt');
     const savedTheme = localStorage.getItem('currentTheme') || 'light';
     setTheme(savedTheme);
+    initializeSearch();
 };
 
 const body = document.body;
@@ -1004,3 +1007,195 @@ document.getElementById('load-file-mobile').addEventListener('click', function()
     document.getElementById('load-file').click();
     toggleMobileMenu();
 });
+
+// Add after editor initialization
+function initializeSearch() {
+    const searchPanel = document.getElementById('searchReplacePanel');
+    const searchInput = document.getElementById('searchInput');
+    const replaceInput = document.getElementById('replaceInput');
+    const replaceRow = document.getElementById('replaceRow');
+    const matchCount = document.getElementById('matchCount');
+    
+    // Search options
+    const matchCase = document.getElementById('matchCase');
+    const wholeWord = document.getElementById('wholeWord');
+    const regexSearch = document.getElementById('regexSearch');
+
+    function clearSearch() {
+        if (currentSearchState) {
+            currentSearchState.markers.forEach(marker => marker.clear());
+            currentSearchState = null;
+        }
+        matchCount.textContent = 'No results';
+    }
+
+    function findNext() {
+        if (!currentSearchState || currentSearchState.markers.length === 0) return;
+        
+        currentSearchState.currentMatch++;
+        if (currentSearchState.currentMatch >= currentSearchState.markers.length) {
+            currentSearchState.currentMatch = 0;
+        }
+        
+        const marker = currentSearchState.markers[currentSearchState.currentMatch];
+        const pos = marker.find();
+        editor.setCursor(pos.from);
+        editor.scrollIntoView({ from: pos.from, to: pos.to }, 20);
+    }
+
+    function findPrev() {
+        if (!currentSearchState || currentSearchState.markers.length === 0) return;
+        
+        currentSearchState.currentMatch--;
+        if (currentSearchState.currentMatch < 0) {
+            currentSearchState.currentMatch = currentSearchState.markers.length - 1;
+        }
+        
+        const marker = currentSearchState.markers[currentSearchState.currentMatch];
+        const pos = marker.find();
+        editor.setCursor(pos.from);
+        editor.scrollIntoView({ from: pos.from, to: pos.to }, 20);
+    }
+
+    function replace() {
+        if (!currentSearchState || currentSearchState.markers.length === 0) return;
+        
+        const marker = currentSearchState.markers[currentSearchState.currentMatch];
+        const pos = marker.find();
+        if (pos) {
+            editor.replaceRange(replaceInput.value, pos.from, pos.to);
+            performSearch(); // Refresh search
+        }
+    }
+
+    function replaceAll() {
+        if (!currentSearchState) return;
+        
+        editor.operation(() => {
+            let cursor = editor.getSearchCursor(currentSearchState.regex);
+            while (cursor.findNext()) {
+                cursor.replace(replaceInput.value);
+            }
+        });
+        performSearch(); // Refresh search
+    }
+
+    function performSearch() {
+        // Clear any existing timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        // Set a new timeout to prevent too many searches while typing
+        searchTimeout = setTimeout(() => {
+            const searchTerm = searchInput.value;
+            if (!searchTerm) {
+                matchCount.textContent = 'No results';
+                clearSearch();
+                return;
+            }
+
+            let searchQuery = searchTerm;
+            if (wholeWord.checked) {
+                searchQuery = `\\b${searchQuery}\\b`;
+            }
+            
+            try {
+                const searchRegex = new RegExp(
+                    regexSearch.checked ? searchTerm : searchQuery,
+                    `g${matchCase.checked ? '' : 'i'}`
+                );
+
+                // Clear previous search
+                clearSearch();
+
+                // Perform new search
+                let cursor = editor.getSearchCursor(searchRegex);
+                let matches = 0;
+                let markers = [];
+
+                while (cursor.findNext()) {
+                    matches++;
+                    markers.push(editor.markText(cursor.from(), cursor.to(), {
+                        className: 'CodeMirror-search-match'
+                    }));
+                }
+
+                currentSearchState = {
+                    regex: searchRegex,
+                    markers: markers,
+                    currentMatch: -1
+                };
+
+                matchCount.textContent = `${matches} match${matches !== 1 ? 'es' : ''}`;
+                if (matches > 0) findNext();
+            } catch (e) {
+                matchCount.textContent = 'Invalid regex';
+            }
+        }, 150);
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', performSearch);
+    matchCase.addEventListener('change', performSearch);
+    wholeWord.addEventListener('change', performSearch);
+    regexSearch.addEventListener('change', performSearch);
+    
+    document.getElementById('findNext').addEventListener('click', findNext);
+    document.getElementById('findPrev').addEventListener('click', findPrev);
+    document.getElementById('replaceBtn').addEventListener('click', replace);
+    document.getElementById('replaceAllBtn').addEventListener('click', replaceAll);
+    document.getElementById('closeSearch').addEventListener('click', () => {
+        searchPanel.style.display = 'none';
+        clearSearch();
+    });
+    document.getElementById('toggleReplace').addEventListener('click', () => {
+        replaceRow.style.display = replaceRow.style.display === 'none' ? 'flex' : 'none';
+    });
+}
+
+function toggleSearchPanel() {
+    const searchPanel = document.getElementById('searchReplacePanel');
+    const searchInput = document.getElementById('searchInput');
+    const isHidden = searchPanel.style.display === 'none' || !searchPanel.style.display;
+
+    searchPanel.style.display = isHidden ? 'block' : 'none';
+
+    if (isHidden) {
+        searchInput.focus();
+        if (searchInput.value) {
+            // Trigger search if there's already text in the input
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    } else {
+        clearSearch();
+    }
+
+    return false;
+}
+
+// Add keyboard shortcut
+document.addEventListener('keydown', function(e) {
+    // Ctrl+F or Cmd+F (Mac)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault(); // Prevent browser's default find
+        toggleSearchPanel();
+    }
+    
+    // Ctrl+H or Cmd+H (Mac) for replace
+    if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault();
+        toggleSearchPanel();
+        document.getElementById('replaceRow').style.display = 'flex';
+        document.getElementById('replaceInput').focus();
+    }
+});
+
+
+
+
+
+
+
+
+

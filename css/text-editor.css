@@ -425,11 +425,13 @@ body{
 .btn-left{
     position: absolute;
     left: 0;
+    z-index: 1001;
 }
 
 .btn-right {
     position: absolute;
     right: 0;
+    z-index: 1001;
 }
 
 .directory {
@@ -557,6 +559,7 @@ body{
     width: 100%;
     margin: 0;
     height: 100vh;
+    position: relative;
 }
 
 #editor{
@@ -879,4 +882,184 @@ body{
         gap: 10px;
         z-index: 1001;
     }
+}
+
+.search-replace-panel {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background-color: var(--background-color);
+    border: 1px solid var(--header-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    width: 380px;
+    padding: 16px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.search-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.search-row, .replace-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.search-row input, .replace-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--header-border);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.search-row input:focus, .replace-row input:focus {
+    outline: none;
+    border-color: var(--buttons-bg);
+    box-shadow: 0 0 0 2px rgba(250, 100, 65, 0.1);
+}
+
+.search-actions, .replace-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.search-actions button, .replace-actions button {
+    padding: 8px 12px;
+    border: 1px solid var(--header-border);
+    border-radius: 6px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.search-actions button:hover, .replace-actions button:hover {
+    background-color: var(--buttons-bg);
+    color: white;
+    border-color: var (--buttons-bg);
+}
+
+.search-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+    border-top: 1px solid var(--header-border);
+    margin-top: 8px;
+}
+
+.search-info label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-color);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.search-info label:hover {
+    opacity: 1;
+}
+
+.search-info input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--buttons-bg);
+}
+
+#matchCount {
+    color: var(--buttons-bg);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.search-shortcuts {
+    padding-top: 8px;
+    border-top: 1px solid var(--header-border);
+    margin-top: 8px;
+}
+
+.search-shortcuts small {
+    color: var(--text-color);
+    opacity: 0.6;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 850px) {
+    .search-replace-panel {
+        width: calc(100% - 40px);
+        top: 70px;
+        right: 20px;
+        left: 20px;
+        border-radius: 8px;
+        padding: 12px;
+    }
+
+    .search-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .search-actions button, .replace-actions button {
+        padding: 10px;
+    }
+
+    .search-actions button span, .replace-actions button span {
+        display: none;
+    }
+
+    .search-shortcuts {
+        display: none;
+    }
+}
+
+/* Dark mode enhancements */
+[data-theme="dark"] .search-replace-panel {
+    background-color: rgba(0, 15, 28, 0.95);
+    backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .search-row input, 
+[data-theme="dark"] .replace-row input {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .search-actions button, 
+[data-theme="dark"] .replace-actions button {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.CodeMirror-search-match {
+    background-color: rgba(250, 100, 65, 0.2);
+    border: 1px solid var(--buttons-bg);
 }

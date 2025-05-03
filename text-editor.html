@@ -30,6 +30,7 @@
                         <a href="#" id="save-file">Save</a>
                         <a href="#" id="save-as-file">Save As</a>
                         <a href="#" id="change-name">Change Name</a>
+                        <a href="#" id="search" onclick="toggleSearchPanel()">Find & Replace</a>
                     </div>
                 </div>
                 <div class="leftBtn">
@@ -129,12 +130,50 @@
                 <a href="#" id="save-file-mobile">Save</a>
                 <a href="#" id="save-as-file-mobile">Save As</a>
                 <a href="#" id="change-name-mobile">Change Name</a>
+                <a href="#" id="search-mobile" onclick="toggleSearchPanel()">Find & Replace</a>
                 <hr>
                 <a href="#" id="save-online-mobile">Save Online</a>
                 <a href="#" id="load-file-mobile">Load Online</a>
             </div>
             <div class="editor-container">
                 <div class="tabs" id="tabs"></div>
+                <div class="search-replace-panel" id="searchReplacePanel">
+                    <div class="search-controls">
+                        <div class="search-inputs">
+                            <div class="search-row">
+                                <input type="text" id="searchInput" placeholder="Find..." autocomplete="off">
+                                <div class="search-actions">
+                                    <button id="findPrev" title="Previous (Shift+Ctrl+G)"><i class="fa fa-chevron-up"></i></button>
+                                    <button id="findNext" title="Next (Ctrl+G)"><i class="fa fa-chevron-down"></i></button>
+                                    <button id="toggleReplace" title="Toggle Replace"><i class="fa fa-exchange"></i></button>
+                                    <button id="closeSearch" title="Close"><i class="fa fa-times"></i></button>
+                                </div>
+                            </div>
+                            <div class="replace-row" id="replaceRow">
+                                <input type="text" id="replaceInput" placeholder="Replace with...">
+                                <div class="replace-actions">
+                                    <button id="replaceBtn">Replace</button>
+                                    <button id="replaceAllBtn">Replace All</button>
+                                </div>
+                            </div>
+                            <div class="search-info" id="searchInfo">
+                                <span id="matchCount">No results</span>
+                                <label><input type="checkbox" id="matchCase"> Match case</label>
+                                <label><input type="checkbox" id="wholeWord"> Whole word</label>
+                                <label><input type="checkbox" id="regexSearch"> Use regex</label>
+                            </div>
+                            <div class="search-shortcuts">
+                                <small>
+                                    Shortcuts: 
+                                    Ctrl+F (Find), 
+                                    Ctrl+H (Replace), 
+                                    Ctrl+G (Next), 
+                                    Shift+Ctrl+G (Previous)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <textarea id="editor"></textarea>
                 <div id="suggestions"></div>
             </div>
