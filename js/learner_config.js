@@ -1,0 +1,4 @@
+const CONFIG = {
+    GEMINI_API_KEY: "AIzaSyAmV6FOsxZT7T5IDVLLcwqWLPosDlmMQ7w",
+    GROQ_API_KEY: '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'
+};

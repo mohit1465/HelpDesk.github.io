@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Platform</title>
+    <link rel="stylesheet" href="css/learner.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>NoteS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li data-section="dashboard" class="dashboard"><i class="fas fa-home"></i>Dashboard</li>
+                    <li data-section="my-courses" class="courses"><i class="fas fa-graduation-cap"></i>My Courses</li>
+                    <li data-section="ai-notes" class="ai-notes">
+                        <i class="fas fa-robot"></i>
+                        <span>Study Tools</span>
+                    </li>
+                    <li data-section="assignments"><i class="fas fa-tasks"></i>Assignments</li>
+                    <li data-section="resources"><i class="fas fa-book-open"></i>Resources</li>
+                    <li data-section="messages"><i class="fas fa-message"></i>Messages</li>
+                    <li data-section="settings"><i class="fas fa-gear"></i>Settings</li>
+                    <li class="user-profile">
+                        <img src="https://via.placeholder.com/32" alt="Profile">
+                        <span>John Doe</span>
+                        <span class="user-role">Student</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </aside>
+        <div class="sidebar-overlay"></div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section-content active">
+                    <div class="welcome-banner">
+                        <h1>Welcome back, John!</h1>
+                        <p class="date">Thursday, May 3</p>
+                    </div>
+
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <h3>Next Class</h3>
+                            <p>Mathematics</p>
+                            <p>10:30 AM</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-tasks"></i>
+                            <h3>Due Tasks</h3>
+                            <p>3 Assignments</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Progress</h3>
+                            <p>75% Complete</p>
+                        </div>
+                    </div>
+
+                    <section class="upcoming-section">
+                        <div class="section-header">
+                            <h2>Upcoming Schedule</h2>
+                            <button class="calendar-btn"><i class="fas fa-calendar"></i> View Calendar</button>
+                        </div>
+                        <div class="schedule-timeline">
+                            <!-- Add timeline items here -->
+                        </div>
+                    </section>
+
+                    <section class="recent-activity">
+                        <h2>Recent Activity</h2>
+                        <div class="activity-feed">
+                            <!-- Add activity items here -->
+                        </div>
+                    </section>
+                </section>
+
+                <!-- My Courses Section -->
+                <section id="my-courses" class="section-content">
+                    <div class="courses-header">
+                        <h2>My Courses</h2>
+                        <div class="course-filters">
+                            <button class="active">All Courses</button>
+                            <button>In Progress</button>
+                            <button>Completed</button>
+                        </div>
+                    </div>
+                    <div class="courses-grid">
+                        <!-- Course cards will be added here -->
+                    </div>
+                </section>
+
+                <!-- AI Notes Section -->
+                <section id="ai-notes" class="section-content">
+                    <div class="ai-notes-section">
+                        <div class="notes-content">
+                            <div id="notesOutput"></div>
+                            <button id="downloadBtn" class="download-btn" style="display: none;">
+                                Download as PDF
+                            </button>
+                        </div>
+                        
+                        <div class="progress-section" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                            <p id="currentStep">Planning your notes...</p>
+                        </div>
+
+                        <div class="input-section">
+                            <textarea id="userInput" placeholder="What topic would you like to create notes on?"></textarea>
+                            <button id="generateBtn">
+                                <span class="button-text">Generate Notes</span>
+                                <span class="send-icon">➤</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Resources Section -->
+                <section id="resources" class="section-content">
+                    <div class="resources-header">
+                        <h2>Learning Resources</h2>
+                        <div class="resource-search">
+                            <input type="text" placeholder="Search resources...">
+                        </div>
+                    </div>
+                    <div class="resources-grid">
+                        <div class="resource-categories">
+                            <!-- Resource categories -->
+                        </div>
+                        <div class="resource-items">
+                            <!-- Resource items -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Community Section -->
+                <section id="community" class="section-content">
+                    <div class="community-header">
+                        <h2>Learning Community</h2>
+                        <button class="create-post-btn"><i class="fas fa-plus"></i> Create Post</button>
+                    </div>
+                    <div class="community-content">
+                        <div class="discussion-feed">
+                            <!-- Discussion posts -->
+                        </div>
+                        <div class="community-sidebar">
+                            <div class="trending-topics">
+                                <h3>Trending Topics</h3>
+                                <!-- Trending topics list -->
+                            </div>
+                            <div class="active-members">
+                                <h3>Active Members</h3>
+                                <!-- Active members list -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Messages Section -->
+                <section id="messages" class="section-content">
+                    <div class="messages-container">
+                        <div class="conversations-list">
+                            <!-- Conversations list -->
+                        </div>
+                        <div class="chat-area">
+                            <!-- Chat interface -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Calendar Section -->
+                <section id="calendar" class="section-content">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <!-- Calendar navigation -->
+                        </div>
+                        <div class="calendar-grid">
+                            <!-- Calendar content -->
+                        </div>
+                        <div class="calendar-events">
+                            <!-- Upcoming events -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="section-content">
+                    <div class="settings-container">
+                        <div class="settings-sidebar">
+                            <h3>Settings</h3>
+                            <ul>
+                                <li>Profile</li>
+                                <li>Notifications</li>
+                                <li>Privacy</li>
+                                <li>Preferences</li>
+                            </ul>
+                        </div>
+                        <div class="settings-content">
+                            <!-- Settings forms -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  
+  <script src="js/learner_config.js"></script>
+    <script src="js/learner.js"></script>
+    </body>
+</html>
