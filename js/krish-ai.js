@@ -329,7 +329,7 @@ async function getAIResponse(userInput, onlineSearchEnabled, pastMessages, contr
     }
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
-    const apiKey = "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"; // Replace with your API key
+    const apiKey = "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" //"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"; Replace with your API key
 
     const headers = {
         "Authorization": `Bearer ${apiKey}`,
