@@ -523,7 +523,7 @@ body {
 .chat-container {
     flex: 1;
     padding: 20px 80px;
-    overflow-y: auto;
+    overflow-y: scroll;
     display: flex;
     flex-direction: column;
 }
@@ -542,7 +542,7 @@ body {
     background-image: var(--message-ai);
     border: var(--main-br) .3px solid;
     box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.025);
-    color: rgb(255, 255, 255);
+    color: var(--text-color);
     max-width: 55%;
     margin-top: 30px;
 }
