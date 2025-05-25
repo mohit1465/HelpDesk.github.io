@@ -29,11 +29,25 @@ function isMobileDevice() {
 }
 
 window.onload = () => {
-    if (isMobileDevice()) {
-        document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
-    }
     const savedTheme = localStorage.getItem('currentTheme') || 'dark';
     setTheme(savedTheme);
+    
+    // Initialize sidebar functionality
+    const logo = document.getElementById('logo');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (logo && sidebar && overlay) {
+        logo.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+        
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+    }
 };
 
 function setTheme(theme) {
@@ -66,26 +80,48 @@ themeToggleBtn.addEventListener('click', () => {
 let aiDescriptionFinal = '';
 let controller = null;
 
-const GOOGLE_SEARCH_API_KEY = "AIzaSyDf5rshjLMV7PCoIjNDitF0nlMlr4ZKFG4";
-const CX = "d6da3f2797ee74602";
 const GENAI_API_KEY = "AIzaSyBIJVTe2LVWSR5ATdyUVs5hzlMhTjmJG4A";
 
+// Basic state management
+let isProcessing = false;
 
-// Load previous chat history from localStorage for the current conversation
+// Add visual feedback for processing state
+function setProcessingState(processing) {
+    const sendButton = document.getElementById('send-btn');
+    const inputField = document.getElementById('chat-input');
+    
+    if (!sendButton || !inputField) {
+        console.warn('Required UI elements not found');
+        return;
+    }
+    
+    isProcessing = processing;
+    
+    if (processing) {
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        inputField.disabled = true;
+        sendButton.disabled = true;
+    } else {
+        sendButton.innerHTML = 'Send';
+        inputField.disabled = false;
+        sendButton.disabled = false;
+    }
+}
+
+// Load previous chat history from localStorage
 function loadChatHistory() {
     const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
     const currentConversationId = localStorage.getItem("currentConversationId");
-
-    return chatHistory[currentConversationId] || []; // Return messages of the current conversation
+    return chatHistory[currentConversationId] || [];
 }
 
-// Save a message to localStorage for the current conversation
+// Save a message to localStorage
 function saveMessageToHistory(content, sender) {
     let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
     let currentConversationId = localStorage.getItem("currentConversationId");
 
     if (!currentConversationId) {
-        currentConversationId = Date.now().toString(); // Create new conversation ID
+        currentConversationId = Date.now().toString();
         localStorage.setItem("currentConversationId", currentConversationId);
     }
 
@@ -95,19 +131,19 @@ function saveMessageToHistory(content, sender) {
 
     chatHistory[currentConversationId].push({ content, sender });
     localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-    populateConversationList(); // Refresh list
+    populateConversationList();
 }
 
-// Clear chat history for the currently opened conversation
+// Clear chat history
 function clearChatHistory() {
     let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
     let currentConversationId = localStorage.getItem("currentConversationId");
 
-    delete chatHistory[currentConversationId]; // Remove only the active conversation
+    delete chatHistory[currentConversationId];
     localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
 
-    document.getElementById('messages').innerHTML = ""; // Clear UI
-    populateConversationList(); // Refresh conversation list
+    document.getElementById('messages').innerHTML = "";
+    populateConversationList();
     closeDeleteModal();
 }
 
@@ -115,15 +151,15 @@ function clearChatHistory() {
 function switchConversation(conversationId) {
     localStorage.setItem("currentConversationId", conversationId);
     displayMessages();
-    populateConversationList(); // Update UI to highlight active conversation
+    populateConversationList();
 }
 
-// Start a new chat (Create a new conversation)
+// Start a new chat
 function startNewChat() {
-    let newConversationId = Date.now().toString(); // Unique ID
+    let newConversationId = Date.now().toString();
     let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
 
-    chatHistory[newConversationId] = []; // Create empty chat
+    chatHistory[newConversationId] = [];
     localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
     localStorage.setItem("currentConversationId", newConversationId);
 
@@ -131,7 +167,7 @@ function startNewChat() {
     populateConversationList();
 }
 
-// Display messages for the current conversation
+// Display messages
 function displayMessages() {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
@@ -139,45 +175,39 @@ function displayMessages() {
     const chatHistory = loadChatHistory();
     
     chatHistory.forEach(msg => {
-        appendMessage(msg.content, msg.sender);
+        appendMessage(msg.content, msg.sender, false);
     });
 }
 
-// Load chat history when the page loads
-document.addEventListener("DOMContentLoaded", () => {
-    displayMessages();
-    populateConversationList();
-});
-
-// Populate the conversation list
+// Populate conversation list
 function populateConversationList() {
     let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
     let conversationList = document.getElementById("conversationList");
     let currentConversationId = localStorage.getItem("currentConversationId");
 
-    conversationList.innerHTML = ""; // Clear old list
+    conversationList.innerHTML = "";
 
     Object.keys(chatHistory).forEach((convId, index) => {
-        let aiFirstWords = "New Chat"; // Default text
+        let previewText = "New Chat";
 
         if (chatHistory[convId].length > 0) {
-            let aiMessage = chatHistory[convId].find(msg => msg.sender === "ai");
-            if (aiMessage) {
-                aiFirstWords = aiMessage.content.split(" ").slice(0, 3).join(" "); // First 3 words
+            let userMessage = chatHistory[convId].find(msg => msg.sender === "user");
+            if (userMessage) {
+                previewText = userMessage.content.split(" ").slice(0, 3).join(" ");
             }
         }
 
         const button = document.createElement("div");
         button.classList.add("conversation-btn");
-        if (convId === currentConversationId) button.classList.add("active"); // Highlight current chat
+        if (convId === currentConversationId) button.classList.add("active");
 
-        button.innerHTML = `<span class="chat-number">${index + 1}</span> <span class="chat-preview">${aiFirstWords}</span>`;
+        button.innerHTML = `<span class="chat-number">${index + 1}</span> <span class="chat-preview">${previewText}</span>`;
         button.onclick = () => switchConversation(convId);
         conversationList.appendChild(button);
     });
 }
 
-
+// Modal functions
 function openDeleteModal() {
     document.getElementById("delete-modal").style.display = "flex";
 }
@@ -186,496 +216,222 @@ function closeDeleteModal() {
     document.getElementById("delete-modal").style.display = "none";
 }
 
+// Auto adjust textarea height
 function autoAdjustHeight(element, maxHeight) {
     element.addEventListener('input', function() {
         this.style.height = "auto";
         this.style.height = Math.min(this.scrollHeight, maxHeight) + "px";
     });
 
-    element.addEventListener(' blur', function() {
-        this.style.height = '250px'; // reset the height to the original max height
-    });
-}
-
-// Handle "Enter" key to send message and "Shift + Enter" for new line
-document.getElementById('chat-input').addEventListener('keydown', function(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage(event);
-    }
-});
-
-autoAdjustHeight(document.getElementById('chat-input'), 250); // Adjust chat-input with max height 250px
-
-document.addEventListener("DOMContentLoaded", function () {
-    const moreOptionsButton = document.getElementById("more-options");
-    const moreOptionBox = document.querySelector(".moreOptionBox");
-
-    moreOptionsButton.addEventListener("click", function (e) {
-        e.stopPropagation(); // So it doesn't immediately close when clicked
-        moreOptionBox.classList.toggle("show");
-    });
-
-    // Click outside to close
-    document.addEventListener("click", function (event) {
-        if (!moreOptionBox.contains(event.target) && !moreOptionsButton.contains(event.target)) {
-            moreOptionBox.classList.remove("show");
+    element.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            this.style.height = "auto";
         }
     });
-});
-
-
-// ===============================================================================================================================
-
-
-async function onlineResponse(userQuery, extractedContent) {
-    try {
-        let aiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
-        
-        let requestBody = {
-            contents: [{
-                parts: [{ text: `${extractedContent}\n\nTell the exact answer for the user's query: '${userQuery}'` }]
-            }]
-        };
-
-        let response = await fetch(aiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody)
-        });
-
-        let data = await response.json();
-        if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            return "AI could not generate a response.";
-        }
-
-    } catch (error) {
-        return `AI Error: ${error.message}`;
-    }
 }
 
-async function googleSearch(userInput) {
-    let query = userInput;
+const systemPrompt = `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE.
+You are Intrecting with User.
 
-    const searchUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${GOOGLE_SEARCH_API_KEY}&cx=${CX}`;
+Your job is to respond to any user input ([user_query]) by following this format:
 
-    try {
-        let response = await fetch(searchUrl);
-        let data = await response.json();
+1. Use [query] for your main response — make it friendly, natural, and match the level of detail the user expects.
+   - If the user asks for a *detailed* explanation, give a thorough response.
+   - If the user asks for a *short* or *brief* reply, keep it concise.
+   - If there's a conflict in wording (e.g., "in detail" and "in a few words"), always prioritize detail when asked.
 
-        if (!data.items) {
-            console.log("Online Search Not Found.")
-            return;
-        }
+2. Use [task] only if the user is requesting an action or operation (like "open YouTube", "set reminder").
 
-        let links = data.items.slice(0, 3).map(item => item.link);
-        let contentHtml = "<h2>Search Results</h2>";
-        let allContent = "";
+3. Use [search] only if the user asks for real-time or external data (like weather, time, recent news).
+   - Do not make up real-time facts; use [search] instead.
 
-        for (let link of links) {
-            contentHtml += `<p><a href="${link}" target="_blank">${link}</a></p>`;
-            contentHtml += `<p>Extracting content...</p>`;
-            
-            let extractedText = await extractContent(link);
-            allContent += extractedText + "\n\n";
-            contentHtml += `<p>${extractedText.substring(0, 500)}...</p>`;  // Show preview
-        }
+4. Always follow with another [query] to keep the conversation open.
 
+Examples:
 
-        // Send extracted content to Gemini AI for a better response
-        if (allContent.trim() !== "") {
-            console.log(allContent);
-            let aiAnswer = await onlineResponse(query, allContent);
-            console.log(aiAnswer);
-            return aiAnswer;
-        }
+User: can you open yt  
+→  
+[query] Of course, wait a second.  
+[task] open youtube  
+[query] I think it opened, enjoy!
 
-    } catch (error) {
-        console.log(error.message);
-    }
-}
+User: who are you  
+→  
+[query] Ohh dear, I am your friend Krish.
 
-async function extractContent(url) {
-    try {
-        let response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-        let data = await response.json();
-        
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(data.contents, "text/html");
+User: what current time  
+→  
+[query] Ooh wait, I think it's...  
+[search] [google] what time in Mahendergarh, Haryana  
+[query] Anything else?
 
-        doc.querySelectorAll("script, style").forEach(el => el.remove());
-        let text = doc.body.innerText.replace(/\s+/g, ' ').trim();
+User: Explain in detail that how AI works in a few words  
+→  
+[query] Absolutely. Since you asked for a detailed explanation, here it goes: [Provide a detailed explanation of how AI works...]
 
-        return text.length > 2000 ? text.substring(0, 2000) + "..." : text;
-    } catch (error) {
-        return `Error extracting content: ${error.message}`;
-    }
-}
+Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally.
+`;
 
-async function getAIResponse(userInput, onlineSearchEnabled, pastMessages, controller) {
-    
-    let messages = pastMessages.map(msg => ({
-        role: msg.sender === "user" ? "user" : "assistant",
-        content: msg.content
-    }));
-
-    if (onlineSearchEnabled == true){
-    var online_data = await googleSearch(userInput);
-    }
-    else{
-    var online_data = "There is no data from google."
-    }
-
-    const url = "https://api.groq.com/openai/v1/chat/completions";
-    const apiKey = "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" //"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"; Replace with your API key
-
-    const headers = {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-    };
+// Update response handling function
+async function handleResponse(userInput) {
+    const apiKey = "AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     const body = {
-        "messages": [
-            { role: "user", content: userInput },
-            { role: "system", content: `You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer. You are Intrecting with User. Online Google search is ${online_data} use this data as possible as. And respond smartly in a funny naughty way, and don't give any empty response when you didn't get anything from Online seearch. ${aiDescriptionFinal}. Reply in less tokens until user don't ask for any details about something. This is the past conversation between you and the user:\n\n${JSON.stringify(messages, null, 2)}` }
-        ],
-        "model": "llama3-8b-8192"
+        contents: [{
+            parts: [
+                { "text": systemPrompt },
+                { "text": userInput }
+            ]
+        }]
     };
 
     try {
         const response = await fetch(url, {
             method: "POST",
-            headers: headers,
-            body: JSON.stringify(body),
-            signal: controller.signal // Attach signal for stopping response
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
         });
 
         const data = await response.json();
-        return data.choices?.[0]?.message?.content || "I couldn't understand that.";
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!text) {
+            return "I apologize, but I couldn't generate a response at this time.";
+        }
+
+        // Check for [task] or [search] in the response
+        if (text.includes('[task]') || text.includes('[search]')) {
+            return "I apologize, but I can't perform tasks or search for real-time information right now. Please ask me something else!";
+        }
+
+        // Remove all [query] tags and get only the text content
+        const cleanText = text.replace(/\[query\]/g, '').trim();
+        return cleanText;
+
     } catch (error) {
-        console.error("Error:", error);
-        return "Something went wrong.";
+        console.error('Error calling Gemini API:', error);
+        return "I apologize, but I encountered an error while processing your request.";
     }
 }
 
-
-// ============================================================================================================================ 
-
-
-// Send Message
+// Update message handling
 async function sendMessage(event) {
-    event.preventDefault();
-    const fileInput = document.getElementById('imageInput');
+    if (event) {
+        event.preventDefault();
+    }
+    
+    if (isProcessing) {
+        console.log('Already processing a message');
+        return;
+    }
+
     const inputField = document.getElementById('chat-input');
     const sendButton = document.getElementById('send-btn');
-    const stopButton = document.createElement("button");
-    const uploadedImages = document.querySelector('.uploadedImages');
+    
+    if (!inputField || !sendButton) {
+        console.error('Required UI elements not found');
+        return;
+    }
 
     const userInput = inputField.value.trim();
-    if (!userInput) return;
-
-    appendMessage(userInput, 'user');
-    saveMessageToHistory(userInput, 'user'); // Save user message
-    inputField.value = '';
-    inputField.disabled = true; // Disable input while AI responds
-    sendButton.disabled = true;
-    sendButton.textContent = "Stop";
-
-    // Add stop button
-    stopButton.id = "stop-btn";
-    stopButton.textContent = "Stop";
-    stopButton.className = "stop-btn";
-    sendButton.replaceWith(stopButton);
-
-    // Stop button event
-    stopButton.addEventListener("click", function () {
-        if (controller) {
-            controller.abort(); // Abort fetch request
-        }
-        resetInput(); // Reset UI after stopping
-    });
-
-    inputField.style.height = 'auto'; 
-    
-    if (fileInput.files[0]) {
-        await analyzeImage();
-        fileInput.value = '';
-        
-        // Clear all uploaded images
-        if (uploadedImages) {
-            const imageGrid = uploadedImages.querySelector('.imageGrid');
-            if (imageGrid) {
-                imageGrid.innerHTML = '';
-            }
-        }
+    if (!userInput) {
+        console.log('No input provided');
+        return;
     }
 
-    const onlineSearchEnabled = document.getElementById('online-search-toggle').checked;
-    controller = new AbortController(); // New controller for stopping
+    setProcessingState(true);
 
     try {
-        const pastMessages = loadChatHistory(); // Get previous chat history
-        const aiResponse = await getAIResponse(userInput, onlineSearchEnabled, pastMessages, controller);
-        appendMessage(aiResponse, 'ai');
-        saveMessageToHistory(aiResponse, 'ai'); // Save AI response
+        // Send user message
+        appendMessage(userInput, 'user');
+        saveMessageToHistory(userInput, 'user');
+        inputField.value = '';
+        inputField.style.height = 'auto';
+
+        // Get and display response
+        const response = await handleResponse(userInput);
+        appendMessage(response, 'ai', true);
+        saveMessageToHistory(response, 'ai');
+
     } catch (error) {
-        if (error.name === "AbortError") {
-            appendMessage("Response stopped by user.", 'ai'); // Show proper message
-        } else {
-            appendMessage("Something went wrong.", 'ai');
-        }
+        console.error('Error in sendMessage:', error);
+    } finally {
+        setProcessingState(false);
+        setTimeout(() => {
+            inputField.focus();
+        }, 0);
     }
-
-    resetInput(); // Reset UI after response
 }
 
-function resetInput() {
-    const inputField = document.getElementById('chat-input');
-    const sendButton = document.createElement("div");
-    sendButton.id = "send-btn";
-    sendButton.textContent = "Send";
-    sendButton.className = "send-btn";
-    document.getElementById('stop-btn')?.replaceWith(sendButton);
-    inputField.disabled = false;
-    sendButton.disabled = false;
-    sendButton.addEventListener("click", sendMessage);
-}
-
-function appendMessage(content, sender) {
+// Update appendMessage function to handle streaming only for new AI responses
+function appendMessage(content, sender, shouldStream = false) {
     const messagesDiv = document.getElementById('messages');
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
 
-    if (sender === 'user'){
-    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-
-    content = content.replace(/\n/g, '<br>');
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    const textContent = doc.body.textContent;
-
-    messageDiv.innerHTML = textContent;
-
-    }
-    
-    if (sender === 'ai'){
-    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    if (sender === 'user') {
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-
-        content = content.replace(/```([\s\S]*?)```/g, function (match, code) {
-            return `
-            <div class="code-block">
-                <pre><code>${escapeHTML(code)}</code></pre>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-            </div>`;
-        });
-
         content = content.replace(/\n/g, '<br>');
-        messageDiv.innerHTML = content;
-    }
-
-    messagesDiv.appendChild(messageDiv);
-
-    if (sender === "ai") {
-        const copyBtnDiv = document.createElement("div");
-        copyBtnDiv.classList.add("copyBtnResponseBox");
-        
-        const copyBtn = document.createElement("div");
-
-        copyBtn.innerHTML = `<i class="fa-regular fa-clone" id="clipboard-icon" onclick="Scalefun(this)"></i>`
-
-        copyBtn.classList.add("copyBtnResponse");
-        copyBtn.onclick = () => copyText(removeHtmlTags(content));
-
-        copyBtnDiv.appendChild(copyBtn);        
-        messagesDiv.appendChild(copyBtnDiv);
-    }
-
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-
-// Function to remove HTML tags for clean text copying
-function removeHtmlTags(html) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || "";
-}
-
-function Scalefun(copybutn){
-    copybutn.classList.toggle('scaled'); 
-    copybutn.classList.remove('nonscaled'); 
-
-    setTimeout(() => { 
-        copybutn.classList.remove('scaled'); 
-        copybutn.classList.toggle('nonscaled'); 
-    }, 500);
-}
-
-// Function to copy text
-function copyText(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        console.log("Response copied to clipboard!");
-    }).catch(err => console.error("Failed to copy:", err));
-}
-
-// Function to escape HTML inside code blocks
-function escapeHTML(str) {
-    return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-// Function to copy code block text
-function copyCode(button) {
-    const codeBlock = button.parentNode;
-    const codeText = codeBlock.querySelector('code').innerText;
-
-    navigator.clipboard.writeText(codeText).then(() => {
-        button.textContent = "Copied!"; // Change text to "Copied!"
-        
-        setTimeout(() => {
-            button.textContent = "Copy"; // Revert to "Copy" after 2 seconds
-        }, 1000);
-
-    }).catch(err => console.error("Copy failed:", err));
-}
-
-
-// Analyze Image with Gemini
-async function analyzeImage() {
-    const fileInput = document.getElementById('imageInput');
-    const prompt = "Explain what's in this image.";
-    const files = fileInput.files;
-    let imageDescriptions = [];
-
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.startsWith('image/')) continue;
-
-        const mimeType = file.type;
-        const reader = new FileReader();
-
-        try {
-            const description = await new Promise((resolve, reject) => {
-                reader.onload = async () => {
-                    const base64Image = reader.result.split(',')[1];
-
-                    const payload = {
-                        contents: [{
-                            parts: [
-                                { text: prompt },
-                                {
-                                    inline_data: {
-                                        mime_type: mimeType,
-                                        data: base64Image
-                                    }
-                                }
-                            ]
-                        }]
-                    };
-
-                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GENAI_API_KEY}`;
-
-                    try {
-                        const res = await fetch(endpoint, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(payload)
-                        });
-
-                        const data = await res.json();
-                        const aiDescription = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                        resolve({
-                            fileName: file.name,
-                            description: aiDescription
-                        });
-                    } catch (err) {
-                        console.error(err);
-                        reject(err);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-            imageDescriptions.push(description);
-        } catch (error) {
-            console.error(`Error analyzing image ${file.name}:`, error);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        const textContent = doc.body.textContent;
+        messageDiv.innerHTML = textContent;
+        messagesDiv.appendChild(messageDiv);
+    } else {
+        if (shouldStream) {
+            // For new AI responses, implement streaming
+            messageDiv.innerHTML = '';
+            messagesDiv.appendChild(messageDiv);
+            
+            let index = 0;
+            const streamText = () => {
+                if (index < content.length) {
+                    messageDiv.innerHTML += content[index];
+                    index++;
+                    setTimeout(streamText, 20); // Adjust speed here (lower = faster)
+                }
+            };
+            streamText();
+        } else {
+            // For loaded messages, display instantly
+            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+            content = content.replace(/\n/g, '<br>');
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
         }
     }
 
-    // Format the final description
-    if (imageDescriptions.length > 0) {
-        let formattedDescription = "User Gave image also in which :\n";
-        imageDescriptions.forEach((desc, index) => {
-            formattedDescription += `${index + 1}. ${desc.fileName} : ${desc.description}\n`;
-        });
-        aiDescriptionFinal = formattedDescription;
-    }
-
-    return imageDescriptions.length > 0;
+    // Smooth scroll to bottom
+    messagesDiv.scrollTo({
+        top: messagesDiv.scrollHeight,
+        behavior: 'smooth'
+    });
 }
 
+// Initialize
+document.addEventListener("DOMContentLoaded", function () {
+    displayMessages();
+    populateConversationList();
+    autoAdjustHeight(document.getElementById('chat-input'), 250);
 
-// Image upload handling
-document.addEventListener('DOMContentLoaded', function() {
-    const imageInput = document.getElementById('imageInput');
-    const imageGrid = document.querySelector('.imageGrid');
-    const chatForm = document.getElementById('chat-form');
+    // Auto focus on input
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.focus();
+    }
 
-    imageInput.addEventListener('change', function(e) {
-        const files = e.target.files;
-        
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const imageContainer = document.createElement('div');
-                    imageContainer.id = 'uploadedImg';
-                    imageContainer.className = 'uploadedImg';
-                    
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = file.name;
-                    
-                    const closeBtn = document.createElement('div');
-                    closeBtn.className = 'imgcrossBtn';
-                    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    closeBtn.onclick = function() {
-                        imageContainer.remove();
-                        // Adjust form margin if no images left
-                        if (imageGrid.children.length === 0) {
-                            chatForm.style.margin = '15px 90px';
-                        }
-                    };
-                    
-                    const fileName = document.createElement('div');
-                    fileName.className = 'imageFileName';
-                    fileName.textContent = file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name;
-                    
-                    imageContainer.appendChild(closeBtn);
-                    imageContainer.appendChild(img);
-                    imageContainer.appendChild(fileName);
-                    imageGrid.appendChild(imageContainer);
-
-                    // Adjust form margin when images are added
-                    chatForm.style.margin = '90px 90px';
-                    chatForm.style.marginBottom = '25px';
-                };
-                
-                reader.readAsDataURL(file);
-            }
+    // Handle Enter key
+    chatInput.addEventListener('keydown', function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(event);
+            inputField.focus();
         }
-        
-        // Reset the input to allow uploading the same file again
-        imageInput.value = '';
-        const elements = document.querySelectorAll("uploadedImg");
-        elements.forEach((element) => {
-          element.remove();
-        });
-        
     });
 });
 
