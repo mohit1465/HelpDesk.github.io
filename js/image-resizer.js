@@ -15,15 +15,22 @@ const body = document.body;
         const themeToggleBtn = document.getElementById('theme-toggle');
         const logoimg = document.getElementById('logo');
         const footerlogoimg = document.getElementById('footerLogo');
+        const reselectButton = document.getElementById('reselectButton');
+        const previewContainer = document.querySelector('.preview-container');
+        const cropButton = document.getElementById('cropButton');
+        const cropImage = document.getElementById('cropImage');
+        const cropCancel = document.getElementById('cropCancel');
+        const cropDone = document.getElementById('cropDone');
+        const previewContent = document.querySelector('.preview-content');
+        const cropContent = document.querySelector('.crop-content');
+        const bgRemoveButton = document.getElementById('bgRemoveButton');
 
-
+        let cropper = null;
         let originalImage = null;
         let aspectRatio = 1;
         let isAspectLocked = false;
         let originalWidth = 0;
         let originalHeight = 0;
-
-
 
         window.onload = () => {
             if (isMobileDevice()) {
@@ -58,8 +65,6 @@ const body = document.body;
             }
         });
         
-
-
         function toggleBox(event) {
             const outerBox = document.querySelector('.outer-box');
             outerBox.style.transform = outerBox.style.transform === 'translateY(0%)' 
@@ -67,6 +72,29 @@ const body = document.body;
                                         : 'translateY(0%)';
         }
         
+
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-menu');
+            
+            // Toggle the visibility of the user menu
+            if (userMenu.style.display === 'none' || userMenu.style.display === '') {
+                userMenu.style.display = 'block';
+            } else {
+                userMenu.style.display = 'none';
+            }
+        
+            // Hide the user menu if clicking outside
+            document.addEventListener('click', function(event) {
+                const isClickInside = userMenu.contains(event.target);
+                const isButtonClick = event.target.closest('.icon-link'); // Check if clicked element is the icon
+        
+                if (!isClickInside && !isButtonClick) {
+                    userMenu.style.display = 'none';
+                }
+            });
+        }
+        
+
         window.addEventListener('click', function(event) {
             const iconLink = document.querySelector('.menu-icon');
             const outerBox = document.querySelector('.outer-box');
@@ -80,14 +108,6 @@ const body = document.body;
             });
         });
 
-
-
-
-
-
-
-
-
         // Aspect ratio lock functionality
         aspectLockBtn.addEventListener('click', function() {
             isAspectLocked = !isAspectLocked;
@@ -96,6 +116,13 @@ const body = document.body;
             
             if (isAspectLocked && originalImage) {
                 aspectRatio = originalWidth / originalHeight;
+                // Update height based on current width
+                const width = parseFloat(widthInput.value);
+                if (!isNaN(width)) {
+                    const widthInPixels = convertToPixels(width, widthUnit.value);
+                    const heightInPixels = widthInPixels / aspectRatio;
+                    heightInput.value = convertFromPixels(heightInPixels, widthUnit.value);
+                }
             }
         });
 
@@ -104,12 +131,31 @@ const body = document.body;
             qualityValue.textContent = this.value + '%';
         });
 
+        // Handle unit changes
+        widthUnit.addEventListener('change', function() {
+            if (originalImage) {
+                const currentWidth = parseFloat(widthInput.value);
+                const currentHeight = parseFloat(heightInput.value);
+                if (!isNaN(currentWidth) && !isNaN(currentHeight)) {
+                    // Convert to pixels first
+                    const widthInPixels = convertToPixels(currentWidth, this.previousValue || 'px');
+                    const heightInPixels = convertToPixels(currentHeight, this.previousValue || 'px');
+                    // Then convert to the new unit
+                    widthInput.value = convertFromPixels(widthInPixels, this.value);
+                    heightInput.value = convertFromPixels(heightInPixels, this.value);
+                    this.previousValue = this.value;
+                }
+            }
+        });
+
         // Handle width/height changes to maintain aspect ratio
         widthInput.addEventListener('input', function() {
             if (isAspectLocked && aspectRatio) {
                 const width = parseFloat(this.value);
                 if (!isNaN(width)) {
-                    heightInput.value = Math.round(width / aspectRatio);
+                    const widthInPixels = convertToPixels(width, widthUnit.value);
+                    const heightInPixels = widthInPixels / aspectRatio;
+                    heightInput.value = convertFromPixels(heightInPixels, widthUnit.value);
                 }
             }
         });
@@ -118,35 +164,108 @@ const body = document.body;
             if (isAspectLocked && aspectRatio) {
                 const height = parseFloat(this.value);
                 if (!isNaN(height)) {
-                    widthInput.value = Math.round(height * aspectRatio);
+                    const heightInPixels = convertToPixels(height, widthUnit.value);
+                    const widthInPixels = heightInPixels * aspectRatio;
+                    widthInput.value = convertFromPixels(widthInPixels, widthUnit.value);
                 }
             }
         });
 
-        // Handle unit changes
-        widthUnit.addEventListener('change', function() {
-            if (originalImage) {
-                const currentValue = parseFloat(widthInput.value);
-                if (!isNaN(currentValue)) {
-                    // Convert to pixels first
-                    const pixelValue = convertToPixels(currentValue, this.previousValue || 'px');
-                    // Then convert to the new unit
-                    widthInput.value = convertFromPixels(pixelValue, this.value);
-                    this.previousValue = this.value;
-                }
+        // Crop button click handler
+        cropButton.addEventListener('click', function() {
+            if (!originalImage) {
+                alert('Please select an image first');
+                return;
             }
+
+            // Show crop interface
+            previewContent.style.display = 'none';
+            cropContent.style.display = 'block';
+            cropImage.src = originalImage.src;
+
+            // Initialize cropper
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(cropImage, {
+                aspectRatio: NaN,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
         });
 
-        heightUnit.addEventListener('change', function() {
-            if (originalImage) {
-                const currentValue = parseFloat(heightInput.value);
-                if (!isNaN(currentValue)) {
-                    // Convert to pixels first
-                    const pixelValue = convertToPixels(currentValue, this.previousValue || 'px');
-                    // Then convert to the new unit
-                    heightInput.value = convertFromPixels(pixelValue, this.value);
-                    this.previousValue = this.value;
-                }
+        // Cancel crop
+        cropCancel.addEventListener('click', function() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            cropContent.style.display = 'none';
+            previewContent.style.display = 'block';
+        });
+
+        // Apply crop
+        cropDone.addEventListener('click', function() {
+            if (!cropper) return;
+
+            const canvas = cropper.getCroppedCanvas({
+                maxWidth: 4096,
+                maxHeight: 4096,
+                fillColor: 'transparent',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            // Check if image has transparency
+            const hasTransparency = previewContainer.classList.contains('has-transparent-bg');
+            const format = hasTransparency ? 'image/png' : 'image/jpeg';
+
+            // Update the image preview with cropped image
+            const croppedImageUrl = canvas.toDataURL(format);
+            imagePreview.src = croppedImageUrl;
+            originalImage = new Image();
+            originalImage.src = croppedImageUrl;
+            originalImage.onload = function() {
+                originalWidth = originalImage.width;
+                originalHeight = originalImage.height;
+                aspectRatio = originalWidth / originalHeight;
+                
+                widthInput.value = originalWidth;
+                heightInput.value = originalHeight;
+                
+                displayImageInfo(null, originalWidth, originalHeight);
+            };
+
+            // Show download button
+            downloadButton.style.display = 'inline-block';
+            downloadButton.href = croppedImageUrl;
+            downloadButton.download = hasTransparency ? 'cropped-image.png' : 'cropped-image.jpg';
+
+            // Clean up
+            cropper.destroy();
+            cropper = null;
+            cropContent.style.display = 'none';
+            previewContent.style.display = 'block';
+        });
+
+        // Add click handler for preview container
+        previewContainer.addEventListener('click', (e) => {
+            // Don't trigger if clicking the reselect button
+            if (e.target === reselectButton || reselectButton.contains(e.target)) {
+                return;
+            }
+            // Only open file explorer if no image is selected
+            if (!originalImage) {
+                imageInput.click();
             }
         });
 
@@ -167,6 +286,7 @@ const body = document.body;
                         heightInput.value = originalHeight;
                         
                         displayImageInfo(file.size, originalWidth, originalHeight);
+                        reselectButton.style.display = 'flex'; // Show reselect button
                     };
                 };
                 reader.readAsDataURL(file);
@@ -188,28 +308,48 @@ const body = document.body;
                 let height = parseFloat(heightInput.value);
                 const quality = parseInt(qualityInput.value) / 100;
 
+                // Convert to pixels first
                 width = convertToPixels(width, widthUnit.value);
-                height = convertToPixels(height, heightUnit.value);
+                height = convertToPixels(height, widthUnit.value);
+
+                // Calculate the new aspect ratio
+                const newAspectRatio = width / height;
 
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
 
                 const ctx = canvas.getContext('2d');
+                
+                // Clear canvas with transparency
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw image
                 ctx.drawImage(originalImage, 0, 0, width, height);
 
+                // Use PNG format if image has transparency
+                const format = previewContainer.classList.contains('has-transparent-bg') ? 'image/png' : 'image/jpeg';
+                
                 canvas.toBlob(function(blob) {
                     const resizedImageURL = URL.createObjectURL(blob);
                     imagePreview.src = resizedImageURL;
                     downloadButton.href = resizedImageURL;
                     downloadButton.style.display = 'inline-block';
-                    displayImageInfo(blob.size, width, height);
+                    downloadButton.download = format === 'image/png' ? 'resized-image.png' : 'resized-image.jpg';
+                    
+                    // Update image info with new dimensions and ratio
+                    const infoHTML = `
+                        <p>File Size: ${formatBytes(blob.size)}</p>
+                        <p>${Math.round(width)} x ${Math.round(height)} px</p>
+                        <p>Aspect Ratio: ${newAspectRatio.toFixed(2)} (Original: ${aspectRatio.toFixed(2)})</p>
+                    `;
+                    imageInfo.innerHTML = infoHTML;
                     
                     resizeButton.classList.remove('loading');
                     resizeButton.textContent = 'Resize & Compress';
                     resizeButton.disabled = false;
-                }, 'image/jpeg', quality);
-            }, 100); // Small delay to allow the UI to update
+                }, format, quality);
+            }, 100);
         });
 
         resetButton.addEventListener('click', function() {
@@ -226,15 +366,15 @@ const body = document.body;
                 displayImageInfo(null, originalWidth, originalHeight);
                 
                 downloadButton.style.display = 'none';
+                previewContainer.classList.remove('has-transparent-bg');
             }
         });
 
         function displayImageInfo(size, width, height) {
             const infoHTML = `
                 <p>File Size: ${size ? formatBytes(size) : 'N/A'}</p>
-                <p>Width: ${Math.round(width)}px</p>
-                <p>Height: ${Math.round(height)}px</p>
-                <p>Aspect Ratio: ${aspectRatio ? aspectRatio.toFixed(2) : 'N/A'}</p>
+                <p>${Math.round(width)} x ${Math.round(height)} px</p>
+                <p>Aspect Ratio: ${aspectRatio.toFixed(2)}</p>
             `;
             imageInfo.innerHTML = infoHTML;
         }
@@ -267,3 +407,137 @@ const body = document.body;
             }
             return Math.round(pixels); // return as integer pixels
         }
+
+        // Add reselect button click handler
+        reselectButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering preview container click
+            imageInput.click();
+        });
+
+        // Hide reselect button initially
+        reselectButton.style.display = 'none';
+
+        // Background removal functionality
+        bgRemoveButton.addEventListener('click', async function() {
+            if (!originalImage) {
+                alert('Please select an image first');
+                return;
+            }
+
+            // Check if user is logged in
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Please login to use the background removal feature');
+                return;
+            }
+
+            // Check background removal count
+            const db = firebase.firestore();
+            const userRef = db.collection('users').doc(user.uid);
+            
+            try {
+                const userDoc = await userRef.get();
+                const currentDate = new Date();
+                const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                
+                if (!userDoc.exists) {
+                    // First time user
+                    await userRef.set({
+                        bgRemovalCount: 1,
+                        lastBgRemoval: currentDate,
+                        firstBgRemovalOfMonth: currentDate
+                    });
+                } else {
+                    const userData = userDoc.data();
+                    const lastRemoval = userData.lastBgRemoval?.toDate();
+                    
+                    // Check if last removal was in a different month
+                    if (!lastRemoval || lastRemoval < firstDayOfMonth) {
+                        // Reset counter for new month
+                        await userRef.update({
+                            bgRemovalCount: 1,
+                            lastBgRemoval: currentDate,
+                            firstBgRemovalOfMonth: currentDate
+                        });
+                    } else {
+                        // Check if user has reached monthly limit
+                        if (userData.bgRemovalCount >= 2) {
+                            alert('You have reached your monthly limit of 2 background removals. Please try again next month.');
+                            return;
+                        }
+                        
+                        // Increment counter
+                        await userRef.update({
+                            bgRemovalCount: firebase.firestore.FieldValue.increment(1),
+                            lastBgRemoval: currentDate
+                        });
+                    }
+                }
+
+                // Show loading state
+                this.classList.add('loading');
+                const loadingSpinner = this.querySelector('.loading-spinner');
+                loadingSpinner.style.display = 'block';
+
+                try {
+                    // Convert the image to a blob
+                    const response = await fetch(originalImage.src);
+                    const blob = await response.blob();
+
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('image_file', blob);
+
+                    // Make API request to remove.bg
+                    const apiResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+                        method: 'POST',
+                        headers: {
+                            'X-Api-Key': 'buB8yvEJ3EsL9iUG1C6CKJJf',
+                        },
+                        body: formData,
+                    });
+
+                    if (!apiResponse.ok) {
+                        throw new Error('Background removal failed');
+                    }
+
+                    // Get the processed image
+                    const processedBlob = await apiResponse.blob();
+                    const processedUrl = URL.createObjectURL(processedBlob);
+
+                    // Update the image preview
+                    imagePreview.src = processedUrl;
+                    originalImage = new Image();
+                    originalImage.src = processedUrl;
+                    originalImage.onload = function() {
+                        originalWidth = originalImage.width;
+                        originalHeight = originalImage.height;
+                        aspectRatio = originalWidth / originalHeight;
+                        
+                        widthInput.value = originalWidth;
+                        heightInput.value = originalHeight;
+                        
+                        displayImageInfo(processedBlob.size, originalWidth, originalHeight);
+                    };
+
+                    // Add transparent background pattern
+                    previewContainer.classList.add('has-transparent-bg');
+                    
+                    // Show download button
+                    downloadButton.style.display = 'inline-block';
+                    downloadButton.href = processedUrl;
+                    downloadButton.download = 'removed-bg.png';
+
+                } catch (error) {
+                    console.error('Background removal error:', error);
+                    alert('Failed to remove background. Please try again.');
+                } finally {
+                    // Reset button state
+                    this.classList.remove('loading');
+                    loadingSpinner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking background removal count:', error);
+                alert('Error checking background removal count. Please try again.');
+            }
+        });

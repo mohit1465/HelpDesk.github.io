@@ -1,4 +1,4 @@
-w<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,8 @@ w<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 </head>
 <body>
 
@@ -39,6 +41,7 @@ w<!DOCTYPE html>
                 </svg>
             </button>
             </a>
+            <a class="icon-link" onclick="toggleUserMenu()"><i class="fa fa-user" id="fa-user"></i>
             <a class="icon-link" onclick="toggleBox(event)">
                 <div class="menu-icon">
                     <div class="dot"></div>
@@ -53,61 +56,121 @@ w<!DOCTYPE html>
                 </div>
             </a>
         </div>
+        
+        <div class="user-menu" id="user-menu">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <img src="assets/profile.png" alt="User Photo">
+                <h3 class="profile-initial" id="profile-initial"></h3>
+                <div id="user-name-email">
+                <h2><span id="userData">Welcome</span></h2>
+                <p id="userEmail"></p>
+            </div>
+            </div>
+    
+            <div class="buttons" id="auth-check-option">
+                <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
+            </div>
+    
+            <!-- File and PDF Section -->
+            <div>
+                <div class="files" onclick="window.open('text-editor.html', '_blank')">Text Files</div>
+                <div class="learner-pdfs">Learner PDFs</div>
+            </div>
+        </div>
     
     </header>
     
-        <div class="container">
-            <h1>Image Resizer and Compressor</h1>
-            
-            <div class="file-input-container">
-                <label for="imageInput" class="file-input-label">
-                    <span>Select Image</span>
-                </label>
-                <input type="file" id="imageInput" accept="image/*">
+    <div class="main-wrapper">
+        <div class="main-content">
+            <div class="preview-container">
+                <button id="reselectButton" class="reselect-button">
+                    <i class="fas fa-redo"></i> Reselect
+                </button>
+                <div class="preview-content">
+                    <img id="imagePreview" src="assets/resize-image.png" alt="Your Image">
+                    <div id="imageInfo"></div>
+                </div>
+                <div class="crop-content" style="display: none;">
+                    <div class="crop-container">
+                        <img id="cropImage" src="" alt="Crop Image">
+                    </div>
+                    <div class="crop-controls">
+                        <button id="cropCancel" class="button button-secondary">Cancel</button>
+                        <button id="cropDone" class="button">Done</button>
+                    </div>
+                </div>
             </div>
-            
+            <a id="downloadButton" class="button" style="display: none;" download="resized-image.jpg">Download Image</a>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="right-sidebar">
+            <div class="action">
+                <button id="resetButton" class="button-resize button-secondary">Reset</button>
+            </div>
+
             <div class="dimension-controls">
-                <div class="input-group">
-                    <label for="widthInput">Width:</label>
-                    <input type="number" id="widthInput" min="1">
+                <h4>Width & Height</h4>
+                <div class="element-ui">
+                    <div class="input-group">
+                        <label for="widthInput">x</label>
+                        <input type="number" id="widthInput" min="1">
+                    </div>
+
+                    <button id="aspectLockBtn" class="aspect-lock" title="Lock aspect ratio">🔓</button>
+
+                    <div class="input-group">
+                        <label for="heightInput">y</label>
+                        <input type="number" id="heightInput" min="1">
+                    </div>
+
                     <select id="widthUnit">
                         <option value="px">Pixels</option>
-                        <option value="cm">Centimeters</option>
-                        <option value="in">Inches</option>
-                    </select>
-                </div>
-                
-                <button id="aspectLockBtn" class="aspect-lock" title="Lock aspect ratio">🔓</button>
-                
-                <div class="input-group">
-                    <label for="heightInput">Height:</label>
-                    <input type="number" id="heightInput" min="1">
-                    <select id="heightUnit">
-                        <option value="px">Pixels</option>
-                        <option value="cm">Centimeters</option>
+                        <option value="cm">C.M.</option>
                         <option value="in">Inches</option>
                     </select>
                 </div>
             </div>
             
             <div class="slider-container">
-                <label for="qualityInput">Quality:</label>
+                <h4>Quality</h4>
                 <div class="slider-value" id="qualityValue">75%</div>
                 <input type="range" id="qualityInput" min="1" max="100" value="75" class="quality-slider">
             </div>
             
+            <div class="tools-section">
+                <h4>Tools</h4>
+                <div class="tools-grid">
+                    <div class="tool-card" id="cropButton">
+                        <div class="tool-content">
+                            <div class="tool-icon">
+                                <i class="fas fa-crop-alt"></i>
+                            </div>
+                            <div class="tool-name">Crop</div>
+                            <div class="tool-description">Crop your image to desired size</div>
+                        </div>
+                    </div>
+                    <div class="tool-card" id="bgRemoveButton">
+                        <div class="tool-content">
+                            <div class="tool-icon">
+                                <i class="fas fa-cut"></i>
+                            </div>
+                            <div class="tool-name">Remove Background</div>
+                            <div class="tool-description">Remove image background</div>
+                        </div>
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="actions">
-                <button id="resizeButton" class="button">Resize & Compress</button>
-                <button id="resetButton" class="button button-secondary">Reset</button>
+                <button id="resizeButton" class="button-resize">Resize & Compress</button>
             </div>
-            
-            <div class="preview-container">
-                <img id="imagePreview" src="assets/resize-image.png" alt="Your Image">
-                <a id="downloadButton" class="button" style="display: none;" download="resized-image.jpg">Download Image</a>
-            </div>
-            
-            <div id="imageInfo"></div>
         </div>
+    </div>
         
     <div class="outer-box">
         <h3>More Apps</h3>
@@ -133,6 +196,15 @@ w<!DOCTYPE html>
                 <p>Krish AI (Beta)</p>
             </div>
         </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
     <script src="js/image-resizer.js"></script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
