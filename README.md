@@ -96,7 +96,7 @@ PrimeX is licensed under the MIT License. See [LICENSE](LICENSE) for more inform
 
 If you have any questions or need help, feel free to contact us:
 
-- Email: support@primex.com
+- Email: mohitdahmewal@gmail.com
 - GitHub: [https://mohit1465.github.io/HelpDesk.github.io/](https://mohit1465.github.io/HelpDesk.github.io/)
 
 ---
