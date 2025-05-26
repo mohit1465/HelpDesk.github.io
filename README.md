@@ -42,7 +42,7 @@ To run PrimeX locally, follow these steps:
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/primex.git
+    git clone https://github.com/mohit1465/HelpDesk.github.io
     ```
 
 2. **Navigate to the project folder**:
