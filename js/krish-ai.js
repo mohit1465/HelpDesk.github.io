@@ -39,13 +39,25 @@ window.onload = () => {
     
     if (logo && sidebar && overlay) {
         logo.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+            if (window.innerWidth < 900) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
         });
         
         overlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
+            if (window.innerWidth < 900) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+
+        // Add window resize listener to handle screen size changes
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 900) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
         });
     }
 };
@@ -218,15 +230,26 @@ function closeDeleteModal() {
 
 // Auto adjust textarea height
 function autoAdjustHeight(element, maxHeight) {
-    element.addEventListener('input', function() {
-        this.style.height = "auto";
-        this.style.height = Math.min(this.scrollHeight, maxHeight) + "px";
+    if (!element) return;
+
+    // Function to adjust height
+    const adjustHeight = () => {
+        element.style.height = '42px';
+        const newHeight = Math.min(element.scrollHeight, maxHeight);
+        element.style.height = newHeight + 'px';
+    };
+
+    // Handle input event
+    element.addEventListener('input', adjustHeight);
+
+    // Handle focus event
+    element.addEventListener('focus', () => {
+        adjustHeight();
     });
 
-    element.addEventListener('blur', function() {
-        if (!this.value.trim()) {
-            this.style.height = "auto";
-        }
+    // Handle blur event
+    element.addEventListener('blur', () => {
+        element.style.height = '42px';
     });
 }
 
@@ -366,7 +389,193 @@ async function sendMessage(event) {
     }
 }
 
-// Update appendMessage function to handle streaming only for new AI responses
+// Function to copy text to clipboard
+function copyToClipboard(text, tooltip) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success tooltip for the specific message
+        tooltip.textContent = 'Copied!';
+        setTimeout(() => {
+            tooltip.textContent = 'Copy';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+
+// Function to add speak icon to message
+function addSpeakIcon(messageDiv, content) {
+    const speakIcon = document.createElement('i');
+    speakIcon.classList.add('fas', 'fa-volume-up', 'speak-icon');
+    speakIcon.title = 'Speak';
+    
+    const tooltip = document.createElement('span');
+    tooltip.classList.add('speak-tooltip');
+    tooltip.textContent = 'Speak';
+    
+    speakIcon.addEventListener('click', () => {
+        // Get the plain text content
+        const textContent = content.replace(/<[^>]*>/g, '');
+        speakText(textContent);
+    });
+    
+    messageDiv.appendChild(speakIcon);
+    messageDiv.appendChild(tooltip);
+}
+
+// Global variables for speech control
+let currentSpeech = null;
+let speechStartTime = 0;
+let speechDuration = 0;
+let speechProgressInterval = null;
+let currentSpeechText = '';
+let isDragging = false;
+let isSeeking = false;
+let words = [];
+
+// Function to update speech progress
+function updateSpeechProgress() {
+    if (!currentSpeech || isDragging || isSeeking) return;
+    
+    const progress = document.getElementById('speech-progress');
+    const elapsed = Date.now() - speechStartTime;
+    const percentage = Math.min((elapsed / speechDuration) * 100, 100);
+    progress.value = percentage;
+}
+
+// Function to show speech control
+function showSpeechControl(text) {
+    const speechControl = document.getElementById('speech-control');
+    const speechText = document.getElementById('speech-text');
+    const progress = document.getElementById('speech-progress');
+    
+    speechText.textContent = text.length > 50 ? text.substring(0, 47) + '...' : text;
+    progress.value = 0;
+    speechControl.style.display = 'block';
+}
+
+// Function to hide speech control
+function hideSpeechControl() {
+    if (isSeeking) return; // Don't hide if seeking
+    const speechControl = document.getElementById('speech-control');
+    speechControl.style.display = 'none';
+    if (speechProgressInterval) {
+        clearInterval(speechProgressInterval);
+        speechProgressInterval = null;
+    }
+}
+
+// Function to get text from word position
+function getTextFromWordPosition(text, wordPosition) {
+    words = text.split(/\s+/);
+    if (wordPosition >= words.length) return '';
+    return words.slice(wordPosition).join(' ');
+}
+
+// Function to speak text from position
+function speakFromPosition(text, startPosition) {
+    isSeeking = true;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set voice to Google UK English Male
+    const voices = speechSynthesis.getVoices();
+    const ukVoice = voices.find(voice => voice.name === 'Google UK English Male');
+    if (ukVoice) {
+        utterance.voice = ukVoice;
+    }
+
+    // Set speech parameters
+    utterance.rate = 1;
+    utterance.pitch = 0.8;
+    utterance.volume = 1;
+
+    // Calculate duration and start time
+    const wordCount = words.length;
+    speechDuration = (wordCount / 150) * 60 * 1000;
+    speechStartTime = Date.now() - (startPosition / 100) * speechDuration;
+
+    // Add event listeners
+    utterance.onstart = () => {
+        currentSpeech = utterance;
+        isSeeking = false;
+        if (!isDragging) {
+            showSpeechControl(text);
+            speechProgressInterval = setInterval(updateSpeechProgress, 100);
+        }
+    };
+
+    utterance.onend = () => {
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    utterance.onerror = () => {
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
+}
+
+// Function to speak text
+function speakText(text) {
+    currentSpeechText = text;
+    words = text.split(/\s+/);
+    speakFromPosition(text, 0);
+}
+
+// Add event listeners for speech controls
+document.addEventListener('DOMContentLoaded', function() {
+    const speechStop = document.getElementById('speech-stop');
+    const speechProgress = document.getElementById('speech-progress');
+
+    speechStop.addEventListener('click', () => {
+        if (currentSpeech) {
+            window.speechSynthesis.cancel();
+            currentSpeech = null;
+            hideSpeechControl();
+        }
+    });
+
+    // Handle progress bar interaction
+    speechProgress.addEventListener('mousedown', () => {
+        isDragging = true;
+        if (speechProgressInterval) {
+            clearInterval(speechProgressInterval);
+        }
+    });
+
+    speechProgress.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (currentSpeechText) {
+            const percentage = speechProgress.value;
+            const wordPosition = Math.floor((percentage / 100) * words.length);
+            const remainingText = getTextFromWordPosition(currentSpeechText, wordPosition);
+            speakFromPosition(remainingText, percentage);
+        }
+    });
+
+    speechProgress.addEventListener('input', (e) => {
+        if (currentSpeechText) {
+            const percentage = e.target.value;
+            const wordPosition = Math.floor((percentage / 100) * words.length);
+            const remainingText = getTextFromWordPosition(currentSpeechText, wordPosition);
+            
+            // Update the speech text display
+            const speechText = document.getElementById('speech-text');
+            speechText.textContent = remainingText.length > 50 ? 
+                remainingText.substring(0, 47) + '...' : 
+                remainingText;
+        }
+    });
+});
+
+// Update appendMessage function to add speak icon for AI messages
 function appendMessage(content, sender, shouldStream = false) {
     const messagesDiv = document.getElementById('messages');
     const messageDiv = document.createElement('div');
@@ -394,6 +603,11 @@ function appendMessage(content, sender, shouldStream = false) {
                     index++;
                     setTimeout(streamText, 20); // Adjust speed here (lower = faster)
                 }
+                // Add copy and speak icons after streaming is complete
+                if (index >= content.length) {
+                    addCopyIcon(messageDiv, content);
+                    addSpeakIcon(messageDiv, content);
+                }
             };
             streamText();
         } else {
@@ -403,6 +617,9 @@ function appendMessage(content, sender, shouldStream = false) {
             content = content.replace(/\n/g, '<br>');
             messageDiv.innerHTML = content;
             messagesDiv.appendChild(messageDiv);
+            // Add copy and speak icons for loaded messages
+            addCopyIcon(messageDiv, content);
+            addSpeakIcon(messageDiv, content);
         }
     }
 
@@ -411,6 +628,26 @@ function appendMessage(content, sender, shouldStream = false) {
         top: messagesDiv.scrollHeight,
         behavior: 'smooth'
     });
+}
+
+// Function to add copy icon to message
+function addCopyIcon(messageDiv, content) {
+    const copyIcon = document.createElement('i');
+    copyIcon.classList.add('fas', 'fa-copy', 'copy-icon');
+    copyIcon.title = 'Copy';
+    
+    const tooltip = document.createElement('span');
+    tooltip.classList.add('copy-tooltip');
+    tooltip.textContent = 'Copy';
+    
+    copyIcon.addEventListener('click', () => {
+        // Get the plain text content
+        const textContent = content.replace(/<[^>]*>/g, '');
+        copyToClipboard(textContent, tooltip);
+    });
+    
+    messageDiv.appendChild(copyIcon);
+    messageDiv.appendChild(tooltip);
 }
 
 // Initialize
@@ -433,6 +670,12 @@ document.addEventListener("DOMContentLoaded", function () {
             inputField.focus();
         }
     });
+
+    // Initialize speech synthesis voices
+    window.speechSynthesis.onvoiceschanged = function() {
+        const voices = window.speechSynthesis.getVoices();
+        console.log('Available voices:', voices);
+    };
 });
 
     

@@ -67,16 +67,6 @@
                 </a>
                 <a class="icon-link">
                     <i class="fa fa-user" id="metaMenu"></i>
-                    <div id="profileInfo-box" class="profile-overlay">
-                        <div id="profileInfo">
-                            <p>User: John Doe</p>
-                            <p>Email: john.doe@example.com</p>
-                        </div>
-                        <div id="profilefiles">
-                            <a href="#">My Files</a><br>
-                            <a href="#">Settings</a><br>
-                        </div>
-                    </div>
                 </a>
                 <a class="icon-link" onclick="toggleBox(event)">
                     <div class="menu-icon">
@@ -93,12 +83,35 @@
                 </a>
             </div>
         </div>
+        
+        <div class="user-menu" id="user-menu">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <img src="assets/profile.png" alt="User Photo">
+                <h3 class="profile-initial" id="profile-initial"></h3>
+                <div id="user-name-email">
+                    <h2><span id="userData">Welcome</span></h2>
+                    <p id="userEmail"></p>
+                </div>
+            </div>
+    
+            <div class="buttons" id="auth-check-option">
+                <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
+            </div>
+
+            <div id="profilefiles">
+                <div id='users-files-bottom-option'>
+                    <a href=""><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
+                    <a href=""><i class="fas fa-cog bottom-option-icon settings"></i></a>
+                </div>
+            </div>
+        </div>
     </header>
 
     <div class="mainContainer">
         <div class="box directory" id="leftDiv">
             <div class="dirTop">
-              <h3>Directory Section</h3>
+              <h3>Directory</h3>
               <div>
                 <a id="new-file" title="Add File"><i class="material-icons">insert_drive_file</i></a>
                 <a onclick="addFolder('New Folder')" title="Add Folder"><i class="material-icons" style="font-size: 25px;">create_new_folder</i></a>
@@ -249,7 +262,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script> <!-- Added Firestore SDK -->
   
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+
     <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
     
     <script src="js/text-editor.js"></script>
 </body>

@@ -32,6 +32,10 @@
     font-size: 15px; /* Change this to whatever size you want */
 }
 
+.cm-s-dracula .CodeMirror-gutters, .cm-s-dracula.CodeMirror{
+  background-color: var(--background-color) !important;
+}
+
 body{
     background-color: var(--background-color);
     color: var(--text-color);
@@ -221,13 +225,14 @@ body{
     background-color: var(--buttons-bg);
 }
 
-.profile-overlay {
+
+.user-menu {
     display: none;
     position: fixed;
     width: 350px;
     height: auto;
     right: 50px;
-    top: 75px;
+    top: 100px;
     padding: 20px;
     background-color: var(--background-color);
     color: var(--primary-color);
@@ -235,48 +240,89 @@ body{
     border-radius: 30px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.047);
     text-align: center;
-    z-index: 2;
-}
-
-.profile-overlay.visible {
-    display: block;
-}
-
-#profileInfo, #profilefiles {
-    padding: 10px;
-}
-
-#profileInfo {
-    border-bottom: 1px solid var(--header-border);
-}
-
-#profileInfo h2{
+    z-index: 101;
+  }
+  
+  .profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profile-header img {
+    width: 70px;
+    height: 70px;
+    padding: 8px;
+    border-radius: 50%;
+    border: 2px solid #007bff;
+  }
+  
+  .profile-initial {
+    display: hidden;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #007bff; /* You can choose any color you like */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  
+  
+  .profile-header h2 {
     font-size: 20px;
     font-weight: 600;
-    margin-bottom: 8px;
-}
-
-#profileInfo p{
+    color: var(--primary-color);
+    margin-top: 8px;
+  }
+  
+  .profile-header p {
     font-size: 14px;
-    margin-bottom: 8px;
-}
-
-#profileInfo button{
+    color: var(--primary-color);
+  }
+  
+  .buttons {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  
+  .edit-profile {
     padding: 10px 20px;
     border: none;
     border-radius: 20px;
-    cursor: pointer;
     font-size: 14px;
     background-color: var(--buttons-bg);
     color: #ecf0f1;
     transition: background-color 0.3s ease;
-    margin-bottom: 8px;
-}
-
-#profilefiles h4{
+  }
+  
+  .edit-profile:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-dark);
+  }
+  
+  .files {
+    width: 100%;
+    padding: 15px;
+    color: var(--primary-color);
+    text-align: center;
+    transition: background-color 0.3s ease;
+    border: 1px solid var(--header-border);
+    border-radius: 10px;
     margin-bottom: 10px;
-}
-
+  }
+  
+  .files:hover {
+    background-color: var(--header-border);
+  }
+  
 #users-files {
     width: 300px;
     max-height: 250px;
@@ -408,7 +454,6 @@ body{
 }
 
 .btn {
-    height: 5vh;
     padding: 6px 10px;
     background-color: var(--buttons-bg);
     color: #ecf0f1;
@@ -425,13 +470,14 @@ body{
 .btn-left{
     position: absolute;
     left: 0;
-    z-index: 1001;
+    z-index: 100;
+    border-right: 1px solid var(--header-border);
 }
 
 .btn-right {
     position: absolute;
     right: 0;
-    z-index: 1001;
+    z-index: 100;
 }
 
 .directory {
@@ -569,12 +615,12 @@ body{
 }
 
 .tabs {
-    height: 5vh;
-    margin-left: 32px;
-    margin-right: 32px;
+    padding-left: 32px;
+    padding-right: 32px;
     display: flex;
     flex-direction: row;
     overflow-x: scroll;
+    border-bottom: 1px solid var(--header-border);
 }
 
 .tab{
@@ -583,6 +629,7 @@ body{
     color: var(--text-color);
     font-size: 15px;
     cursor: pointer;
+    height: 100%;
     border: 1px solid var(--header-border);
 }
 
@@ -810,6 +857,10 @@ body{
         align-items: center;
         justify-content: center;
         margin-left: 10px;
+    }
+
+    .btn-left{
+        border-right: 1px solid var(--header-border);
     }
 
     .tabs {

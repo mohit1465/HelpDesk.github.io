@@ -13,7 +13,7 @@ auth.onAuthStateChanged(user => {
 
                 document.getElementById('user-name-email').innerHTML = `
                     <h2 style="margin-bottom:0px;" id='userData'>${userData.name}</h2>
-                    <p style="margin-top:5px;" id='userEmail'>Email: ${userData.email}</p>`;
+                    <p style="margin: 0; margin: 5px 0;" id='userEmail'>Email: ${userData.email}</p>`;
 
                 document.getElementById('auth-check-option').innerHTML = `
                     <button onclick="logoutUser()" class="edit-profile" style="margin: 1px 0;">Logout</button>`;

@@ -62,6 +62,22 @@
     </div>
 </header>
 
+<!-- Speech Control Bar -->
+<div id="speech-control" class="speech-control" style="display: none;">
+    <div class="speech-control-content">
+        <div class="speech-info">
+            <i class="fas fa-volume-up"></i>
+            <span id="speech-text">Speaking...</span>
+        </div>
+        <div class="speech-controls">
+            <input type="range" id="speech-progress" min="0" max="100" value="0">
+            <button id="speech-stop" class="speech-btn">
+                <i class="fas fa-stop"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
 <!-- Sidebar Overlay -->
 <div class="sidebar-overlay"></div>
@@ -106,7 +122,7 @@
     </div>
 
     <!-- More Options Button -->
-    <button type="button" id="more-options">+</button>
+    <button type="button" id="more-options" style="display: none;">+</button>
     <div class="moreOptionBox">
         <div class="upload-container">
           <label class="btn btn-primary" for="imageInput">Upload Images</label>

@@ -33,9 +33,6 @@ const body = document.body;
         let originalHeight = 0;
 
         window.onload = () => {
-            if (isMobileDevice()) {
-                document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
-            }
             const savedTheme = localStorage.getItem('currentTheme') || 'light';
             setTheme(savedTheme);
         };
@@ -47,10 +44,7 @@ const body = document.body;
                 body.removeAttribute('data-theme');
             }
         }
-        
-        function isMobileDevice() {
-            return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-        }
+
         
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = body.getAttribute('data-theme');

@@ -217,6 +217,7 @@ body {
 }
 
 .profile-initial {
+  display: hidden;
   width: 70px;
   height: 70px;
   border-radius: 50%;
@@ -266,24 +267,7 @@ body {
   color: var(--text-color-dark);
 }
 
-.skills-section {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px;
-  margin-bottom: 30px;
-}
-
-.skill-tag {
-  background-color: var(--primary-color);
-  color: var(--text-color-dark);
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-}
-
-.files, .learner-pdfs {
+.files {
   width: 100%;
   padding: 15px;
   color: var(--primary-color);
@@ -294,8 +278,77 @@ body {
   margin-bottom: 10px;
 }
 
-.files:hover, .learner-pdfs:hover {
+.files:hover {
   background-color: var(--header-border);
+}
+
+#profileInfo, #profilefiles {
+  padding: 10px;
+}
+
+#profileInfo {
+  border-bottom: 1px solid var(--header-border);
+}
+
+#users-files-bottom-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.bottom-option-icon {
+  font-size: 22px;
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+.bottom-option-icon:hover {
+  color: var(--buttons-bg);
+}
+
+.settings:hover{
+  rotate: 90deg;
+  transform: scale(1.1);
+}
+
+.filesBtn:hover{
+  animation: filesBtnAnimation .8s forwards;
+}
+
+@keyframes filesBtnAnimation{
+  0%{
+      transform: scale(1);
+  }
+  20%{
+      transform: scale(1.1);
+  }
+  30%{
+      transform: scale(1.1);
+      rotate: 5deg;
+  }
+  40%{
+      transform: scale(1.1);
+      rotate: -5deg;
+  }
+  50%{
+      transform: scale(1.1);
+      rotate: 5deg;
+  }
+  60%{
+      transform: scale(1.1);
+      rotate: -5deg;
+  }
+  70%{
+      transform: scale(1.1);
+      rotate: 5deg;
+  }
+  80%{
+      transform: scale(1.1);
+  }
+  100%{
+      transform: scale(1);
+  }
 }
 
 .outer-box {

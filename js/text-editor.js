@@ -34,7 +34,7 @@ document.getElementById('save-file').addEventListener('click', saveFile);
 document.getElementById('save-as-file').addEventListener('click', saveAsFile);
 document.getElementById('file-input').addEventListener('change', handleFileOpen);
 document.getElementById('change-name').addEventListener('click', changeFileNameAndExtension);
-document.getElementById('metaMenu').addEventListener('click', toggleMenu);
+document.getElementById('metaMenu').addEventListener('click', toggleUserMenu);
 document.getElementById('save-online').addEventListener('click', saveFileOnline);
 document.getElementById('load-file').addEventListener('click', loadFileOnline);
 
@@ -637,14 +637,25 @@ async function loadUserFiles() {
 }
 
 auth.onAuthStateChanged(user => {
+    const profileImage = document.querySelector('.profile-header img');
     if (user) {
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
                 const userData = doc.data();
-                document.getElementById('profileInfo').innerHTML = `
-                    <h2>${userData.name}</h2>
-                    <p>Email: ${userData.email}</p>
-                    <button onclick="logoutUser()">Logout</button>`;
+
+                profileImage.style.display = 'none';
+
+                const firstLetter = userData.name.charAt(0).toUpperCase();
+                const nameLetterElement = document.getElementById('profile-initial');
+                nameLetterElement.textContent = firstLetter;
+
+                document.getElementById('user-name-email').innerHTML = `
+                    <h2 style="margin-bottom:0px;" id='userData'>${userData.name}</h2>
+                    <p style="margin: 0; margin: 5px 0;" id='userEmail'>Email: ${userData.email}</p>`;
+
+                document.getElementById('auth-check-option').innerHTML = `
+                    <button onclick="logoutUser()" class="edit-profile" style="margin: 1px 0;">Logout</button>`;
+
                 document.getElementById('profilefiles').innerHTML = `
                     <h4>My Files</h4>
                     <div id='users-files'></div>
@@ -654,11 +665,16 @@ auth.onAuthStateChanged(user => {
                     </div>`;
 
                 loadUserFiles();
-            } else {
-                document.getElementById('profileInfo').innerHTML = `
-                    <h2>No user data found</h2>
-                    <p>Please complete your profile.</p>
-                    <button onclick="logoutUser()">Logout</button>`;
+            }
+            else {
+                profileImage.style.display = 'block';
+                document.getElementById('profile-initial').style.display = 'none';
+            
+                document.getElementById('user-name-email').innerHTML = `
+                    <h2 id='login-magic' onclick='redirectToLogin()' style='margin-bottom: 0px'>Login to See, <span>Magic</span></h2>`;
+                document.getElementById('auth-check-option').innerHTML = `
+                    <span id="login-signup" onclick="redirectToLogin()" class="edit-profile" style="margin: 8px 0;">Login | signup</span>`;
+
                 document.getElementById('profilefiles').innerHTML = `
                     <div id='users-files-bottom-option'>
                         <a href="#"><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
@@ -669,11 +685,18 @@ auth.onAuthStateChanged(user => {
             console.error('Error fetching user data:', error);
             alert('Error fetching user data.');
         });
+
     } else {
-        document.getElementById('profileInfo').innerHTML = `
-            <h2>No user data found</h2>
-            <p>Please login</p>
-            <a onclick="redirectToLogin()">Login | Signup</a>`;
+
+        profileImage.style.display = 'block';
+        document.getElementById('profile-initial').style.display = 'none';
+    
+        document.getElementById('user-name-email').innerHTML = `
+            <h2 id='login-magic' onclick='redirectToLogin()' style='margin-bottom: 0px'>Login to See, <span>Magic</span></h2>`;
+        document.getElementById('auth-check-option').innerHTML = `
+            <span id="login-signup" onclick="redirectToLogin()" class="edit-profile" style="margin: 8px 0;">Login | signup</span>`;
+
+        
         document.getElementById('profilefiles').innerHTML = `
             <div id='users-files-bottom-option'>
                 <a href="#"><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
@@ -755,14 +778,36 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 
-function toggleMenu() {
-    const profileInfo = document.getElementById('profileInfo-box');
+// function toggleMenu() {
+//     const profileInfo = document.getElementById('profileInfo-box');
     
-    if (profileInfo.style.display === 'none' || profileInfo.style.display === '') {
-        profileInfo.style.display = 'block';
+//     if (profileInfo.style.display === 'none' || profileInfo.style.display === '') {
+//         profileInfo.style.display = 'block';
+//     } else {
+//         profileInfo.style.display = 'none';
+//     }
+// }
+
+
+function toggleUserMenu() {
+    const userMenu = document.getElementById('user-menu');
+    
+    // Toggle the visibility of the user menu
+    if (userMenu.style.display === 'none' || userMenu.style.display === '') {
+        userMenu.style.display = 'block';
     } else {
-        profileInfo.style.display = 'none';
+        userMenu.style.display = 'none';
     }
+
+    // Hide the user menu if clicking outside
+    document.addEventListener('click', function(event) {
+        const isClickInside = userMenu.contains(event.target);
+        const isButtonClick = event.target.closest('.icon-link'); // Check if clicked element is the icon
+
+        if (!isClickInside && !isButtonClick) {
+            userMenu.style.display = 'none';
+        }
+    });
 }
 
 document.addEventListener('click', function(event) {
