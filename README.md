@@ -92,7 +92,7 @@ To run PrimeX locally, follow these steps:
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/primex.git
+    git clone https://github.com/mohit1465/HelpDesk.github.io
     ```
 
 2. **Navigate to the project folder**:
@@ -151,6 +151,7 @@ PrimeX is licensed under the MIT License. See [LICENSE](LICENSE) for more inform
 
 If you have any questions or need help, feel free to contact us:
 
+- Email: support@primex.com
 - GitHub: [https://mohit1465.github.io/HelpDesk.github.io/](https://mohit1465.github.io/HelpDesk.github.io/)
 - Report Issues: Use the GitHub Issues page
 
