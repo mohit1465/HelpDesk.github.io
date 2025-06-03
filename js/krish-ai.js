@@ -413,9 +413,26 @@ function addSpeakIcon(messageDiv, content) {
     tooltip.textContent = 'Speak';
     
     speakIcon.addEventListener('click', () => {
-        // Get the plain text content
-        const textContent = content.replace(/<[^>]*>/g, '');
-        speakText(textContent);
+        // Get the plain text content, excluding code blocks
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        
+        // Remove all code blocks
+        tempDiv.querySelectorAll('.code-block').forEach(block => block.remove());
+        
+        // Get the remaining text
+        let textContent = tempDiv.textContent.trim();
+        
+        // Remove special symbols
+        textContent = textContent
+            .replace(/[`*]/g, '') // Remove backticks and asterisks
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .trim();
+        
+        // Only speak if there's text content (excluding code blocks)
+        if (textContent) {
+            speakText(textContent);
+        }
     });
     
     messageDiv.appendChild(speakIcon);
@@ -581,6 +598,37 @@ function appendMessage(content, sender, shouldStream = false) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
 
+    // Function to escape HTML
+    const escapeHtml = (unsafe) => {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+
+    // Function to add copy button to code block
+    const addCopyButtonToCodeBlock = (codeBlock) => {
+        const copyButton = document.createElement('button');
+        copyButton.classList.add('code-copy-btn');
+        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+        
+        // Get the code content
+        const code = codeBlock.querySelector('code').textContent;
+        
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(code).then(() => {
+                copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            });
+        });
+        
+        codeBlock.appendChild(copyButton);
+    };
+
     if (sender === 'user') {
         content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
@@ -599,7 +647,28 @@ function appendMessage(content, sender, shouldStream = false) {
             let index = 0;
             const streamText = () => {
                 if (index < content.length) {
-                    messageDiv.innerHTML += content[index];
+                    // Format the content before adding it
+                    let formattedContent = content.substring(0, index + 1);
+                    
+                    // Handle code blocks
+                    formattedContent = formattedContent.replace(/```(\w+)?\s*([\s\S]*?)```/g, (match, lang, code) => {
+                        // Escape HTML in code blocks
+                        const escapedCode = escapeHtml(code.trim());
+                        return `<div class="code-block"><pre><code class="language-${lang || ''}">${escapedCode}</code></pre></div>`;
+                    });
+                    
+                    // Handle bold text with different sizes
+                    formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong style="font-size: 1.2em;">$1</strong>');
+                    formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<strong style="font-size: 1.1em;">$1</strong>');
+                    
+                    // Handle line breaks
+                    formattedContent = formattedContent.replace(/\n/g, '<br>');
+                    
+                    messageDiv.innerHTML = formattedContent;
+                    
+                    // Add copy buttons to all code blocks
+                    messageDiv.querySelectorAll('.code-block').forEach(addCopyButtonToCodeBlock);
+                    
                     index++;
                     setTimeout(streamText, 20); // Adjust speed here (lower = faster)
                 }
@@ -612,10 +681,25 @@ function appendMessage(content, sender, shouldStream = false) {
             streamText();
         } else {
             // For loaded messages, display instantly
-            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+            // Handle code blocks
+            content = content.replace(/```(\w+)?\s*([\s\S]*?)```/g, (match, lang, code) => {
+                // Escape HTML in code blocks
+                const escapedCode = escapeHtml(code.trim());
+                return `<div class="code-block"><pre><code class="language-${lang || ''}">${escapedCode}</code></pre></div>`;
+            });
+            
+            // Handle bold text with different sizes
+            content = content.replace(/\*\*(.*?)\*\*/g, '<strong style="font-size: 1.2em;">$1</strong>');
+            content = content.replace(/\*(.*?)\*/g, '<strong style="font-size: 1.1em;">$1</strong>');
+            
+            // Handle line breaks
             content = content.replace(/\n/g, '<br>');
+            
             messageDiv.innerHTML = content;
+            
+            // Add copy buttons to all code blocks
+            messageDiv.querySelectorAll('.code-block').forEach(addCopyButtonToCodeBlock);
+            
             messagesDiv.appendChild(messageDiv);
             // Add copy and speak icons for loaded messages
             addCopyIcon(messageDiv, content);

@@ -8,6 +8,11 @@
     --header-left: #f6f6f6d7;
     --header-left-btn-hover: #ffffffb6;
     --primary-color : #000f1c;
+    --gradient-bg-background-color: hsla(240,0%,100%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 1% 21%, hsla(60,100%,50%,0.01) 0px, transparent 50%),
+        radial-gradient(at 62% 100%, hsla(60,100%,50%,0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(60,100%,50%,0.04) 0px, transparent 50%);
 }
 
 [data-theme="dark"] {
@@ -20,6 +25,15 @@
     --header-left: #00172bd9;
     --header-left-btn-hover: #ffffff19;
     --primary-color : #f4f9f9;
+    --gradient-bg-background-color: hsla(240,100%,18%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 40% 20%, hsla(270,0%,7%,0.61) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(71,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 33% 50%, hsla(236,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(222,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(264,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 72% 87%, hsla(124,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, hsla(225,0%,7%,1) 0px, transparent 50%);
 }
 
 * {
@@ -37,7 +51,8 @@
 }
 
 body{
-    background-color: var(--background-color);
+    background-color: var(--gradient-bg-background-color);
+    background-image: var(--gradient-bg-background-image);
     color: var(--text-color);
     font-family: 'Quicksand', sans-serif;
 }
