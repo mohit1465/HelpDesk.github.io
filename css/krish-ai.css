@@ -62,11 +62,11 @@ body {
     padding: 10px 20px;
     color: #f4f9f9;
     z-index: 100;
-    height: 8vh;
+    height: 60px;
 }
 
 .logo-container {
-    height: 7vh;
+    height: 55px;
     width: 55px;
     display: flex;
     align-items: center;
@@ -281,8 +281,8 @@ body {
 
 .sidebar {
     left: 0;
-    margin-top: 8vh;
-    height: 92vh;
+    padding-top: 60px;
+    height: 100%;
     width: 70px;
     color: var(--text-color);
     display: flex;
@@ -290,7 +290,6 @@ body {
     justify-content: space-between;
     transition: width 0.3s ease-in-out;
     overflow: hidden;
-    padding: 10px 0;
 }
 
 .sidebar:hover {
@@ -531,7 +530,8 @@ body {
     flex-direction: column;
     align-self: flex-end;
     width: 100vw;
-    height: 92vh;
+    margin-top: 60px;
+    height: 92%;
     border-top-left-radius: 45px;
     background-image: var(--main-bg);
     border: var(--out-br) .3px solid;
@@ -991,7 +991,7 @@ body {
     }
 
     .logo-container {
-        height: 6vh;
+        height: 45px;
         width: 45px;
     }
 
@@ -1022,7 +1022,7 @@ body {
 /* Speech Control Bar Styles */
 .speech-control {
     position: fixed;
-    top: 10vh;
+    top: 80px;
     width: 90%;
     max-width: 800px;
     margin: auto;
@@ -1153,7 +1153,7 @@ body {
 /* Small Mobile Styles */
 @media screen and (max-width: 480px) {
     .speech-control {
-        top: 10vh;
+        top: 80px;
         padding: 6px 12px;
     }
 
