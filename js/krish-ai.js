@@ -677,7 +677,7 @@ function appendMessage(content, sender, shouldStream = false) {
                     messageDiv.querySelectorAll('.code-block').forEach(addCopyButtonToCodeBlock);
                     
                     index++;
-                    setTimeout(streamText, 20); // Adjust speed here (lower = faster)
+                    setTimeout(streamText, 10); // Adjust speed here (lower = faster)
                 }
                 // Add copy and speak icons after streaming is complete
                 if (index >= content.length) {
