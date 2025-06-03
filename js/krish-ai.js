@@ -298,7 +298,7 @@ Always match the user's intent. If the user asks for detail, give detail — eve
 // Update response handling function
 async function handleResponse(userInput) {
     const apiKey = "AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
 
     const body = {
         contents: [{

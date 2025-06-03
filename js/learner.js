@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const GEMINI_API_KEY = CONFIG?.GEMINI_API_KEY || '';
 const GROQ_API_KEY = CONFIG?.GROQ_API_KEY || '';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 let currentPlan = [];
