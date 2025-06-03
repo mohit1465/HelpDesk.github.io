@@ -281,8 +281,8 @@ body {
 
 .sidebar {
     left: 0;
-    padding-top: 8vh;
-    height: 100vh;
+    margin-top: 8vh;
+    height: 92vh;
     width: 70px;
     color: var(--text-color);
     display: flex;
@@ -922,6 +922,8 @@ body {
     .sidebar {
         position: fixed;
         left: 0;
+        margin-top:0;
+        height: 100vh;
         width: 200px;
         z-index: 1000;
         background: var(--bg);
