@@ -376,15 +376,22 @@ async function sendMessage(event) {
 
         // Get and display response
         const response = await handleResponse(userInput);
-        appendMessage(response, 'ai', true);
-        saveMessageToHistory(response, 'ai');
+        if (response) {
+            appendMessage(response, 'ai', true);
+            saveMessageToHistory(response, 'ai');
+        } else {
+            appendMessage("I apologize, but I couldn't generate a response at this time. Please try again.", 'ai', true);
+        }
 
     } catch (error) {
         console.error('Error in sendMessage:', error);
+        appendMessage("I apologize, but I encountered an error while processing your request. Please try again.", 'ai', true);
     } finally {
         setProcessingState(false);
         setTimeout(() => {
-            inputField.focus();
+            if (inputField) {
+                inputField.focus();
+            }
         }, 0);
     }
 }
