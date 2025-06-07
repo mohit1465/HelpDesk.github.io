@@ -726,10 +726,7 @@ function appendMessage(content, sender, shouldStream = false) {
         content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         content = content.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
         content = content.replace(/\n/g, '<br>');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(content, 'text/html');
-        const textContent = doc.body.textContent;
-        messageDiv.innerHTML = textContent;
+        messageDiv.innerHTML = content;
         messagesDiv.appendChild(messageDiv);
     } else {
         if (shouldStream) {
@@ -800,11 +797,13 @@ function appendMessage(content, sender, shouldStream = false) {
         }
     }
 
-    // Smooth scroll to bottom
-    messagesDiv.scrollTo({
-        top: messagesDiv.scrollHeight,
-        behavior: 'smooth'
-    });
+    // Smooth scroll to bottom with a small delay to ensure content is rendered
+    setTimeout(() => {
+        messagesDiv.scrollTo({
+            top: messagesDiv.scrollHeight,
+            behavior: 'smooth'
+        });
+    }, 100);
 }
 
 // Function to add copy icon to message
@@ -866,9 +865,17 @@ document.addEventListener("DOMContentLoaded", function () {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
             sendMessage(event);
-            inputField.focus();
+            chatInput.focus();
         }
     });
+
+    // Handle mobile keyboard
+    if (isMobileDevice()) {
+        window.addEventListener('resize', function() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        });
+    }
 });
 
     
