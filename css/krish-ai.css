@@ -483,7 +483,7 @@ body {
 }
 
 #delete-btn {
-    background: #0da724;
+    background: red;
     color: #ffffff
 }
 
@@ -956,7 +956,8 @@ body {
 
     .chat-container {
         flex: 1;
-        padding: 10px;
+        padding: 5px;
+        padding-top: 10px;
         padding-bottom: 80px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -980,70 +981,49 @@ body {
     }
 
     .message {
-        max-width: 85%;
+        max-width: 100%;
         margin-bottom: 10px;
-        padding: 8px 12px;
     }
 
     .message.user {
-        margin-left: auto;
-        margin-right: 0;
         max-width: 85%;
     }
 
     .message.ai {
-        margin-right: auto;
-        margin-left: 0;
         max-width: 85%;
         margin-bottom: 35px;
     }
 
-    .copy-icon, .speak-icon {
-        bottom: -20px;
+    .header {
+        padding: 10px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: var(--bg);
+        backdrop-filter: blur(15px);
     }
 
-    .copy-tooltip, .speak-tooltip {
-        bottom: -25px;
+    .nav {
+        display: none;
     }
 
-    .speak-tooltip {
-        left: 70px;
+    .icons {
+        gap: 15px;
     }
 
-    #chat-input {
-        font-size: 16px; /* Prevent zoom on iOS */
-        padding: 8px;
+    #AI-logo {
+        font-size: 24px;
     }
 
-    #send-btn {
-        padding: 8px 12px;
-    }
-}
-
-/* Small Mobile Styles */
-@media screen and (max-width: 480px) {
-    .chat-container {
-        padding: 8px;
+    .logo-container {
+        height: 6vh;
+        width: 45px;
     }
 
-    .message {
-        max-width: 90%;
-    }
-
-    .message.user, .message.ai {
-        max-width: 90%;
-    }
-
-    #chat-form {
-        padding: 8px;
-    }
-
-    #chat-input {
-        padding: 6px;
-    }
-
-    #send-btn {
-        padding: 6px 10px;
+    #send-btn, #more-options {
+        margin: 0;
     }
 }
 
@@ -1205,6 +1185,27 @@ body {
 
     #speech-progress {
         min-width: 80px;
+    }
+}
+
+/* Small Mobile Styles */
+@media screen and (max-width: 480px) {
+    .speech-control {
+        top: 10vh;
+        padding: 6px 12px;
+    }
+
+    .speech-info span {
+        max-width: 80px;
+        font-size: 12px;
+    }
+
+    .speech-controls {
+        gap: 8px;
+    }
+
+    #speech-progress {
+        min-width: 60px;
     }
 }
 
