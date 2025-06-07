@@ -1250,4 +1250,10 @@ body {
     content: 'Copied!';
 }
 
+/* Remove the speaking highlight styles */
+.speaking-highlight,
+@keyframes highlight-pulse {
+    /* Remove these styles */
+}
+
 

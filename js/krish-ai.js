@@ -420,6 +420,8 @@ function addSpeakIcon(messageDiv, content) {
     tooltip.textContent = 'Speak';
     
     speakIcon.addEventListener('click', () => {
+        console.log('Speak icon clicked'); // Debug log
+        
         // Get the plain text content, excluding code blocks
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = content;
@@ -436,8 +438,21 @@ function addSpeakIcon(messageDiv, content) {
             .replace(/\s+/g, ' ') // Replace multiple spaces with single space
             .trim();
         
-        // Only speak if there's text content (excluding code blocks)
-        if (textContent) {
+        console.log('Text to speak:', textContent); // Debug log
+        
+        // Check if speech synthesis is available
+        if (!window.speechSynthesis) {
+            console.error('Speech synthesis not supported');
+            return;
+        }
+
+        // Initialize voices if not already done
+        if (speechSynthesis.getVoices().length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('Voices loaded:', speechSynthesis.getVoices());
+                speakText(textContent);
+            };
+        } else {
             speakText(textContent);
         }
     });
@@ -548,9 +563,80 @@ function speakFromPosition(text, startPosition) {
 
 // Function to speak text
 function speakText(text) {
+    console.log('Starting speech synthesis');
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
     currentSpeechText = text;
     words = text.split(/\s+/);
-    speakFromPosition(text, 0);
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set voice to Google UK English Male
+    const voices = speechSynthesis.getVoices();
+    console.log('Available voices:', voices);
+    
+    // Try to find a suitable voice
+    let selectedVoice = voices.find(voice => voice.name === 'Google UK English Male');
+    if (!selectedVoice) {
+        // Fallback to any English voice
+        selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
+    }
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('Using voice:', selectedVoice.name);
+    } else {
+        console.log('Using default voice');
+    }
+
+    // Set speech parameters
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    // Calculate duration and start time
+    const wordCount = words.length;
+    speechDuration = (wordCount / 150) * 60 * 1000;
+    speechStartTime = Date.now();
+
+    // Add event listeners
+    utterance.onstart = () => {
+        console.log('Speech started');
+        currentSpeech = utterance;
+        showSpeechControl(text);
+        speechProgressInterval = setInterval(updateSpeechProgress, 100);
+    };
+
+    utterance.onend = () => {
+        console.log('Speech ended');
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    utterance.onerror = (event) => {
+        console.error('Speech error:', event);
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    // Speak the text
+    try {
+        // Ensure speech synthesis is ready
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+        
+        // Add a small delay before speaking
+        setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+            console.log('Speech synthesis initiated');
+        }, 100);
+    } catch (error) {
+        console.error('Error starting speech:', error);
+    }
 }
 
 // Add event listeners for speech controls
@@ -747,6 +833,28 @@ document.addEventListener("DOMContentLoaded", function () {
     populateConversationList();
     autoAdjustHeight(document.getElementById('chat-input'), 250);
 
+    // Initialize speech synthesis
+    if (window.speechSynthesis) {
+        // Load voices
+        let voices = speechSynthesis.getVoices();
+        if (voices.length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                voices = speechSynthesis.getVoices();
+                console.log('Voices loaded on page load:', voices);
+            };
+        } else {
+            console.log('Voices already available:', voices);
+        }
+
+        // Resume speech synthesis if it was paused
+        speechSynthesis.onpause = () => {
+            console.log('Speech synthesis paused, resuming...');
+            speechSynthesis.resume();
+        };
+    } else {
+        console.error('Speech synthesis not supported in this browser');
+    }
+
     // Auto focus on input
     const chatInput = document.getElementById('chat-input');
     if (chatInput) {
@@ -761,12 +869,6 @@ document.addEventListener("DOMContentLoaded", function () {
             inputField.focus();
         }
     });
-
-    // Initialize speech synthesis voices
-    window.speechSynthesis.onvoiceschanged = function() {
-        const voices = window.speechSynthesis.getVoices();
-        console.log('Available voices:', voices);
-    };
 });
 
     
