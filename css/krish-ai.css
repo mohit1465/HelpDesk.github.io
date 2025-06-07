@@ -1,7 +1,7 @@
 :root {
     --text-color: #000f1c;
     --text-color-dark: #ecf0f1;
-    --bg: rgb(255, 255, 255);
+    --bg:  linear-gradient(#ffffffcb, #efeff1ca);
     --main-bg: linear-gradient(#f1f1f174, #efeff197);
     --main-br: #c4c4c480;
     --out-br: #0000001a;
@@ -19,7 +19,7 @@
 [data-theme="dark"] {
     --text-color: #ecf0f1;
     --text-color-dark: #000f1c;
-    --bg: rgb(0, 0, 0);
+    --bg: linear-gradient(#0000006a, #0000007c);
     --main-bg: linear-gradient(#13131371, #29292950);
     --main-br: #eeeeee23;
     --out-br: #eeeeee23;
@@ -648,7 +648,7 @@ body {
 #chat-form {
     display: flex;
     align-items: flex-end;
-    border-radius: 15px;
+    border-radius: 15px 15px 15px 15px;
     padding: 10px 5px;
     margin: 15px 90px;
     margin-bottom: 25px;
@@ -935,6 +935,7 @@ body {
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease-in-out;
         transform: translateX(-100%);
+        backdrop-filter: blur(15px);
     }
 
     .sidebar.active {
@@ -960,7 +961,7 @@ body {
 
     .chat-window {
         width: 100%;
-        height: 100vh;
+        margin-top: 8vh;
         height: -webkit-fill-available;
         border-top-left-radius: 0;
         display: flex;
@@ -978,14 +979,17 @@ body {
 
     #chat-form {
         position: fixed;
+        border-radius: 15px 15px 0 0;
         bottom: 0;
         left: 0;
         right: 0;
         margin: 0;
         padding: 10px;
-        background: var(--bg);
-        border-top: 1px solid var(--out-br);
+        background-image: var(--bg);
+        border: var(--main-br) .3px solid;
+        box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.075);
         z-index: 100;
+        backdrop-filter: blur(15px);
     }
 
     .message {
@@ -1039,7 +1043,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.541);
     z-index: 999;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
