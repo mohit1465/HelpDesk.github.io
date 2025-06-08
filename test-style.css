@@ -622,13 +622,13 @@ body {
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
     .message {
         max-width: 90%;
     }
     
     .chat-input-container {
-        padding: 10px;
+        padding: 20px;
         padding-bottom: env(safe-area-inset-bottom, 10px); /* Support for iPhone X and newer */
     }
     
@@ -650,7 +650,7 @@ body {
     
     .chat-input-container {
         position: fixed;
-        bottom: 0;
+        bottom: 15px;
         left: 0;
         width: 100%;
         padding-bottom: env(safe-area-inset-bottom, 10px);
