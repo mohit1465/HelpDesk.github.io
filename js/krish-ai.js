@@ -310,6 +310,7 @@ async function handleResponse(userInput) {
     };
 
     try {
+        console.log('Sending request to Gemini API...');
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -318,13 +319,22 @@ async function handleResponse(userInput) {
             body: JSON.stringify(body)
         });
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!text) {
-            return "I apologize, but I couldn't generate a response at this time.";
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
         }
 
+        const data = await response.json();
+        console.log('API Response:', data);
+
+        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+            console.error('Invalid API Response:', data);
+            throw new Error('Invalid response format from API');
+        }
+
+        const text = data.candidates[0].content.parts[0].text;
+        
         // Check for [task] or [search] in the response
         if (text.includes('[task]') || text.includes('[search]')) {
             return "I apologize, but I can't perform tasks or search for real-time information right now. Please ask me something else!";
@@ -335,8 +345,15 @@ async function handleResponse(userInput) {
         return cleanText;
 
     } catch (error) {
-        console.error('Error calling Gemini API:', error);
-        return "I apologize, but I encountered an error while processing your request.";
+        console.error('Error in handleResponse:', error);
+        // Return a more specific error message based on the error type
+        if (error.message.includes('API Error')) {
+            return "I apologize, but there was an issue connecting to the AI service. Please check your internet connection and try again.";
+        } else if (error.message.includes('Invalid response')) {
+            return "I apologize, but I received an invalid response from the AI service. Please try again.";
+        } else {
+            return "I apologize, but I encountered an error while processing your request. Please try again.";
+        }
     }
 }
 
