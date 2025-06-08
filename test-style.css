@@ -43,6 +43,11 @@
     padding: 0;
     box-sizing: border-box;
 }
+
+html{
+    height: -webkit-fill-available;
+}
+
 body {
     background-color: var(--gradient-bg-background-color);
     background-image: var(--gradient-bg-background-image);
@@ -53,6 +58,7 @@ body {
     overflow: hidden;
     min-height: 100vh;
     min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
 }
 
 .header {
