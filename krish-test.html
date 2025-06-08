@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="test-style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" /><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Just+Me+Again+Down+Here&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+IN:wght@100..400&family=Satisfy&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.4/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+</head>
+<body>
+    
+<header class="header">
+    <div class="logo-container">
+        <img src="assets/Krish AI.png" alt="PrimeX Logo" class="logo" id="logo">
+    </div>
+    <a href="" id="AI-logo"><span style="color: #fa6441;">KRISH</span>.ai</a>
+    <div class="icons">
+        <a class="icon-link">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+            <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                <mask class="moon" id="moon-mask">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white"/>
+                    <circle cx="24" cy="10" r="6" fill="black"/>
+                </mask>
+                <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"/>
+                <g class="sun-beams" stroke="currentColor">
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </g>
+            </svg>
+        </button>
+        </a>
+        <a class="icon-link" onclick="toggleBox(event)">
+            <div class="menu-icon">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </a>
+    </div>
+</header>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="outer-box">
+    <h3>More Apps</h3>
+    <div class="boxes">
+        <div class="inner-box" onclick="window.open('index.html', '_blank')">
+            <img src="assets/Home.png" alt="Image Resizer">
+            <p>Home</p>
+        </div>
+        <div class="inner-box" onclick="window.open('image-resizer.html', '_blank')">
+            <img src="assets/Image Resizer.png" alt="Image Resizer">
+            <p>Image Resizer</p>
+        </div>
+        <div class="inner-box" onclick="window.open('text-editor.html', '_blank')">
+            <img src="assets/Text Editor.png" alt="Text Editor">
+            <p>Text Editor</p>
+        </div>
+        <div class="inner-box" onclick="window.open('image-editor.html', '_blank')">
+            <img src="assets/Image Editor.png" alt="Text Editor">
+            <p>Image Editor</p>
+        </div>
+        <div class="inner-box" onclick="window.open('Krish.html', '_blank')">
+            <img src="assets/Krish AI.png" alt="Text Editor">
+            <p>Krish AI (Beta)</p>
+        </div>
+    </div>
+</div>
+</body>
+    <script src="test-script.js"></script>
+</html>
