@@ -46,6 +46,7 @@
             </svg>
         </button>
         </a>
+        <a class="icon-link" onclick="toggleUserMenu()"><i class="fa fa-user" id="fa-user"></i>
         <a class="icon-link" onclick="toggleBox(event)">
             <div class="menu-icon">
                 <div class="dot"></div>
@@ -59,6 +60,34 @@
                 <div class="dot"></div>
             </div>
         </a>
+    </div>
+    
+    <div class="user-menu" id="user-menu">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <img src="assets/profile.png" alt="User Photo">
+            <h3 class="profile-initial" id="profile-initial"></h3>
+            <div id="user-name-email">
+            <h2><span id="userData">Welcome</span></h2>
+            <p id="userEmail"></p>
+        </div>
+        </div>
+
+        <div class="buttons" id="auth-check-option">
+            <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
+        </div>
+
+        <!-- File and PDF Section -->
+        <div>
+            <div class="files" onclick="window.open('text-editor.html', '_blank')">Text Files</div>
+        </div>
+
+        <div id="profilefiles">
+            <div id='users-files-bottom-option'>
+                <a href=""><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
+                <a href=""><i class="fas fa-cog bottom-option-icon settings"></i></a>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -104,5 +133,12 @@
     </div>
 </div>
 </body>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
     <script src="test-script.js"></script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
 </html>

@@ -23,6 +23,26 @@ window.addEventListener('click', function(event) {
     });
 });
 
+function toggleUserMenu() {
+    const userMenu = document.getElementById('user-menu');
+    
+    // Toggle the visibility of the user menu
+    if (userMenu.style.display === 'none' || userMenu.style.display === '') {
+        userMenu.style.display = 'block';
+    } else {
+        userMenu.style.display = 'none';
+    }
+
+    // Hide the user menu if clicking outside
+    document.addEventListener('click', function(event) {
+        const isClickInside = userMenu.contains(event.target);
+        const isButtonClick = event.target.closest('.icon-link'); // Check if clicked element is the icon
+
+        if (!isClickInside && !isButtonClick) {
+            userMenu.style.display = 'none';
+        }
+    });
+}
 
 function isMobileDevice() {
     return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
