@@ -2,7 +2,7 @@
     --background-color: #f4f9f9;
     --text-color: #000f1c;
     --text-color-dark: #ecf0f1;
-    --bg:  linear-gradient(#ffffffcb, #efeff1ca);
+    --bg:  linear-gradient(#ffffffe8, #efeff1e4);
     --main-bg: linear-gradient(#f1f1f174, #efeff197);
     --main-br: #c4c4c480;
     --out-br: #0000001a;
@@ -21,7 +21,7 @@
     --background-color: #000f1c;
     --text-color: #ecf0f1;
     --text-color-dark: #000f1c;
-    --bg: linear-gradient(#0000006a, #0000007c);
+    --bg: linear-gradient(#00000088, #00000077);
     --main-bg: linear-gradient(#13131371, #29292950);
     --main-br: #eeeeee23;
     --out-br: #eeeeee23;
@@ -132,6 +132,7 @@ body {
     justify-content: center;
     cursor: pointer;
     padding: 5px;
+    transition: all 0.3s ease;
 }
 
 .logo {
@@ -492,6 +493,7 @@ body {
     font-family: "Playfair Display", serif;
     font-weight: 400;
     font-style: italic;
+    transition: all 0.3s ease;
 }
 
 /* Chat System Styles */
@@ -511,7 +513,7 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    padding-bottom: 80px; /* Add padding to prevent messages from being hidden behind input */
+    padding-bottom: 100px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -548,13 +550,22 @@ body {
 .chat-input-container {
     position: fixed;
     bottom: 15px;
-    left: 0;
-    width: 100%;
-    padding: 0 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 1000px;
+    padding: 10px;
     display: flex;
     gap: 10px;
-    align-items: flex-end;
     z-index: 2;
+    min-height: 42px;
+    max-height: 150px;
+    border-radius: 15px;
+    background-image: var(--message-ai);
+    border: var(--main-br) .3px solid;
+    backdrop-filter: blur(10px);
+    box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
 }
 
 #chat-input {
@@ -562,9 +573,9 @@ body {
     min-height: 42px;
     max-height: 150px;
     padding: 10px 15px;
-    border: 1px solid var(--main-br);
+    border: none;
     border-radius: 20px;
-    background: var(--bg);
+    background: transparent;
     color: var(--text-color);
     font-family: inherit;
     font-size: 14px;
@@ -576,7 +587,12 @@ body {
 }
 
 #chat-input:focus {
-    border-color: #fa6441;
+    outline: none;
+}
+
+#chat-input:focus + .chat-input-container,
+.chat-input-container:focus-within {
+    border: var(--main-br) .3px solid;
     box-shadow: 0 0 0 2px rgba(250, 100, 65, 0.1);
 }
 
@@ -623,22 +639,39 @@ body {
 
 /* Responsive Styles */
 @media (max-width: 850px) {
+    .logo-container {
+        display: none;
+    }
+
+    #AI-logo {
+        font-size: 24px;
+        margin-left: 20px;
+    }
+
+    .header {
+        padding: 10px 15px;
+    }
+
+    .icons {
+        gap: 20px;
+    }
+
     .message {
         max-width: 90%;
     }
     
     .chat-input-container {
-        padding: 20px;
-        padding-bottom: env(safe-area-inset-bottom, 10px); /* Support for iPhone X and newer */
+        padding: 12px 15px;
+        /* padding-bottom: env(safe-area-inset-bottom, 10px); */
     }
     
     #chat-input {
         font-size: 16px;
-        padding: 12px 15px; /* Larger touch target */
+        padding: 12px 15px;
     }
 
     .chat-messages {
-        padding-bottom: 100px; /* More padding on mobile to prevent messages from being hidden */
+        padding-bottom: 100px;
     }
 }
 
@@ -653,6 +686,6 @@ body {
         bottom: 15px;
         left: 0;
         width: 100%;
-        padding-bottom: env(safe-area-inset-bottom, 10px);
+        /* padding-bottom: env(safe-area-inset-bottom, 10px); */
     }
 }
