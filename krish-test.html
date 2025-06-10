@@ -92,6 +92,22 @@
 </header>
 
 <div class="chat-container">
+    <button class="toggle-sidebar" id="toggle-sidebar">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <div class="chat-history-sidebar" id="chat-history-sidebar">
+        <div class="chat-history-header">
+            <h2 class="chat-history-title">Chat History</h2>
+            <button class="new-chat-btn" id="new-chat-btn">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+        </div>
+        <div class="chat-history-list" id="chat-history-list">
+            <!-- Chat items will be added dynamically -->
+        </div>
+    </div>
+
     <div class="chat-messages" id="messages">
         <div class="message ai">
             <div class="message-content">
@@ -100,6 +116,8 @@
         </div>
     </div>
     <div class="chat-input-container">
+        <div class="left-border"></div>
+        <div class="right-border"></div>
         <textarea id="chat-input" placeholder="Type your message here..." rows="1"></textarea>
         <button id="send-btn">
             <i class="fas fa-paper-plane"></i>

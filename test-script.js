@@ -135,11 +135,26 @@ Your job is to respond to any user input ([user_query]) by following this format
 
 // Auto-resize textarea
 function autoResizeTextarea() {
-    chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+    const chatInput = document.getElementById('chat-input');
+    if (!chatInput) return;
+
+    // Reset height to auto to get the correct scrollHeight
+    chatInput.style.height = '42px';
+    const newHeight = Math.min(chatInput.scrollHeight, 250);
+    chatInput.style.height = newHeight + 'px';
 }
 
-chatInput.addEventListener('input', autoResizeTextarea);
+// Add event listeners for textarea
+document.addEventListener('DOMContentLoaded', () => {
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('input', autoResizeTextarea);
+        chatInput.addEventListener('focus', autoResizeTextarea);
+        chatInput.addEventListener('blur', () => {
+            chatInput.style.height = '42px';
+        });
+    }
+});
 
 // Handle AI response
 async function handleResponse(userInput) {
@@ -257,4 +272,142 @@ chatInput.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Focus chat input
     chatInput.focus();
+});
+
+// Chat History Functionality
+const toggleSidebar = document.getElementById('toggle-sidebar');
+const chatHistorySidebar = document.getElementById('chat-history-sidebar');
+const chatContainer = document.querySelector('.chat-container');
+const chatHistoryList = document.getElementById('chat-history-list');
+const newChatBtn = document.getElementById('new-chat-btn');
+
+let currentChatId = null;
+let chats = JSON.parse(localStorage.getItem('chats')) || [];
+
+// Toggle sidebar
+toggleSidebar.addEventListener('click', () => {
+    chatHistorySidebar.classList.toggle('active');
+    toggleSidebar.classList.toggle('active');
+    chatContainer.classList.toggle('with-sidebar');
+});
+
+// Create new chat
+function createNewChat() {
+    const chatId = Date.now().toString();
+    const newChat = {
+        id: chatId,
+        title: 'New Chat',
+        messages: [],
+        createdAt: new Date().toISOString()
+    };
+    
+    chats.unshift(newChat);
+    saveChats();
+    renderChatHistory();
+    switchToChat(chatId);
+}
+
+// Save chats to localStorage
+function saveChats() {
+    localStorage.setItem('chats', JSON.stringify(chats));
+}
+
+// Render chat history
+function renderChatHistory() {
+    chatHistoryList.innerHTML = '';
+    
+    chats.forEach(chat => {
+        const chatItem = document.createElement('div');
+        chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+        chatItem.setAttribute('data-id', chat.id); // Add data-id attribute
+        chatItem.innerHTML = `
+            <div class="chat-icon">
+                <i class="fas fa-comment"></i>
+            </div>
+            <div class="chat-info">
+                <div class="chat-title">${chat.title}</div>
+                <div class="chat-preview">${chat.messages[0]?.content || 'No messages yet'}</div>
+            </div>
+        `;
+        
+        chatItem.addEventListener('click', () => switchToChat(chat.id));
+        chatHistoryList.appendChild(chatItem);
+    });
+}
+
+// Switch to a specific chat
+function switchToChat(chatId) {
+    // Don't switch if it's the same chat
+    if (currentChatId === chatId) return;
+    
+    currentChatId = chatId;
+    const chat = chats.find(c => c.id === chatId);
+    
+    if (chat) {
+        // Clear current messages
+        messagesContainer.innerHTML = '';
+        
+        // Load chat messages
+        chat.messages.forEach(msg => {
+            appendMessage(msg.content, msg.sender);
+        });
+        
+        // Update active state in sidebar
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const activeItem = document.querySelector(`.chat-item[data-id="${chatId}"]`);
+        if (activeItem) {
+            activeItem.classList.add('active');
+        }
+    }
+}
+
+// Modify the existing appendMessage function to save messages
+const originalAppendMessage = appendMessage;
+appendMessage = function(content, sender) {
+    originalAppendMessage(content, sender);
+    
+    if (currentChatId) {
+        const chat = chats.find(c => c.id === currentChatId);
+        if (chat) {
+            chat.messages.push({ content, sender });
+            if (chat.messages.length === 1) {
+                chat.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+            }
+            saveChats();
+            renderChatHistory();
+        }
+    }
+};
+
+// Initialize chat history
+newChatBtn.addEventListener('click', createNewChat);
+renderChatHistory();
+
+// Create initial chat if none exists
+if (chats.length === 0) {
+    createNewChat();
+}
+
+// Add click event listeners to close sidebar
+document.querySelector('.chat-messages').addEventListener('click', () => {
+    if (chatHistorySidebar.classList.contains('active')) {
+        chatHistorySidebar.classList.remove('active');
+        toggleSidebar.classList.remove('active');
+        chatContainer.classList.remove('with-sidebar');
+    }
+});
+
+document.querySelector('.chat-input-container').addEventListener('click', () => {
+    if (chatHistorySidebar.classList.contains('active')) {
+        chatHistorySidebar.classList.remove('active');
+        toggleSidebar.classList.remove('active');
+        chatContainer.classList.remove('with-sidebar');
+    }
+});
+
+// Prevent sidebar from closing when clicking inside it
+chatHistorySidebar.addEventListener('click', (e) => {
+    e.stopPropagation();
 });
