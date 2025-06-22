@@ -3,6 +3,16 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 const logoimg = document.getElementById('logo');
 const footerlogoimg = document.getElementById('footerLogo');
 
+// Global variables for speech control
+let currentSpeech = null;
+let speechStartTime = 0;
+let speechDuration = 0;
+let speechProgressInterval = null;
+let currentSpeechText = '';
+let isDragging = false;
+let isSeeking = false;
+let words = [];
+
 function toggleBox(event) {
     const outerBox = document.querySelector('.outer-box');
     outerBox.style.transform = outerBox.style.transform === 'translateY(0%)' 
@@ -165,6 +175,8 @@ User: Explain in detail that how AI works in a few words
 [query] Absolutely. Since you asked for a detailed explanation, here it goes: [Provide a detailed explanation of how AI works...]
 
 Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally.
+
+Now reply User :
 `;
 
 // Auto-resize textarea
@@ -432,6 +444,50 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
             }, 2000);
         });
     });
+
+    const speakBtn = document.createElement('i');
+    speakBtn.className = 'fas fa-volume-up message-action-btn';
+    speakBtn.title = 'Speak';
+    speakBtn.addEventListener('click', () => {
+        // Get the plain text content, excluding code blocks
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        
+        // Remove all code blocks and pre elements
+        tempDiv.querySelectorAll('pre, code').forEach(block => block.remove());
+        
+        // Get the remaining text
+        let textContent = tempDiv.textContent.trim();
+        
+        // Remove AI response tags and special symbols
+        textContent = textContent
+            .replace(/\[query\]/gi, '') // Remove [query] tags
+            .replace(/\[code\].*?\[\/code\]/gis, '') // Remove [code] blocks
+            .replace(/\[task\].*?\[\/task\]/gis, '') // Remove [task] blocks
+            .replace(/\[search\].*?\[\/search\]/gis, '') // Remove [search] blocks
+            .replace(/\[code\].*?(?=\[|$)/gis, '') // Remove [code] without closing tag
+            .replace(/\[task\].*?(?=\[|$)/gis, '') // Remove [task] without closing tag
+            .replace(/\[search\].*?(?=\[|$)/gis, '') // Remove [search] without closing tag
+            .replace(/[`*]/g, '') // Remove backticks and asterisks
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .trim();
+        
+        // Only speak if there's meaningful content left
+        if (textContent.length > 10) {
+            if (window.speechSynthesis) {
+                if (speechSynthesis.getVoices().length === 0) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        speakText(textContent);
+                    };
+                } else {
+                    speakText(textContent);
+                }
+            }
+        } else {
+            showFeedbackToast('No readable content to speak');
+        }
+    });
+
     // Add code copy buttons to all code blocks in this message
     contentDiv.querySelectorAll('pre > code').forEach(codeBlock => {
         // Prevent duplicate buttons
@@ -452,7 +508,6 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
         codeBlock.parentElement.style.position = 'relative';
         codeBlock.parentElement.appendChild(copyBtn);
     });
-    actionsDiv.appendChild(copyBtn);
 
     const likeBtn = document.createElement('i');
     likeBtn.className = 'fas fa-thumbs-up message-action-btn';
@@ -515,6 +570,7 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
     }
 
     actionsDiv.appendChild(copyBtn);
+    actionsDiv.appendChild(speakBtn);
     actionsDiv.appendChild(likeBtn);
     actionsDiv.appendChild(dislikeBtn);
     actionsDiv.appendChild(rewriteBtn);
@@ -535,6 +591,78 @@ chatInput.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Focus chat input
     chatInput.focus();
+    
+    // Initialize speech synthesis
+    if (window.speechSynthesis) {
+        // Load voices
+        let voices = speechSynthesis.getVoices();
+        if (voices.length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                voices = speechSynthesis.getVoices();
+                console.log('Voices loaded on page load:', voices);
+            };
+        } else {
+            console.log('Voices already available:', voices);
+        }
+
+        // Resume speech synthesis if it was paused
+        speechSynthesis.onpause = () => {
+            console.log('Speech synthesis paused, resuming...');
+            speechSynthesis.resume();
+        };
+    } else {
+        console.error('Speech synthesis not supported in this browser');
+    }
+
+    // Add event listeners for speech controls
+    const speechStop = document.getElementById('speech-stop');
+    const speechProgress = document.getElementById('speech-progress');
+
+    if (speechStop) {
+        speechStop.addEventListener('click', () => {
+            if (currentSpeech) {
+                window.speechSynthesis.cancel();
+                currentSpeech = null;
+                hideSpeechControl();
+            }
+        });
+    }
+
+    if (speechProgress) {
+        // Handle progress bar interaction
+        speechProgress.addEventListener('mousedown', () => {
+            isDragging = true;
+            if (speechProgressInterval) {
+                clearInterval(speechProgressInterval);
+            }
+        });
+
+        speechProgress.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (currentSpeechText) {
+                const percentage = speechProgress.value;
+                const wordPosition = Math.floor((percentage / 100) * words.length);
+                const remainingText = getTextFromWordPosition(currentSpeechText, wordPosition);
+                speakFromPosition(remainingText, percentage);
+            }
+        });
+
+        speechProgress.addEventListener('input', (e) => {
+            if (currentSpeechText) {
+                const percentage = e.target.value;
+                const wordPosition = Math.floor((percentage / 100) * words.length);
+                const remainingText = getTextFromWordPosition(currentSpeechText, wordPosition);
+                
+                // Update the speech text display
+                const speechText = document.getElementById('speech-text');
+                if (speechText) {
+                    speechText.textContent = remainingText.length > 50 ? 
+                        remainingText.substring(0, 47) + '...' : 
+                        remainingText;
+                }
+            }
+        });
+    }
 });
 
 // Chat History Functionality
@@ -681,6 +809,19 @@ function renderChatHistory() {
             }
         });
 
+        // Right-click to open options menu
+        chatItem.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const optionsMenu = chatItem.querySelector('.options-menu');
+            
+            // Close all other open menus first
+            document.querySelectorAll('.options-menu.active').forEach(menu => {
+                if (menu !== optionsMenu) menu.classList.remove('active');
+            });
+            
+            optionsMenu.classList.add('active');
+        });
+
         // Double click to rename
         chatItem.addEventListener('dblclick', (e) => {
             if (!e.target.closest('.options-menu') && !e.target.closest('.chat-item-options')) {
@@ -722,7 +863,26 @@ function renderChatHistory() {
 
     // Close options menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.options-menu') && !e.target.closest('.chat-item-options')) {
+        // If clicking on a chat item, close other options menus but keep the clicked one open
+        const clickedChatItem = e.target.closest('.chat-item');
+        if (clickedChatItem) {
+            const clickedOptionsMenu = clickedChatItem.querySelector('.options-menu');
+            document.querySelectorAll('.options-menu.active').forEach(menu => {
+                if (menu !== clickedOptionsMenu) {
+                    menu.classList.remove('active');
+                }
+            });
+        } else if (!e.target.closest('.options-menu') && !e.target.closest('.chat-item-options')) {
+            // If clicking outside chat items and options, close all menus
+            document.querySelectorAll('.options-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+        }
+    });
+
+    // Close options menu when right-clicking outside
+    document.addEventListener('contextmenu', (e) => {
+        if (!e.target.closest('.options-menu') && !e.target.closest('.chat-item')) {
             document.querySelectorAll('.options-menu.active').forEach(menu => {
                 menu.classList.remove('active');
             });
@@ -911,4 +1071,230 @@ function showFeedbackToast(message) {
         toast.style.opacity = '0';
         setTimeout(() => { toast.remove(); }, 400);
     }, 1800);
+}
+
+// Function to update speech progress
+function updateSpeechProgress() {
+    if (!currentSpeech || isDragging || isSeeking) return;
+    
+    const progress = document.getElementById('speech-progress');
+    if (progress) {
+        const elapsed = Date.now() - speechStartTime;
+        const percentage = Math.min((elapsed / speechDuration) * 100, 100);
+        progress.value = percentage;
+    }
+}
+
+// Function to show speech control
+function showSpeechControl(text) {
+    const speechControl = document.getElementById('speech-control');
+    const speechText = document.getElementById('speech-text');
+    const progress = document.getElementById('speech-progress');
+    
+    if (speechControl && speechText && progress) {
+        speechText.textContent = text.length > 50 ? text.substring(0, 47) + '...' : text;
+        progress.value = 0;
+        speechControl.style.display = 'block';
+    }
+}
+
+// Function to hide speech control
+function hideSpeechControl() {
+    if (isSeeking) return; // Don't hide if seeking
+    const speechControl = document.getElementById('speech-control');
+    if (speechControl) {
+        speechControl.style.display = 'none';
+    }
+    if (speechProgressInterval) {
+        clearInterval(speechProgressInterval);
+        speechProgressInterval = null;
+    }
+}
+
+// Function to get text from word position
+function getTextFromWordPosition(text, wordPosition) {
+    words = text.split(/\s+/);
+    if (wordPosition >= words.length) return '';
+    return words.slice(wordPosition).join(' ');
+}
+
+// Function to speak text from position
+function speakFromPosition(text, startPosition) {
+    isSeeking = true;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set voice to Google UK English Male
+    const voices = speechSynthesis.getVoices();
+    const ukVoice = voices.find(voice => voice.name === 'Google UK English Male');
+    if (ukVoice) {
+        utterance.voice = ukVoice;
+    }
+
+    // Set speech parameters
+    utterance.rate = 1;
+    utterance.pitch = 0.8;
+    utterance.volume = 1;
+
+    // Calculate duration and start time
+    const wordCount = words.length;
+    speechDuration = (wordCount / 150) * 60 * 1000;
+    speechStartTime = Date.now() - (startPosition / 100) * speechDuration;
+
+    // Add event listeners
+    utterance.onstart = () => {
+        currentSpeech = utterance;
+        isSeeking = false;
+        if (!isDragging) {
+            showSpeechControl(text);
+            speechProgressInterval = setInterval(updateSpeechProgress, 100);
+        }
+    };
+
+    utterance.onend = () => {
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    utterance.onerror = () => {
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
+}
+
+// Function to speak text
+function speakText(text) {
+    console.log('Starting speech synthesis');
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    currentSpeechText = text;
+    words = text.split(/\s+/);
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set voice to Google UK English Male
+    const voices = speechSynthesis.getVoices();
+    console.log('Available voices:', voices);
+    
+    // Try to find a suitable voice
+    let selectedVoice = voices.find(voice => voice.name === 'Google UK English Male');
+    if (!selectedVoice) {
+        // Fallback to any English voice
+        selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
+    }
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('Using voice:', selectedVoice.name);
+    } else {
+        console.log('Using default voice');
+    }
+
+    // Set speech parameters
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    // Calculate duration and start time
+    const wordCount = words.length;
+    speechDuration = (wordCount / 150) * 60 * 1000;
+    speechStartTime = Date.now();
+
+    // Add event listeners
+    utterance.onstart = () => {
+        console.log('Speech started');
+        currentSpeech = utterance;
+        showSpeechControl(text);
+        speechProgressInterval = setInterval(updateSpeechProgress, 100);
+    };
+
+    utterance.onend = () => {
+        console.log('Speech ended');
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    utterance.onerror = (event) => {
+        console.error('Speech error:', event);
+        currentSpeech = null;
+        hideSpeechControl();
+    };
+
+    // Speak the text
+    try {
+        // Ensure speech synthesis is ready
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+        
+        // Add a small delay before speaking
+        setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+            console.log('Speech synthesis initiated');
+        }, 100);
+    } catch (error) {
+        console.error('Error starting speech:', error);
+    }
+}
+
+// Function to add speak icon to message
+function addSpeakIcon(messageDiv, content) {
+    const speakIcon = document.createElement('i');
+    speakIcon.classList.add('fas', 'fa-volume-up', 'speak-icon');
+    speakIcon.title = 'Speak';
+    
+    const tooltip = document.createElement('span');
+    tooltip.classList.add('speak-tooltip');
+    tooltip.textContent = 'Speak';
+    
+    speakIcon.addEventListener('click', () => {
+        console.log('Speak icon clicked'); // Debug log
+        
+        // Get the plain text content, excluding code blocks
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        
+        // Remove all code blocks
+        tempDiv.querySelectorAll('pre').forEach(block => block.remove());
+        
+        // Get the remaining text
+        let textContent = tempDiv.textContent.trim();
+        
+        // Remove special symbols
+        textContent = textContent
+            .replace(/[`*]/g, '') // Remove backticks and asterisks
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .trim();
+        
+        console.log('Text to speak:', textContent); // Debug log
+        
+        // Check if speech synthesis is available
+        if (!window.speechSynthesis) {
+            console.error('Speech synthesis not supported');
+            return;
+        }
+
+        // Initialize voices if not already done
+        if (speechSynthesis.getVoices().length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('Voices loaded:', speechSynthesis.getVoices());
+                speakText(textContent);
+            };
+        } else {
+            speakText(textContent);
+        }
+    });
+    
+    messageDiv.appendChild(speakIcon);
+    messageDiv.appendChild(tooltip);
 }

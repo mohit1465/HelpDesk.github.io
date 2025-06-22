@@ -1130,3 +1130,71 @@ body {
 .code-copy-btn i {
     pointer-events: none;
 }
+
+/* Speech-related styles */
+.speak-icon {
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 10px;
+    transition: color 0.3s ease;
+}
+
+.speak-icon:hover {
+    color: var(--buttons-bg);
+}
+
+.speak-tooltip {
+    position: absolute;
+    background: var(--background-color);
+    color: var(--text-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    border: 1px solid var(--main-br);
+    z-index: 1000;
+}
+
+.speak-icon:hover + .speak-tooltip {
+    opacity: 1;
+}
+
+#speech-control {
+    transition: opacity 0.3s ease;
+}
+
+#speech-progress {
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--main-br);
+    border-radius: 2px;
+    outline: none;
+}
+
+#speech-progress::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--buttons-bg);
+    cursor: pointer;
+}
+
+#speech-progress::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--buttons-bg);
+    cursor: pointer;
+    border: none;
+}
+
+#speech-stop:hover {
+    background: var(--text-color) !important;
+    color: var(--background-color) !important;
+}
