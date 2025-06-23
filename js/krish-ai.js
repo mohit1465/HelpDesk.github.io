@@ -292,7 +292,7 @@ User: Explain in detail that how AI works in a few words
 →  
 [query] Absolutely. Since you asked for a detailed explanation, here it goes: [Provide a detailed explanation of how AI works...]
 
-Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally.
+Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally. you can also use emoji in reply.
 `;
 
 // Update response handling function

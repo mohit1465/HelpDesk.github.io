@@ -13,6 +13,10 @@ let isDragging = false;
 let isSeeking = false;
 let words = [];
 
+// Enhanced message formatting and UI features
+let isTyping = false;
+let typingTimeout = null;
+
 function toggleBox(event) {
     const outerBox = document.querySelector('.outer-box');
     outerBox.style.transform = outerBox.style.transform === 'translateY(0%)' 
@@ -135,6 +139,7 @@ Your job is to respond to any user input ([user_query]) by following this format
    - If the user asks for a *detailed* explanation, give a thorough response.
    - If the user asks for a *short* or *brief* reply, keep it concise.
    - If there's a conflict in wording (e.g., "in detail" and "in a few words"), always prioritize detail when asked.
+   - You can use emojis in your responses to make them more engaging and friendly.
 
 2. Use [task] only if the user is requesting an action or operation (like "open YouTube", "set reminder").
 
@@ -149,32 +154,32 @@ Examples:
 
 User: can you open yt  
 →  
-[query] Of course, wait a second.  
+[query] Of course, wait a second! 🚀  
 [task] open youtube  
-[query] I think it opened, enjoy!
+[query] I think it opened, enjoy! 🎉
 
 User: who are you  
 →  
-[query] Ohh dear, I am your friend Krish.
+[query] Ohh dear, I am your friend Krish! 🤖✨
 
 User: what current time  
 →  
-[query] Ooh wait, I think it's...  
+[query] Ooh wait, I think it's... ⏰  
 [search] [google] what time in Mahendergarh, Haryana  
-[query] Anything else?
+[query] Anything else? 😊
 
 User: write a hello world in python
 →
-[query] Here is a simple "Hello, World!" program in Python:
+[query] Here is a simple "Hello, World!" program in Python: 🐍
 [code] python
 print("Hello, World!")
-[query] Let me know if you want to see it in another language!
+[query] Let me know if you want to see it in another language! 💻
 
 User: Explain in detail that how AI works in a few words  
 →  
-[query] Absolutely. Since you asked for a detailed explanation, here it goes: [Provide a detailed explanation of how AI works...]
+[query] Absolutely! Since you asked for a detailed explanation, here it goes: 🤖 [Provide a detailed explanation of how AI works...]
 
-Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally.
+Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally. You can also use emoji in reply to make conversations more engaging and friendly! 😊
 
 Now reply User :
 `;
@@ -208,7 +213,6 @@ async function handleResponse(userInput) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
 
     try {
-        console.log('Sending request to Gemini API...');
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -231,7 +235,6 @@ async function handleResponse(userInput) {
         }
 
         const data = await response.json();
-        console.log('API Response:', data);
 
         if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
             console.error('Invalid API Response:', data);
@@ -262,44 +265,72 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-function formatAIResponse(text) {
+// Enhanced markdown parsing
+function enhancedFormatAIResponse(text) {
     if (!text) return '';
 
     // Remove any closing [/code] tags that may appear
     text = text.replace(/\[\/code\]/gi, '');
 
+    // Handle code blocks with language detection
     text = text.replace(/\[code\]\s*(\w+)\n([\s\S]*?)(?=\[\w+\]|$)/g, (_match, language, code) => {
         return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
     });
 
+    // Handle regular markdown code blocks
+    text = text.replace(/```(\w+)?\s*([\s\S]*?)```/g, (_match, lang, code) => {
+        const language = lang || '';
+        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
+    });
+
+    // Remove AI response tags
     text = text.replace(/\[query\]/g, '');
     text = text.replace(/\[task\]\s*(.*?)(?=\[\w+\]|$)/g, `<p><i>Task: I can't do this yet.</i></p>`);
     text = text.replace(/\[search\]\s*(.*?)(?=\[\w+\]|$)/g, `<p><i>Search: I can't do this yet.</i></p>`);
 
-    text = text.replace(/```([\s\S]*?)```/g, (_match, code) => {
-        const escapedCode = escapeHtml(code.trim());
-        return `<pre><code>${escapedCode}</code></pre>`;
-    });
-
+    // Enhanced markdown parsing
     const lines = text.split('\n');
     let html = '';
     let inList = false;
+    let inCodeBlock = false;
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
 
+        // Handle code blocks
         if (line.includes('<pre><code>')) {
             if (inList) {
                 html += '</ul>';
                 inList = false;
             }
             html += line;
+            inCodeBlock = true;
             continue;
         }
 
-        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        if (inCodeBlock && line.includes('</code></pre>')) {
+            html += line;
+            inCodeBlock = false;
+            continue;
+        }
 
-        if (line.trim().startsWith('* ')) {
+        if (inCodeBlock) {
+            html += line + '\n';
+            continue;
+        }
+
+        // Handle bold text with different sizes
+        line = line.replace(/\*\*(.*?)\*\*/g, '<strong style="font-size: 1.2em;">$1</strong>');
+        line = line.replace(/\*(.*?)\*/g, '<strong style="font-size: 1.1em;">$1</strong>');
+
+        // Handle italic text
+        line = line.replace(/\_(.*?)\_/g, '<em>$1</em>');
+
+        // Handle links
+        line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: var(--buttons-bg);">$1</a>');
+
+        // Handle lists
+        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
             if (!inList) {
                 html += '<ul>';
                 inList = true;
@@ -311,6 +342,13 @@ function formatAIResponse(text) {
             } else {
                 html += `<li>${content}</li>`;
             }
+        } else if (line.trim().match(/^\d+\./)) {
+            if (!inList) {
+                html += '<ol>';
+                inList = true;
+            }
+            const content = line.trim().replace(/^\d+\.\s*/, '');
+            html += `<li>${content}</li>`;
         } else {
             if (inList) {
                 html += '</ul>';
@@ -343,18 +381,26 @@ async function sendMessage() {
     sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
     try {
-        // Add user message
+        // Add user message with timestamp
         appendMessage(message, 'user');
         chatInput.value = '';
         chatInput.style.height = 'auto';
 
+        // Show typing indicator
+        showTypingIndicator();
+
         // Get AI response
         const response = await handleResponse(message);
+        
+        // Hide typing indicator
+        hideTypingIndicator();
+        
         const chat = chats.find(c => c.id === currentChatId);
         const messageIndex = chat ? chat.messages.length : -1;
         appendMessage(response, 'ai', true, message, messageIndex, true);
     } catch (error) {
         console.error('Error:', error);
+        hideTypingIndicator();
         appendMessage("I apologize, but I encountered an error. Please try again.", 'ai');
     } finally {
         isProcessing = false;
@@ -365,7 +411,7 @@ async function sendMessage() {
 }
 
 // Append message to chat
-function appendMessage(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false) {
+function appendMessage(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
     
@@ -376,7 +422,7 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
     if (sender === 'ai' && stream) {
         // Streaming animation for new AI responses
         let i = 0;
-        const formatted = formatAIResponse(content);
+        const formatted = enhancedFormatAIResponse(content);
         // Remove HTML tags for animation, but keep tags for final rendering
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = formatted;
@@ -393,25 +439,64 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
                 contentDiv.innerHTML = formatted;
                 // Attach action icons after animation
                 addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
+                // Add timestamp for AI messages
+                const timestampDiv = document.createElement('div');
+                const timeToShow = timestamp
+                    ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timestampDiv.className = 'message-timestamp';
+                timestampDiv.textContent = timeToShow;
+                timestampDiv.style.fontSize = '0.75rem';
+                timestampDiv.style.color = 'var(--text-color)';
+                timestampDiv.style.opacity = '0.6';
+                timestampDiv.style.marginTop = '5px';
+                timestampDiv.style.textAlign = 'right';
+                messageDiv.appendChild(timestampDiv);
             }
         }
         animate();
     } else if (sender === 'ai') {
-        contentDiv.innerHTML = formatAIResponse(content);
+        contentDiv.innerHTML = enhancedFormatAIResponse(content);
         addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
+        // Add timestamp for AI messages
+        const timestampDiv = document.createElement('div');
+        const timeToShow = timestamp
+            ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timestampDiv.className = 'message-timestamp';
+        timestampDiv.textContent = timeToShow;
+        timestampDiv.style.fontSize = '0.75rem';
+        timestampDiv.style.color = 'var(--text-color)';
+        timestampDiv.style.opacity = '0.6';
+        timestampDiv.style.marginTop = '5px';
+        timestampDiv.style.textAlign = 'right';
+        messageDiv.appendChild(timestampDiv);
     } else {
         contentDiv.textContent = content;
+        // Add timestamp for user messages at the bottom
+        const timestampDiv = document.createElement('div');
+        const timeToShow = timestamp
+            ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timestampDiv.className = 'message-timestamp';
+        timestampDiv.textContent = timeToShow;
+        timestampDiv.style.fontSize = '0.75rem';
+        timestampDiv.style.color = 'var(--text-color)';
+        timestampDiv.style.opacity = '0.6';
+        timestampDiv.style.marginTop = '5px';
+        timestampDiv.style.textAlign = 'right';
+        messageDiv.appendChild(timestampDiv);
     }
     
     messagesContainer.appendChild(messageDiv);
     
     // Scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    scrollToBottom();
 
     if (save && currentChatId) {
         const chat = chats.find(c => c.id === currentChatId);
         if (chat) {
-            const messageToSave = { content, sender };
+            const messageToSave = { content, sender, timestamp: new Date().toISOString() };
             if (sender === 'ai' && userQuery) {
                 messageToSave.userQuery = userQuery;
             }
@@ -470,6 +555,7 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
             .replace(/\[search\].*?(?=\[|$)/gis, '') // Remove [search] without closing tag
             .replace(/[`*]/g, '') // Remove backticks and asterisks
             .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
             .trim();
         
         // Only speak if there's meaningful content left
@@ -542,7 +628,7 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
                 
                 // Animate the new response
                 let i = 0;
-                const formatted = formatAIResponse(newResponse);
+                const formatted = enhancedFormatAIResponse(newResponse);
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = formatted;
                 const plainText = tempDiv.textContent || '';
@@ -592,6 +678,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Focus chat input
     chatInput.focus();
     
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
+    
     // Initialize speech synthesis
     if (window.speechSynthesis) {
         // Load voices
@@ -599,10 +688,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (voices.length === 0) {
             speechSynthesis.onvoiceschanged = () => {
                 voices = speechSynthesis.getVoices();
-                console.log('Voices loaded on page load:', voices);
             };
         } else {
-            console.log('Voices already available:', voices);
+            console.log('Voices already available');
         }
 
         // Resume speech synthesis if it was paused
@@ -963,7 +1051,7 @@ function switchToChat(chatId) {
         } else {
             // Load chat messages without re-saving them
             chat.messages.forEach((msg, index) => {
-                appendMessage(msg.content, msg.sender, false, msg.userQuery, index, false);
+                appendMessage(msg.content, msg.sender, false, msg.userQuery, index, false, msg.timestamp);
             });
         }
         
@@ -1297,4 +1385,99 @@ function addSpeakIcon(messageDiv, content) {
     
     messageDiv.appendChild(speakIcon);
     messageDiv.appendChild(tooltip);
+}
+
+// Function to show typing indicator
+function showTypingIndicator() {
+    if (isTyping) return;
+    
+    isTyping = true;
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message ai typing-indicator';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span style="margin-left: 10px; color: var(--text-color); opacity: 0.7;">AI is typing...</span>
+        </div>
+    `;
+    messagesContainer.appendChild(typingDiv);
+    scrollToBottom();
+}
+
+// Function to hide typing indicator
+function hideTypingIndicator() {
+    isTyping = false;
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Enhanced scroll to bottom with smooth animation
+function scrollToBottom() {
+    messagesContainer.scrollTo({
+        top: messagesContainer.scrollHeight,
+        behavior: 'smooth'
+    });
+}
+
+// Function to add timestamp to messages
+function addTimestamp(messageDiv) {
+    const actionsDiv = messageDiv.querySelector('.message-actions');
+    if (actionsDiv) {
+        const timestamp = document.createElement('div');
+        timestamp.className = 'message-timestamp';
+        timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timestamp.style.fontSize = '0.75rem';
+        timestamp.style.color = 'var(--text-color)';
+        timestamp.style.opacity = '0.6';
+        timestamp.style.marginLeft = 'auto'; // Push to right side
+        timestamp.style.alignSelf = 'center';
+        actionsDiv.appendChild(timestamp);
+    }
+}
+
+// Keyboard shortcuts
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+Enter to send message
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+        
+        // Ctrl+K for new chat
+        if (e.ctrlKey && e.key === 'k') {
+            e.preventDefault();
+            createNewChat();
+        }
+        
+        // Ctrl+L to focus input
+        if (e.ctrlKey && e.key === 'l') {
+            e.preventDefault();
+            chatInput.focus();
+        }
+        
+        // Escape to close modals/menus
+        if (e.key === 'Escape') {
+            // Close options menus
+            document.querySelectorAll('.options-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+            
+            // Close speech control
+            hideSpeechControl();
+            
+            // Close outer box
+            const outerBox = document.querySelector('.outer-box');
+            if (outerBox) {
+                outerBox.style.transform = 'translateY(100%)';
+            }
+        }
+    });
 }

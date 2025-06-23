@@ -23,7 +23,7 @@
     --text-color: #ecf0f1;
     --text-color-dark: #000f1c;
     --bg: linear-gradient(#00000088, #00000077);
-    --main-bg: linear-gradient(#13131371, #29292950);
+    --main-bg: linear-gradient(#131313b3, #29292983);
     --main-br: #eeeeee23;
     --out-br: #eeeeee23;
     --message-user: linear-gradient(#ff7300, #fa6441);
@@ -1197,4 +1197,154 @@ body {
 #speech-stop:hover {
     background: var(--text-color) !important;
     color: var(--background-color) !important;
+}
+
+/* Typing indicator styles */
+.typing-indicator {
+    opacity: 0.8;
+}
+
+.typing-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--buttons-bg);
+    animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typing-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Enhanced message formatting */
+.message.ai a {
+    color: var(--buttons-bg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--buttons-bg);
+    transition: all 0.3s ease;
+}
+
+.message.ai a:hover {
+    color: var(--text-color);
+    border-bottom-color: var(--text-color);
+}
+
+.message.ai em {
+    font-style: italic;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.message.ai ol {
+    margin-left: 20px;
+    padding-left: 10px;
+}
+
+.message.ai ol li {
+    margin-bottom: 5px;
+}
+
+/* Message timestamp */
+.message-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.6;
+    margin-top: 5px;
+    text-align: right;
+}
+
+/* Enhanced code block styling */
+.message.ai pre {
+    position: relative;
+    background: var(--background-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid var(--main-br);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.message.ai pre code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Syntax highlighting for common languages */
+.language-python {
+    color: #3776ab;
+}
+
+.language-javascript {
+    color: #f7df1e;
+}
+
+.language-html {
+    color: #e34c26;
+}
+
+.language-css {
+    color: #1572b6;
+}
+
+.language-java {
+    color: #ed8b00;
+}
+
+.language-cpp {
+    color: #00599c;
+}
+
+/* Enhanced list styling */
+.message.ai ul li, .message.ai ol li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.message.ai ul li::marker {
+    color: var(--buttons-bg);
+}
+
+.message.ai ol li::marker {
+    color: var(--buttons-bg);
+    font-weight: bold;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 768px) {
+    .typing-dots span {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .message.ai pre {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .message-timestamp {
+        font-size: 0.7rem;
+    }
 }
