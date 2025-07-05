@@ -150,6 +150,8 @@ Your job is to respond to any user input ([user_query]) by following this format
 
 5. Use [code] {code_language} for a code block.
 
+6. Use [generate] (user prompt) if the user wants to generate an image from text or from text and image(s).
+
 Examples:
 
 User: can you open yt  
@@ -178,6 +180,10 @@ print("Hello, World!")
 User: Explain in detail that how AI works in a few words  
 →  
 [query] Absolutely! Since you asked for a detailed explanation, here it goes: 🤖 [Provide a detailed explanation of how AI works...]
+
+User: generate a picture of a cat astronaut
+→
+[generate] generate a picture of a cat astronaut
 
 Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally. You can also use emoji in reply to make conversations more engaging and friendly! 😊
 
@@ -209,8 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle AI response
 async function handleResponse(userInput) {
-    const apiKey = "AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+    const apiKey = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
 
     try {
         const response = await fetch(url, {
@@ -369,35 +375,239 @@ function enhancedFormatAIResponse(text) {
     });
 }
 
+// Enhanced AI response handler for [generate] blocks
+async function handleAIResponseWithGenerate(response, userImages) {
+    // Split the response into [query] before, [generate], and [query] after
+    const generateRegex = /\[generate\](.*?)(?=\[|$)/is;
+    const queryRegex = /\[query\](.*?)(?=\[|$)/gis;
+    let queries = [];
+    let match;
+    while ((match = queryRegex.exec(response)) !== null) {
+        queries.push(match[1].trim());
+    }
+    const generateMatch = response.match(generateRegex);
+    const generatePrompt = generateMatch ? generateMatch[1].trim() : null;
+
+    // Combine all text content into one message
+    let combinedText = '';
+    if (queries.length > 0) {
+        combinedText += queries[0];
+    }
+
+    // 2. If [generate] present, show progress bar, generate image, then show image
+    if (generatePrompt) {
+        // Show progress bar
+        const progressDiv = document.createElement('div');
+        progressDiv.className = 'ai-image-progress';
+        progressDiv.style.display = 'flex';
+        progressDiv.style.alignItems = 'center';
+        progressDiv.style.gap = '10px';
+        progressDiv.style.margin = '10px 0 8px 0';
+        progressDiv.innerHTML = `
+            <div class="progress-bar-outer" style="width: 120px; height: 10px; background: #eee; border-radius: 6px; overflow: hidden;">
+                <div class="progress-bar-inner" style="width: 0%; height: 100%; background: #fa6441; transition: width 0.4s;"></div>
+            </div>
+            <span style="color: var(--text-color); font-size: 0.95em;">Generating image...</span>
+        `;
+        messagesContainer.appendChild(progressDiv);
+        scrollToBottom();
+        // Animate progress bar
+        let progress = 0;
+        const progressBar = progressDiv.querySelector('.progress-bar-inner');
+        const progressInterval = setInterval(() => {
+            progress = Math.min(progress + Math.random() * 20, 95);
+            progressBar.style.width = progress + '%';
+        }, 400);
+        // Generate image
+        const imageBase64 = await generateImageWithGemini(generatePrompt, userImages || []);
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        setTimeout(() => {
+            progressDiv.remove();
+            if (imageBase64) {
+                // Use appendMessage to create the message with image
+                const fullContent = (combinedText || '') + (queries.length > 1 ? queries[1] : '');
+                
+                // Compress image before saving to reduce storage size
+                compressImageForStorage(imageBase64).then(compressedImage => {
+                    // Use appendMessage with the compressed image
+                    appendMessage(fullContent, 'ai', true, null, -1, false, null, null, true, compressedImage);
+                }).catch(error => {
+                    console.error('Error compressing image:', error);
+                    // Save without image if compression fails
+                    appendMessage(fullContent + ' (Image not saved - compression failed)', 'ai', true, null, -1, false, null, null, false, null);
+                });
+            } else {
+                appendMessage('Image generation failed.', 'ai');
+            }
+        }, 400);
+    } else {
+        // If no [generate] block, just show the combined text
+        if (combinedText) {
+            appendMessage(combinedText, 'ai');
+        }
+    }
+}
+
 // Handle sending messages
 async function sendMessage() {
     if (isProcessing) return;
     
     const message = chatInput.value.trim();
-    if (!message) return;
+    if (!message && selectedImages.length === 0) return;
 
     isProcessing = true;
     sendButton.disabled = true;
     sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
     try {
-        // Add user message with timestamp
-        appendMessage(message, 'user');
+        // Add user message with timestamp and images
+        appendMessage(message, 'user', true, null, -1, false, null, selectedImages.length > 0 ? [...selectedImages] : null);
         chatInput.value = '';
         chatInput.style.height = 'auto';
 
         // Show typing indicator
         showTypingIndicator();
 
+        // If the message contains [generate], call image generation
+        if (/\[generate\]/i.test(message)) {
+            // Extract prompt after [generate]
+            const match = message.match(/\[generate\](.*)/i);
+            const promptText = match ? match[1].trim() : '';
+            const images = selectedImages.length > 0 ? [...selectedImages] : [];
+            const imageBase64 = await generateImageWithGemini(promptText, images);
+            hideTypingIndicator();
+            if (imageBase64) {
+                // Create a proper AI message with image
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', 'ai');
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.classList.add('message-content');
+                
+                // Add the generated image
+                const imgElem = document.createElement('img');
+                imgElem.src = 'data:image/png;base64,' + imageBase64;
+                imgElem.alt = 'Generated Image';
+                imgElem.style.width = '220px';
+                imgElem.style.height = 'auto';
+                imgElem.style.borderRadius = '10px';
+                imgElem.style.border = '2px solid #fa6441';
+                imgElem.style.background = '#fff';
+                imgElem.style.boxShadow = '0 2px 8px rgba(0,0,0,0.09)';
+                imgElem.style.margin = '10px 0';
+                imgElem.style.display = 'block';
+                
+                contentDiv.appendChild(imgElem);
+                messageDiv.appendChild(contentDiv);
+                
+                // Add message actions
+                addAIMessageActions(messageDiv, contentDiv, 'Generated image for: ' + promptText, null, -1);
+                
+                // Add timestamp
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'message-timestamp';
+                timestampDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timestampDiv.style.fontSize = '0.75rem';
+                timestampDiv.style.color = 'var(--text-color)';
+                timestampDiv.style.opacity = '0.6';
+                timestampDiv.style.marginTop = '5px';
+                timestampDiv.style.textAlign = 'right';
+                messageDiv.appendChild(timestampDiv);
+                
+                messagesContainer.appendChild(messageDiv);
+                scrollToBottom();
+                
+                // Save the message to chat history
+                if (currentChatId) {
+                    const chat = chats.find(c => c.id === currentChatId);
+                    if (chat) {
+                        // Compress image before saving to reduce storage size
+                        compressImageForStorage(imageBase64).then(compressedImage => {
+                            const messageToSave = { 
+                                content: 'Generated image for: ' + promptText, 
+                                sender: 'ai', 
+                                timestamp: new Date().toISOString(),
+                                hasGeneratedImage: true,
+                                imageBase64: compressedImage
+                            };
+                            
+                            // Check if adding this message would make data too large
+                            const tempChats = [...chats];
+                            const chatIndex = tempChats.findIndex(c => c.id === currentChatId);
+                            if (chatIndex !== -1) {
+                                tempChats[chatIndex].messages.push(messageToSave);
+                                if (isDataTooLarge(tempChats)) {
+                                    console.log('Message too large, saving without image...');
+                                    messageToSave.imageBase64 = null;
+                                    messageToSave.hasGeneratedImage = false;
+                                    messageToSave.content = 'Generated image for: ' + promptText + ' (Image not saved - storage limit)';
+                                }
+                            }
+                            
+                            chat.messages.push(messageToSave);
+                            saveChats();
+                            renderChatHistory();
+                        }).catch(error => {
+                            console.error('Error compressing image:', error);
+                            // Save without image if compression fails
+                            const messageToSave = { 
+                                content: 'Generated image for: ' + promptText + ' (Image not saved - compression failed)', 
+                                sender: 'ai', 
+                                timestamp: new Date().toISOString(),
+                                hasGeneratedImage: false
+                            };
+                            chat.messages.push(messageToSave);
+                            saveChats();
+                            renderChatHistory();
+                        });
+                    }
+                }
+            } else {
+                appendMessage('Image generation failed.', 'ai');
+            }
+            // Clear selected images and previews
+            selectedImages = [];
+            renderImagePreviews();
+            isProcessing = false;
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            chatInput.focus();
+            return;
+        }
+
+        let imageDescriptions = [];
+        for (const img of selectedImages) {
+            // Convert to base64 (strip data URL prefix)
+            const base64Image = img.dataUrl.split(',')[1];
+            const description = await analyzeImageWithGemini(base64Image, img.file.type);
+            imageDescriptions.push(`[${img.file.name}] ${description}`);
+        }
+
+        let finalMessage = message;
+        if (imageDescriptions.length > 0) {
+            finalMessage += "\nUser also sent the image(s):\n" + imageDescriptions.join('\n');
+        }
+
         // Get AI response
-        const response = await handleResponse(message);
-        
+        const response = await handleResponse(finalMessage);
+
         // Hide typing indicator
         hideTypingIndicator();
-        
-        const chat = chats.find(c => c.id === currentChatId);
-        const messageIndex = chat ? chat.messages.length : -1;
-        appendMessage(response, 'ai', true, message, messageIndex, true);
+
+        // If AI response contains [generate], use enhanced handler
+        if (/\[generate\]/i.test(response)) {
+            await handleAIResponseWithGenerate(response, selectedImages.length > 0 ? [...selectedImages] : null);
+        } else {
+            const chat = chats.find(c => c.id === currentChatId);
+            const messageIndex = chat ? chat.messages.length : -1;
+            appendMessage(response, 'ai', true, finalMessage, messageIndex, true);
+        }
+
+        // Clear selected images and previews
+        selectedImages = [];
+        renderImagePreviews();
+
     } catch (error) {
         console.error('Error:', error);
         hideTypingIndicator();
@@ -411,10 +621,35 @@ async function sendMessage() {
 }
 
 // Append message to chat
-function appendMessage(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null) {
+function appendMessage(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null, userImages = null, hasGeneratedImage = false, imageBase64 = null) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
     
+    // If user sent images, show them in a separate div before the message (for user only)
+    let imagesWrapper = null;
+    if (sender === 'user' && userImages && userImages.length > 0) {
+        imagesWrapper = document.createElement('div');
+        imagesWrapper.className = 'user-images-wrapper';
+        const imagesFlex = document.createElement('div');
+        imagesFlex.className = 'user-images';
+        imagesFlex.style.display = 'flex';
+        imagesFlex.style.flexWrap = 'wrap';
+        imagesFlex.style.gap = '10px';
+        imagesFlex.style.marginBottom = '6px';
+        userImages.forEach((img, idx) => {
+            const imgElem = document.createElement('img');
+            imgElem.src = img.dataUrl;
+            imgElem.alt = img.file?.name || img.name || '';
+            imgElem.style.width = '110px';
+            imgElem.style.height = '80px';
+            imgElem.style.objectFit = 'cover';
+            imgElem.style.borderRadius = '8px';
+            imgElem.style.border = '1.5px solid #ccc';
+            imagesFlex.appendChild(imgElem);
+        });
+        imagesWrapper.appendChild(imagesFlex);
+    }
+
     const contentDiv = document.createElement('div');
     contentDiv.classList.add('message-content');
     messageDiv.appendChild(contentDiv);
@@ -457,6 +692,24 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
         animate();
     } else if (sender === 'ai') {
         contentDiv.innerHTML = enhancedFormatAIResponse(content);
+        
+        // Add generated image if present
+        if (hasGeneratedImage && imageBase64) {
+            const imgElem = document.createElement('img');
+            imgElem.src = 'data:image/png;base64,' + imageBase64;
+            imgElem.alt = 'Generated Image';
+            imgElem.style.width = '220px';
+            imgElem.style.height = 'auto';
+            imgElem.style.borderRadius = '10px';
+            imgElem.style.border = '2px solid #fa6441';
+            imgElem.style.background = '#fff';
+            imgElem.style.boxShadow = '0 2px 8px rgba(0,0,0,0.09)';
+            imgElem.style.margin = '10px 0';
+            imgElem.style.display = 'block';
+            
+            contentDiv.appendChild(imgElem);
+        }
+        
         addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
         // Add timestamp for AI messages
         const timestampDiv = document.createElement('div');
@@ -489,16 +742,34 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
     }
     
     messagesContainer.appendChild(messageDiv);
+    // Insert imagesWrapper before messageDiv if present
+    if (imagesWrapper) {
+        messagesContainer.insertBefore(imagesWrapper, messageDiv);
+    }
     
     // Scroll to bottom
     scrollToBottom();
 
+    // Save images in chat history if needed
     if (save && currentChatId) {
         const chat = chats.find(c => c.id === currentChatId);
         if (chat) {
             const messageToSave = { content, sender, timestamp: new Date().toISOString() };
             if (sender === 'ai' && userQuery) {
                 messageToSave.userQuery = userQuery;
+            }
+            // Save userImages for user messages
+            if (sender === 'user' && userImages && userImages.length > 0) {
+                // Only save file name and dataUrl for persistence
+                messageToSave.userImages = userImages.map(img => ({
+                    name: img.file?.name || img.name || '',
+                    dataUrl: img.dataUrl
+                }));
+            }
+            // Save generated image data for AI messages
+            if (sender === 'ai' && hasGeneratedImage && imageBase64) {
+                messageToSave.hasGeneratedImage = true;
+                messageToSave.imageBase64 = imageBase64;
             }
             chat.messages.push(messageToSave);
             if (chat.messages.length === 1 && sender === 'user') {
@@ -760,106 +1031,207 @@ const chatContainer = document.querySelector('.chat-container');
 const chatHistoryList = document.getElementById('chat-history-list');
 const newChatBtn = document.getElementById('new-chat-btn');
 
+// Restore chat history from localStorage on load
 let currentChatId = null;
 let chats = JSON.parse(localStorage.getItem('chats')) || [];
 
-// Toggle sidebar
-toggleSidebar.addEventListener('click', () => {
-    chatHistorySidebar.classList.toggle('active');
-    toggleSidebar.classList.toggle('active');
-    chatContainer.classList.toggle('with-sidebar');
-});
-
-// Memory Management
-const MAX_CHATS = 50; // Maximum number of chats to store
-const MEMORY_THRESHOLD = 0.8; // 80% memory threshold
-
-// Function to estimate memory usage
-function estimateMemoryUsage() {
-    try {
-        const memoryInfo = performance.memory;
-        if (memoryInfo) {
-            return memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit;
-        }
-    } catch (e) {
-        console.warn('Memory info not available:', e);
-    }
-    return 0;
+// Function to compress image for storage with better optimization
+function compressImageForStorage(base64String) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate new dimensions (max 300px width/height for better compression)
+            let { width, height } = img;
+            const maxSize = 300;
+            
+            if (width > height) {
+                if (width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw and compress
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Try different compression levels to find the best balance
+            const compressionLevels = [0.6, 0.5, 0.4];
+            
+            function tryCompression(level) {
+                const compressedBase64 = canvas.toDataURL('image/jpeg', level);
+                const base64Data = compressedBase64.split(',')[1];
+                const sizeInKB = (base64Data.length * 0.75) / 1024;
+                
+                // If size is under 50KB or this is the last compression level, use it
+                if (sizeInKB < 50 || level === compressionLevels[compressionLevels.length - 1]) {
+                    resolve(base64Data);
+                } else {
+                    // Try next compression level
+                    const nextIndex = compressionLevels.indexOf(level) + 1;
+                    if (nextIndex < compressionLevels.length) {
+                        tryCompression(compressionLevels[nextIndex]);
+                    } else {
+                        resolve(base64Data);
+                    }
+                }
+            }
+            
+            tryCompression(compressionLevels[0]);
+        };
+        
+        img.onerror = function() {
+            reject(new Error('Failed to load image for compression'));
+        };
+        
+        img.src = 'data:image/png;base64,' + base64String;
+    });
 }
 
-// Function to clean up old chats
+// Function to cleanup old chats to free up storage space
 function cleanupOldChats() {
-    if (chats.length > MAX_CHATS) {
-        // Sort chats by creation date (oldest first)
-        chats.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        
-        // Keep only the most recent MAX_CHATS
-        chats = chats.slice(-MAX_CHATS);
-        saveChats();
-        
-        // If we're still in a high memory situation, remove older messages from remaining chats
-        if (estimateMemoryUsage() > MEMORY_THRESHOLD) {
-            chats.forEach(chat => {
-                if (chat.messages.length > 20) { // Keep only last 20 messages per chat
-                    chat.messages = chat.messages.slice(-20);
+    console.log('Cleaning up old chats to free storage space...');
+    
+    // Remove images from old messages to reduce storage size
+    chats.forEach(chat => {
+        if (chat.messages && chat.messages.length > 0) {
+            // Keep only the last 15 messages per chat (increased from 10)
+            if (chat.messages.length > 15) {
+                chat.messages = chat.messages.slice(-15);
+            }
+            
+            // Remove image data from messages older than 24 hours (increased from 1 hour)
+            const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+            chat.messages.forEach(msg => {
+                if (msg.hasGeneratedImage && msg.timestamp) {
+                    const messageTime = new Date(msg.timestamp).getTime();
+                    if (messageTime < oneDayAgo) {
+                        delete msg.imageBase64;
+                        msg.hasGeneratedImage = false;
+                        msg.content = msg.content + ' (Image removed - older than 24 hours)';
+                    }
                 }
             });
-            saveChats();
         }
+    });
+    
+    // If still too many chats, remove the oldest ones (increased from 5)
+    if (chats.length > 8) {
+        chats = chats.slice(-8);
     }
 }
 
-// Modify the saveChats function to include memory management
+// Function to check if data is too large for storage
+function isDataTooLarge(data) {
+    try {
+        const dataString = JSON.stringify(data);
+        const sizeInBytes = new Blob([dataString]).size;
+        const sizeInMB = sizeInBytes / (1024 * 1024);
+        
+        // If data is larger than 8MB, it's too large (increased from 4MB)
+        return sizeInMB > 8;
+    } catch (e) {
+        console.error('Error checking data size:', e);
+        return true; // Assume too large if we can't check
+    }
+}
+
+// Emergency cleanup function for when storage is completely full
+function emergencyCleanup() {
+    console.log('Performing emergency cleanup...');
+    
+    // Keep only the current chat and remove all others
+    if (currentChatId && chats.length > 1) {
+        const currentChat = chats.find(c => c.id === currentChatId);
+        if (currentChat) {
+            // Keep only the last 10 messages from current chat (increased from 5)
+            if (currentChat.messages && currentChat.messages.length > 10) {
+                currentChat.messages = currentChat.messages.slice(-10);
+            }
+            
+            // Remove image data from messages older than 12 hours (instead of all)
+            const twelveHoursAgo = Date.now() - (12 * 60 * 60 * 1000);
+            currentChat.messages.forEach(msg => {
+                if (msg.hasGeneratedImage && msg.timestamp) {
+                    const messageTime = new Date(msg.timestamp).getTime();
+                    if (messageTime < twelveHoursAgo) {
+                        delete msg.imageBase64;
+                        msg.hasGeneratedImage = false;
+                        msg.content = msg.content + ' (Image removed - older than 12 hours)';
+                    }
+                }
+            });
+            
+            chats = [currentChat];
+        } else {
+            // If current chat not found, keep only the most recent chat
+            chats = chats.slice(-1);
+        }
+    } else if (chats.length > 1) {
+        // If no current chat, keep only the most recent chat
+        chats = chats.slice(-1);
+    }
+    
+    // If still too large, remove images from recent messages (instead of all)
+    if (isDataTooLarge(chats)) {
+        console.log('Still too large, removing some recent images...');
+        chats.forEach(chat => {
+            if (chat.messages && chat.messages.length > 0) {
+                // Remove images from every other message to reduce size
+                chat.messages.forEach((msg, index) => {
+                    if (msg.hasGeneratedImage && index % 2 === 0) {
+                        delete msg.imageBase64;
+                        msg.hasGeneratedImage = false;
+                        msg.content = msg.content + ' (Image removed - storage optimization)';
+                    }
+                });
+            }
+        });
+    }
+}
+
+// Save chats to localStorage
 function saveChats() {
     try {
-        // Check memory usage before saving
-        if (estimateMemoryUsage() > MEMORY_THRESHOLD) {
+        // Check if data is too large before attempting to save
+        if (isDataTooLarge(chats)) {
+            console.log('Data too large, cleaning up before saving...');
             cleanupOldChats();
         }
         
         localStorage.setItem('chats', JSON.stringify(chats));
     } catch (e) {
         console.error('Error saving chats:', e);
-        // If saving fails, try to clean up and save again
         cleanupOldChats();
         try {
             localStorage.setItem('chats', JSON.stringify(chats));
         } catch (e2) {
             console.error('Failed to save chats after cleanup:', e2);
-            // If still failing, clear all chats and start fresh
-            chats = [];
-            localStorage.removeItem('chats');
+            // If still failing, perform emergency cleanup
+            emergencyCleanup();
+            try {
+                localStorage.setItem('chats', JSON.stringify(chats));
+            } catch (e3) {
+                console.error('Emergency cleanup failed, starting fresh:', e3);
+                // If still failing, clear all chats and start fresh
+                chats = [];
+                localStorage.removeItem('chats');
+            }
         }
     }
 }
-
-// Add periodic memory check
-setInterval(() => {
-    if (estimateMemoryUsage() > MEMORY_THRESHOLD) {
-        cleanupOldChats();
-    }
-}, 60000); // Check every minute
-
-// Modify createNewChat to include memory check
-function createNewChat() {
-    const chatId = Date.now().toString();
-    const newChat = {
-        id: chatId,
-        title: 'New Chat',
-        messages: [],
-        createdAt: new Date().toISOString()
-    };
     
-    // Check memory before adding new chat
-    if (estimateMemoryUsage() > MEMORY_THRESHOLD) {
-        cleanupOldChats();
-    }
-    
-    chats.unshift(newChat);
-    saveChats();
-    renderChatHistory();
-    switchToChat(chatId);
-}
+        
 
 // Render chat history
 function renderChatHistory() {
@@ -1051,7 +1423,7 @@ function switchToChat(chatId) {
         } else {
             // Load chat messages without re-saving them
             chat.messages.forEach((msg, index) => {
-                appendMessage(msg.content, msg.sender, false, msg.userQuery, index, false, msg.timestamp);
+                appendMessage(msg.content, msg.sender, false, msg.userQuery, index, false, msg.timestamp, msg.userImages, msg.hasGeneratedImage, msg.imageBase64);
             });
         }
         
@@ -1066,10 +1438,23 @@ function switchToChat(chatId) {
     }
 }
 
-// Initialize chat history
-newChatBtn.addEventListener('click', createNewChat);
+// Create new chat
+function createNewChat() {
+    const chatId = Date.now().toString();
+    const newChat = {
+        id: chatId,
+        title: 'New Chat',
+        messages: [],
+        createdAt: new Date().toISOString()
+    };
+    
+    chats.unshift(newChat);
+    saveChats();
+    renderChatHistory();
+    switchToChat(chatId);
+}
 
-// Create initial chat if none exists, or load the latest one
+// On page load, initialize chat history
 if (chats.length === 0) {
     createNewChat();
 } else {
@@ -1479,5 +1864,186 @@ function setupKeyboardShortcuts() {
                 outerBox.style.transform = 'translateY(100%)';
             }
         }
+    });
+}
+
+// Toggle sidebar
+toggleSidebar.addEventListener('click', () => {
+    chatHistorySidebar.classList.toggle('active');
+    toggleSidebar.classList.toggle('active');
+    chatContainer.classList.toggle('with-sidebar');
+});
+
+async function analyzeImageWithGemini(base64Image, mimeType) {
+    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    const temperature = 0.4; // Or your preferred value
+
+    const parts = [
+        {
+            inlineData: {
+                mimeType: mimeType,
+                data: base64Image
+            }
+        },
+        {
+            text: "Analyze this image and describe what you see."
+        }
+    ];
+
+    const requestData = {
+        contents: [{
+            role: "user",
+            parts: parts
+        }],
+        generationConfig: {
+            responseModalities: ["image", "text"],
+            responseMimeType: "text/plain",
+            temperature: temperature
+        }
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = JSON.parse(errorText);
+                if (errorData.error) {
+                    errorMessage = errorData.error.message || errorMessage;
+                }
+            } catch (e) {
+                if (errorText) errorMessage += ` - ${errorText}`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        // Extract the text response
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "No analysis result.";
+        return text;
+    } catch (error) {
+        return "Image analysis failed: " + error.message;
+    }
+}
+
+// Add Gemini image generation function
+async function generateImageWithGemini(promptText, images = []) {
+    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    const parts = [];
+    if (promptText) {
+        parts.push({ text: promptText });
+    }
+    for (const img of images) {
+        parts.push({
+            inlineData: {
+                mimeType: img.file?.type || img.type || 'image/jpeg',
+                data: img.dataUrl.split(',')[1]
+            }
+        });
+    }
+    const requestData = {
+        contents: [{ parts }],
+        generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+    };
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        const data = await response.json();
+        // Find the image part in the response
+        let imageBase64 = null;
+        if (data.candidates && data.candidates[0]?.content?.parts) {
+            for (const part of data.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    imageBase64 = part.inlineData.data;
+                    break;
+                }
+            }
+        }
+        return imageBase64;
+    } catch (error) {
+        return null;
+    }
+}
+
+const imageUploadBtn = document.getElementById('image-upload-btn');
+const imageUploadInput = document.getElementById('image-upload');
+let selectedImages = []; // { file, dataUrl }
+const imagePreviewContainer = document.getElementById('image-preview-container');
+
+imageUploadBtn.addEventListener('click', () => {
+    imageUploadInput.click();
+});
+
+imageUploadInput.addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files);
+    for (const file of files) {
+        // Prevent duplicates
+        if (selectedImages.some(img => img.file.name === file.name && img.file.size === file.size)) continue;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedImages.push({ file, dataUrl: e.target.result });
+            renderImagePreviews();
+        };
+        reader.readAsDataURL(file);
+    }
+    // Reset input so same file can be re-selected if removed
+    imageUploadInput.value = '';
+});
+
+function renderImagePreviews() {
+    imagePreviewContainer.innerHTML = '';
+    selectedImages.forEach((img, idx) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+
+        const image = document.createElement('img');
+        image.src = img.dataUrl;
+        image.alt = img.file.name;
+        image.style.width = '60px';
+        image.style.height = '60px';
+        image.style.objectFit = 'cover';
+        image.style.borderRadius = '8px';
+        image.style.border = '1px solid #ccc';
+
+        // Remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '&times;';
+        removeBtn.title = 'Remove';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '0';
+        removeBtn.style.right = '0';
+        removeBtn.style.background = '#fa6441';
+        removeBtn.style.color = '#fff';
+        removeBtn.style.border = 'none';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.width = '20px';
+        removeBtn.style.height = '20px';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.onclick = () => {
+            selectedImages.splice(idx, 1);
+            renderImagePreviews();
+        };
+
+        wrapper.appendChild(image);
+        wrapper.appendChild(removeBtn);
+        imagePreviewContainer.appendChild(wrapper);
     });
 }

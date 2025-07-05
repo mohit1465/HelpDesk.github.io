@@ -115,9 +115,16 @@
             </div>
         </div>
     </div>
+    
     <div class="chat-input-container">
+        <div id="image-preview-container"></div>
+        
         <div class="left-border"></div>
         <div class="right-border"></div>
+        <input type="file" id="image-upload" accept="image/*" style="display:none;" multiple>
+        <button id="image-upload-btn" title="Upload Image">
+            <i class="fas fa-image"></i>
+        </button>
         <textarea id="chat-input" placeholder="Type your message here..." rows="1"></textarea>
         <button id="send-btn">
             <i class="fas fa-paper-plane"></i>

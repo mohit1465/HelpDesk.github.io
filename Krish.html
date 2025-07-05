@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChatGPT Clone</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 
-<link rel="stylesheet" href="css/krish-ai.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" /><link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Just+Me+Again+Down+Here&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+IN:wght@100..400&family=Satisfy&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.4/dist/sweetalert2.all.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-
+    <link rel="stylesheet" href="test-style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" /><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Just+Me+Again+Down+Here&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+IN:wght@100..400&family=Satisfy&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.4/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 </head>
 <body>
-
+    
 <header class="header">
     <div class="logo-container">
         <img src="assets/Krish AI.png" alt="PrimeX Logo" class="logo" id="logo">
@@ -61,92 +61,86 @@
             </div>
         </a>
     </div>
-</header>
-
-<!-- Speech Control Bar -->
-<div id="speech-control" class="speech-control" style="display: none;">
-    <div class="speech-control-content">
-        <div class="speech-info">
-            <i class="fas fa-volume-up"></i>
-            <span id="speech-text">Speaking...</span>
+    
+    <div class="user-menu" id="user-menu">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <img src="assets/profile.png" alt="User Photo">
+            <h3 class="profile-initial" id="profile-initial"></h3>
+            <div id="user-name-email">
+            <h2><span id="userData">Welcome</span></h2>
+            <p id="userEmail"></p>
         </div>
-        <div class="speech-controls">
-            <input type="range" id="speech-progress" min="0" max="100" value="0">
-            <button id="speech-stop" class="speech-btn">
-                <i class="fas fa-stop"></i>
-            </button>
         </div>
-    </div>
-</div>
 
-<div class="container">
-<!-- Sidebar Overlay -->
-<div class="sidebar-overlay"></div>
-
-<!-- Sidebar -->
-
-<div class="sidebar">
-    <div class="sidebar-box-top">
-        <div id="conversationContainer">
-            <button class="newChatBtn" onclick="startNewChat()">+<span class="newChatText"> New Chat</span></button>
-            <div id="conversationList"></div>
+        <div class="buttons" id="auth-check-option">
+            <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
         </div>
-    </div>
 
-    <div class="sidebar-box-bottom">
-        <div class="sidebar-box-bottom-btn" id="share-btn">
-            <i class="fa-solid fa-share"></i>
-            <span>Share</span>
+        <!-- File and PDF Section -->
+        <div>
+            <div class="files" onclick="window.open('text-editor.html', '_blank')">Text Files</div>
         </div>
-        <div class="sidebar-box-bottom-btn" id="delete-btn" onclick="openDeleteModal()">
-            <i class="fa-solid fa-trash"></i>
-            <span>Delete</span>
-        </div>
-        <div class="sidebar-box-bottom-btn" id="setting-btn">
-            <i class="fa-solid fa-gear"></i>
-            <span>Settings</span>
-        </div>
-    </div>
-</div>
 
-<!-- Chat Window -->
-<div class="chat-window">
-    <div class="chat-container" id="messages"></div>
-    <form id="chat-form" onsubmit="sendMessage(event)">
-
-    <div class="extraImage">
-        <div class="uploadedImages">
-            <div class="imageGrid">
-                <!-- Images will be dynamically added here -->
+        <div id="profilefiles">
+            <div id='users-files-bottom-option'>
+                <a href=""><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
+                <a href=""><i class="fas fa-cog bottom-option-icon settings"></i></a>
             </div>
         </div>
     </div>
+</header>
 
-    <!-- More Options Button -->
-    <button type="button" id="more-options" style="display: none;">+</button>
-    <div class="moreOptionBox">
-        <div class="upload-container">
-          <label class="btn btn-primary" for="imageInput">Upload Images</label>
-          <input type="file" id="imageInput" accept="image/*" multiple />
+<div class="chat-container">
+    <button class="toggle-sidebar" id="toggle-sidebar">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <div class="chat-history-sidebar" id="chat-history-sidebar">
+        <div class="chat-history-header">
+            <h2 class="chat-history-title">Chat History</h2>
+            <button class="new-chat-btn" id="new-chat-btn">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+        </div>
+        <div class="chat-history-list" id="chat-history-list">
+            <!-- Chat items will be added dynamically -->
         </div>
     </div>
 
-    <!-- Chat Input -->
-    <textarea id="chat-input" placeholder="Type a message..." rows="1"></textarea>
+    <div class="chat-messages" id="messages">
+        <div class="message ai">
+            <div class="message-content">
+                Hello! I'm Krish, your AI assistant. How can I help you today?
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-input-container">
+        <div id="image-preview-container"></div>
+        
+        <div class="left-border"></div>
+        <div class="right-border"></div>
+        <input type="file" id="image-upload" accept="image/*" style="display:none;" multiple>
+        <button id="image-upload-btn" title="Upload Image">
+            <i class="fas fa-image"></i>
+        </button>
+        <textarea id="chat-input" placeholder="Type your message here..." rows="1"></textarea>
+        <button id="send-btn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
 
-    <!-- Send Button -->
-    <button type="submit" id="send-btn">Send</button>
-    </form>
-</div>
-</div>
-
-<!-- Confirmation Modal -->
-<div id="delete-modal" class="delete-alert">
-<div class="delete-alert-content">
-    <p>Do you really want delete our Memories? ✨</p>
-    <button onclick="clearChatHistory()" class="confirmDelete">Yes, Delete</button>
-    <button onclick="closeDeleteModal()" class="confirmCancel">Cancel</button>
-</div>
+<!-- Speech Control UI -->
+<div id="speech-control" style="display: none; position: fixed; top: 20px; right: 20px; background: var(--background-color); border: 1px solid var(--main-br); border-radius: 10px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; min-width: 300px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <span id="speech-text" style="font-size: 14px; color: var(--text-color); font-weight: 500;"></span>
+        <button id="speech-stop" style="background: var(--buttons-bg); color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 12px;">
+            <i class="fas fa-stop"></i> Stop
+        </button>
+    </div>
+    <input type="range" id="speech-progress" min="0" max="100" value="0" style="width: 100%; height: 4px; border-radius: 2px; background: var(--main-br); outline: none; cursor: pointer;">
 </div>
 
 <div class="outer-box">
@@ -174,9 +168,13 @@
         </div>
     </div>
 </div>
-
-
-<script src="js/krish-ai.js"></script>
-
 </body>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+    <script src="test-script.js"></script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
 </html>
