@@ -127,11 +127,28 @@ themeToggleBtn.addEventListener('click', () => {
 const chatInput = document.getElementById('chat-input');
 const sendButton = document.getElementById('send-btn');
 const messagesContainer = document.getElementById('messages');
+const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
 let isProcessing = false;
 
 // System prompt for the AI
-const systemPrompt = `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE.
+function getSystemPrompt() {
+
+  const now = new Date();
+  // Format as ISO string with timezone offset
+  const pad = n => n.toString().padStart(2, '0');
+  const tzOffset = -now.getTimezoneOffset();
+  const sign = tzOffset >= 0 ? '+' : '-';
+  const hours = pad(Math.floor(Math.abs(tzOffset) / 60));
+  const mins = pad(Math.abs(tzOffset) % 60);
+  const isoWithOffset = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${sign}${hours}:${mins}`;
+  const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  return `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE.
 You are Intrecting with User.
+
+Current user context:
+- Local Time: ${isoWithOffset}
+- Date: ${dateStr}
+
 
 Your job is to respond to any user input ([user_query]) by following this format:
 
@@ -164,12 +181,6 @@ User: who are you
 →  
 [query] Ohh dear, I am your friend Krish! 🤖✨
 
-User: what current time  
-→  
-[query] Ooh wait, I think it's... ⏰  
-[search] [google] what time in Mahendergarh, Haryana  
-[query] Anything else? 😊
-
 User: write a hello world in python
 →
 [query] Here is a simple "Hello, World!" program in Python: 🐍
@@ -189,6 +200,7 @@ Always match the user's intent. If the user asks for detail, give detail — eve
 
 Now reply User :
 `;
+}
 
 // Auto-resize textarea
 function autoResizeTextarea() {
@@ -196,7 +208,7 @@ function autoResizeTextarea() {
     if (!chatInput) return;
 
     // Reset height to auto to get the correct scrollHeight
-    chatInput.style.height = '42px';
+    chatInput.style.height = '46px';
     const newHeight = Math.min(chatInput.scrollHeight, 250);
     chatInput.style.height = newHeight + 'px';
 }
@@ -208,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.addEventListener('input', autoResizeTextarea);
         chatInput.addEventListener('focus', autoResizeTextarea);
         chatInput.addEventListener('blur', () => {
-            chatInput.style.height = '42px';
+            chatInput.style.height = '46px';
         });
     }
 });
@@ -227,7 +239,7 @@ async function handleResponse(userInput) {
             body: JSON.stringify({
                 contents: [{
                     parts: [
-                        { "text": systemPrompt },
+                        { "text": getSystemPrompt() },
                         { "text": userInput }
                     ]
                 }]
@@ -247,7 +259,19 @@ async function handleResponse(userInput) {
             throw new Error('Invalid response format from API');
         }
 
-        const text = data.candidates[0].content.parts[0].text;
+        let text = data.candidates[0].content.parts[0].text;
+        
+        // Process [search] tags if auto-search handler is available
+        if (window.autoSearchHandler && AutoSearchHandler.needsSearchProcessing(text)) {
+            try {
+                // Set the Gemini API key for search handler
+                window.autoSearchHandler.setApiKeys(apiKey);
+                text = await window.autoSearchHandler.processSearchTags(text, userInput);
+            } catch (searchError) {
+                console.error('Auto-search processing error:', searchError);
+                // Continue with original text if search fails
+            }
+        }
         
         return text;
 
@@ -275,104 +299,113 @@ function escapeHtml(text) {
 function enhancedFormatAIResponse(text) {
     if (!text) return '';
 
-    // Remove any closing [/code] tags that may appear
+    // Escape HTML for code
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
+
+    // Remove AI tags
     text = text.replace(/\[\/code\]/gi, '');
-
-    // Handle code blocks with language detection
-    text = text.replace(/\[code\]\s*(\w+)\n([\s\S]*?)(?=\[\w+\]|$)/g, (_match, language, code) => {
-        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
-    });
-
-    // Handle regular markdown code blocks
-    text = text.replace(/```(\w+)?\s*([\s\S]*?)```/g, (_match, lang, code) => {
-        const language = lang || '';
-        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
-    });
-
-    // Remove AI response tags
     text = text.replace(/\[query\]/g, '');
-    text = text.replace(/\[task\]\s*(.*?)(?=\[\w+\]|$)/g, `<p><i>Task: I can't do this yet.</i></p>`);
-    text = text.replace(/\[search\]\s*(.*?)(?=\[\w+\]|$)/g, `<p><i>Search: I can't do this yet.</i></p>`);
+    text = text.replace(/\[task\](.*?)(?=\[\w+\]|$)/g, `<p><i>Task: I can't do this yet.</i></p>`);
+    text = text.replace(/\[search\](.*?)(?=\[\w+\]|$)/g, `<p><i>Search: I can't do this yet.</i></p>`);
 
-    // Enhanced markdown parsing
+    // Code blocks
+    text = text.replace(/\[code\]\s*(\w+)\n([\s\S]*?)(?=\[\w+\]|$)/g, (_m, lang, code) =>
+        `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`
+    );
+    text = text.replace(/```(\w+)?\s*([\s\S]*?)```/g, (_m, lang = '', code) =>
+        `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`
+    );
+
     const lines = text.split('\n');
     let html = '';
-    let inList = false;
     let inCodeBlock = false;
+    let listStack = []; // [{type: 'ul'|'ol', indent: number}]
+    let globalOLCounter = 1; // Track numbering across <ol>
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
 
         // Handle code blocks
-        if (line.includes('<pre><code>')) {
-            if (inList) {
-                html += '</ul>';
-                inList = false;
-            }
-            html += line;
+        if (line.includes('<pre><code')) {
             inCodeBlock = true;
-            continue;
-        }
-
-        if (inCodeBlock && line.includes('</code></pre>')) {
             html += line;
-            inCodeBlock = false;
             continue;
         }
-
         if (inCodeBlock) {
-            html += line + '\n';
+            html += line;
+            if (line.includes('</code></pre>')) inCodeBlock = false;
             continue;
         }
 
-        // Handle bold text with different sizes
-        line = line.replace(/\*\*(.*?)\*\*/g, '<strong style="font-size: 1.2em;">$1</strong>');
-        line = line.replace(/\*(.*?)\*/g, '<strong style="font-size: 1.1em;">$1</strong>');
-
-        // Handle italic text
+        // Markdown inline
+        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        line = line.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
         line = line.replace(/\_(.*?)\_/g, '<em>$1</em>');
-
-        // Handle links
         line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: var(--buttons-bg);">$1</a>');
 
-        // Handle lists
-        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-            if (!inList) {
-                html += '<ul>';
-                inList = true;
+        const trimmed = line.trim();
+        const indent = line.match(/^\s*/)[0].length;
+        const olMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+        const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
+
+        if (olMatch) {
+            const level = indent;
+
+            // Close deeper/parallel lists
+            while (listStack.length && listStack[listStack.length - 1].indent >= level) {
+                html += `</${listStack.pop().type}>`;
             }
-            const indent = line.match(/^\s*/)[0].length;
-            const content = line.trim().substring(2);
-            if (indent > 1) {
-                html += `<ul><li>${content}</li></ul>`;
-            } else {
-                html += `<li>${content}</li>`;
+
+            const startAttr = globalOLCounter > 1 ? ` start="${globalOLCounter}"` : '';
+
+            if (!listStack.length || listStack[listStack.length - 1].type !== 'ol') {
+                html += `<ol${startAttr}>`;
+                listStack.push({ type: 'ol', indent: level });
             }
-        } else if (line.trim().match(/^\d+\./)) {
-            if (!inList) {
-                html += '<ol>';
-                inList = true;
+
+            html += `<li>${olMatch[2]}</li>`;
+            globalOLCounter++;
+        }
+
+        else if (ulMatch) {
+            const level = indent;
+
+            // Handle UL nesting
+            while (listStack.length && listStack[listStack.length - 1].type === 'ul' && listStack[listStack.length - 1].indent >= level) {
+                html += `</${listStack.pop().type}>`;
             }
-            const content = line.trim().replace(/^\d+\.\s*/, '');
-            html += `<li>${content}</li>`;
-        } else {
-            if (inList) {
-                html += '</ul>';
-                inList = false;
+
+            html += '<ul>';
+            listStack.push({ type: 'ul', indent: level });
+            html += `<li>${ulMatch[1]}</li>`;
+        }
+
+        else {
+            // Close all lists before paragraphs
+            while (listStack.length) {
+                html += `</${listStack.pop().type}>`;
             }
-            if (line.trim().length > 0) {
-                html += `<p>${line}</p>`;
+
+            if (trimmed.length > 0) {
+                html += `<p>${trimmed}</p>`;
             }
         }
     }
 
-    if (inList) {
-        html += '</ul>';
+    // Close remaining lists
+    while (listStack.length) {
+        html += `</${listStack.pop().type}>`;
     }
 
-    return html.replace(/<p>([\s\S]*?)<\/p>/g, (match, content) => {
-        return `<p>${content.replace(/\n/g, '<br>')}</p>`;
-    });
+    return html;
 }
 
 // Enhanced AI response handler for [generate] blocks
@@ -504,17 +537,6 @@ async function sendMessage() {
                 // Add message actions
                 addAIMessageActions(messageDiv, contentDiv, 'Generated image for: ' + promptText, null, -1);
                 
-                // Add timestamp
-                const timestampDiv = document.createElement('div');
-                timestampDiv.className = 'message-timestamp';
-                timestampDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                timestampDiv.style.fontSize = '0.75rem';
-                timestampDiv.style.color = 'var(--text-color)';
-                timestampDiv.style.opacity = '0.6';
-                timestampDiv.style.marginTop = '5px';
-                timestampDiv.style.textAlign = 'right';
-                messageDiv.appendChild(timestampDiv);
-                
                 messagesContainer.appendChild(messageDiv);
                 scrollToBottom();
                 
@@ -644,7 +666,6 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
             imgElem.style.height = '80px';
             imgElem.style.objectFit = 'cover';
             imgElem.style.borderRadius = '8px';
-            imgElem.style.border = '1.5px solid #ccc';
             imagesFlex.appendChild(imgElem);
         });
         imagesWrapper.appendChild(imagesFlex);
@@ -674,19 +695,7 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
                 contentDiv.innerHTML = formatted;
                 // Attach action icons after animation
                 addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
-                // Add timestamp for AI messages
-                const timestampDiv = document.createElement('div');
-                const timeToShow = timestamp
-                    ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                timestampDiv.className = 'message-timestamp';
-                timestampDiv.textContent = timeToShow;
-                timestampDiv.style.fontSize = '0.75rem';
-                timestampDiv.style.color = 'var(--text-color)';
-                timestampDiv.style.opacity = '0.6';
-                timestampDiv.style.marginTop = '5px';
-                timestampDiv.style.textAlign = 'right';
-                messageDiv.appendChild(timestampDiv);
+                // No timestampDiv here
             }
         }
         animate();
@@ -701,7 +710,7 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
             imgElem.style.width = '220px';
             imgElem.style.height = 'auto';
             imgElem.style.borderRadius = '10px';
-            imgElem.style.border = '2px solid #fa6441';
+            imgElem.style.border = '1px solid var(--main-bg)';
             imgElem.style.background = '#fff';
             imgElem.style.boxShadow = '0 2px 8px rgba(0,0,0,0.09)';
             imgElem.style.margin = '10px 0';
@@ -709,21 +718,7 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
             
             contentDiv.appendChild(imgElem);
         }
-        
-        addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
-        // Add timestamp for AI messages
-        const timestampDiv = document.createElement('div');
-        const timeToShow = timestamp
-            ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        timestampDiv.className = 'message-timestamp';
-        timestampDiv.textContent = timeToShow;
-        timestampDiv.style.fontSize = '0.75rem';
-        timestampDiv.style.color = 'var(--text-color)';
-        timestampDiv.style.opacity = '0.6';
-        timestampDiv.style.marginTop = '5px';
-        timestampDiv.style.textAlign = 'right';
-        messageDiv.appendChild(timestampDiv);
+        addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex, timestamp);
     } else {
         contentDiv.textContent = content;
         // Add timestamp for user messages at the bottom
@@ -736,7 +731,6 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
         timestampDiv.style.fontSize = '0.75rem';
         timestampDiv.style.color = 'var(--text-color)';
         timestampDiv.style.opacity = '0.6';
-        timestampDiv.style.marginTop = '5px';
         timestampDiv.style.textAlign = 'right';
         messageDiv.appendChild(timestampDiv);
     }
@@ -781,7 +775,7 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
     }
 }
 
-function addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex) {
+function addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex, timestamp = null) {
     // Remove any existing .message-actions in this message
     const oldActions = messageDiv.querySelectorAll('.message-actions');
     oldActions.forEach(el => el.remove());
@@ -931,6 +925,21 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
     actionsDiv.appendChild(likeBtn);
     actionsDiv.appendChild(dislikeBtn);
     actionsDiv.appendChild(rewriteBtn);
+
+    // Add timestampDiv inside actionsDiv, aligned right, using correct timestamp
+    const timestampDiv = document.createElement('div');
+    const timeToShow = timestamp
+        ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timestampDiv.className = 'message-timestamp';
+    timestampDiv.textContent = timeToShow;
+    timestampDiv.style.fontSize = '0.75rem';
+    timestampDiv.style.color = 'var(--text-color)';
+    timestampDiv.style.opacity = '0.6';
+    timestampDiv.style.marginLeft = 'auto';
+    timestampDiv.style.alignSelf = 'center';
+    actionsDiv.appendChild(timestampDiv);
+
     messageDiv.appendChild(actionsDiv);
 }
 
@@ -1024,13 +1033,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Show/hide scroll-to-bottom button based on scroll position
+messagesContainer.addEventListener('scroll', () => {
+    const threshold = 50; // px from bottom
+    const scrollPosition = messagesContainer.scrollTop + messagesContainer.clientHeight;
+    const atBottom = messagesContainer.scrollHeight - scrollPosition <= threshold;
+    if (atBottom) {
+        scrollToBottomBtn.style.display = 'none';
+    } else {
+        scrollToBottomBtn.style.display = 'flex';
+    }
+});
+
 // Chat History Functionality
 const toggleSidebar = document.getElementById('toggle-sidebar');
 const chatHistorySidebar = document.getElementById('chat-history-sidebar');
 const chatContainer = document.querySelector('.chat-container');
 const chatHistoryList = document.getElementById('chat-history-list');
 const newChatBtn = document.getElementById('new-chat-btn');
-
+if (newChatBtn) {
+    newChatBtn.addEventListener('click', createNewChat);
+}
 // Restore chat history from localStorage on load
 let currentChatId = null;
 let chats = JSON.parse(localStorage.getItem('chats')) || [];
@@ -1100,34 +1123,10 @@ function compressImageForStorage(base64String) {
 
 // Function to cleanup old chats to free up storage space
 function cleanupOldChats() {
-    console.log('Cleaning up old chats to free storage space...');
-    
-    // Remove images from old messages to reduce storage size
-    chats.forEach(chat => {
-        if (chat.messages && chat.messages.length > 0) {
-            // Keep only the last 15 messages per chat (increased from 10)
-            if (chat.messages.length > 15) {
-                chat.messages = chat.messages.slice(-15);
-            }
-            
-            // Remove image data from messages older than 24 hours (increased from 1 hour)
-            const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-            chat.messages.forEach(msg => {
-                if (msg.hasGeneratedImage && msg.timestamp) {
-                    const messageTime = new Date(msg.timestamp).getTime();
-                    if (messageTime < oneDayAgo) {
-                        delete msg.imageBase64;
-                        msg.hasGeneratedImage = false;
-                        msg.content = msg.content + ' (Image removed - older than 24 hours)';
-                    }
-                }
-            });
-        }
-    });
-    
-    // If still too many chats, remove the oldest ones (increased from 5)
-    if (chats.length > 8) {
-        chats = chats.slice(-8);
+    // Only remove old chats if storage is too large
+    // Keep the most recent 10 chats
+    if (chats.length > 10) {
+        chats = chats.slice(0, 10);
     }
 }
 
@@ -1137,12 +1136,10 @@ function isDataTooLarge(data) {
         const dataString = JSON.stringify(data);
         const sizeInBytes = new Blob([dataString]).size;
         const sizeInMB = sizeInBytes / (1024 * 1024);
-        
-        // If data is larger than 8MB, it's too large (increased from 4MB)
+        // If data is larger than 8MB, it's too large
         return sizeInMB > 8;
     } catch (e) {
-        console.error('Error checking data size:', e);
-        return true; // Assume too large if we can't check
+        return true;
     }
 }
 
@@ -1203,30 +1200,25 @@ function emergencyCleanup() {
 // Save chats to localStorage
 function saveChats() {
     try {
-        // Check if data is too large before attempting to save
+        // Only cleanup if data is too large
         if (isDataTooLarge(chats)) {
-            console.log('Data too large, cleaning up before saving...');
             cleanupOldChats();
         }
-        
         localStorage.setItem('chats', JSON.stringify(chats));
     } catch (e) {
-        console.error('Error saving chats:', e);
-        cleanupOldChats();
-        try {
-            localStorage.setItem('chats', JSON.stringify(chats));
-        } catch (e2) {
-            console.error('Failed to save chats after cleanup:', e2);
-            // If still failing, perform emergency cleanup
-            emergencyCleanup();
+        // If still failing, keep only the most recent chat
+        if (chats.length > 1) {
+            chats = chats.slice(0, 1);
             try {
                 localStorage.setItem('chats', JSON.stringify(chats));
-            } catch (e3) {
-                console.error('Emergency cleanup failed, starting fresh:', e3);
-                // If still failing, clear all chats and start fresh
+            } catch (e2) {
+                // If still failing, clear all chats
                 chats = [];
                 localStorage.removeItem('chats');
             }
+        } else {
+            chats = [];
+            localStorage.removeItem('chats');
         }
     }
 }
@@ -1247,7 +1239,6 @@ function renderChatHistory() {
             </div>
             <div class="chat-info">
                 <div class="chat-title">${chat.title}</div>
-                <div class="chat-preview">${chat.messages[0]?.content || 'No messages yet'}</div>
             </div>
             <div class="chat-item-options">
                 <i class="fas fa-ellipsis-v"></i>
@@ -1787,7 +1778,6 @@ function showTypingIndicator() {
                 <span></span>
                 <span></span>
             </div>
-            <span style="margin-left: 10px; color: var(--text-color); opacity: 0.7;">AI is typing...</span>
         </div>
     `;
     messagesContainer.appendChild(typingDiv);
@@ -1809,6 +1799,7 @@ function scrollToBottom() {
         top: messagesContainer.scrollHeight,
         behavior: 'smooth'
     });
+    if (scrollToBottomBtn) scrollToBottomBtn.style.display = 'none';
 }
 
 // Function to add timestamp to messages
@@ -2047,3 +2038,321 @@ function renderImagePreviews() {
         imagePreviewContainer.appendChild(wrapper);
     });
 }
+
+if (scrollToBottomBtn) {
+    scrollToBottomBtn.addEventListener('click', () => {
+        scrollToBottom();
+    });
+}
+
+// Image Preview Modal Logic
+// Ensure this runs after DOMContentLoaded
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('image-preview-modal');
+    const modalImg = document.getElementById('image-preview-modal-img');
+    const modalClose = document.querySelector('.image-preview-modal-close');
+    const modalOverlay = document.querySelector('.image-preview-modal-overlay');
+
+    // Delegate click event for all images inside chat messages or user images
+    document.body.addEventListener('click', function(e) {
+      if (
+        e.target.tagName === 'IMG' && (
+          e.target.closest('.message') ||
+          e.target.closest('.user-images') ||
+          e.target.closest('#image-preview-container')
+        )
+      ) {
+        modalImg.src = e.target.src;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    function closeModal() {
+      modal.style.display = 'none';
+      modalImg.src = '';
+      document.body.style.overflow = '';
+    }
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
+    document.addEventListener('keydown', function(e) {
+      if (modal.style.display === 'flex' && e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  });
+})();
+
+// --- AI Image Overlay Logic ---
+function createAIImageOverlay(imgElem, imageBase64, aiMsgText) {
+  // Create overlay container
+  const overlay = document.createElement('div');
+  overlay.className = 'ai-image-overlay';
+  overlay.style.display = 'none';
+
+  // Download button
+  const downloadBtn = document.createElement('button');
+  downloadBtn.className = 'ai-image-icon-btn';
+  downloadBtn.title = 'Download Image';
+  downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+  downloadBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const a = document.createElement('a');
+    a.href = 'data:image/png;base64,' + imageBase64;
+    a.download = 'krish-ai-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  // Share button
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'ai-image-icon-btn';
+  shareBtn.title = 'Share Image';
+  shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+
+  // Share menu
+  const shareMenu = document.createElement('div');
+  shareMenu.className = 'ai-image-share-menu';
+  [
+    { name: 'LinkedIn', icon: 'fab fa-linkedin', url: (imgUrl, text) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}` },
+    { name: 'Instagram', icon: 'fab fa-instagram', url: (imgUrl, text) => `https://www.instagram.com/` }, // Instagram does not support direct share
+    { name: 'Facebook', icon: 'fab fa-facebook', url: (imgUrl, text) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}` },
+    { name: 'WhatsApp', icon: 'fab fa-whatsapp', url: (imgUrl, text) => `https://wa.me/?text=${encodeURIComponent(text + '\n' + window.location.href)}` },
+  ].forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-image-share-option';
+    btn.innerHTML = `<i class="${opt.icon}"></i> ${opt.name}`;
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      // For Instagram, just open homepage (no direct share)
+      if (opt.name === 'Instagram') {
+        window.open(opt.url(), '_blank');
+      } else {
+        window.open(opt.url('data:image/png;base64,' + imageBase64, aiMsgText), '_blank');
+      }
+      shareMenu.classList.remove('active');
+    });
+    shareMenu.appendChild(btn);
+  });
+  document.body.addEventListener('click', function(e) {
+    if (!shareMenu.contains(e.target) && !shareBtn.contains(e.target)) {
+      shareMenu.classList.remove('active');
+    }
+  });
+  shareBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    // Close other open share menus
+    document.querySelectorAll('.ai-image-share-menu.active').forEach(menu => {
+      if (menu !== shareMenu) menu.classList.remove('active');
+    });
+    shareMenu.classList.toggle('active');
+    // Position menu
+    const rect = shareBtn.getBoundingClientRect();
+    shareMenu.style.right = '10px';
+    shareMenu.style.bottom = '55px';
+  });
+
+  overlay.appendChild(downloadBtn);
+  overlay.appendChild(shareBtn);
+  overlay.appendChild(shareMenu);
+
+  // Position icons
+  downloadBtn.style.alignSelf = 'flex-end';
+  shareBtn.style.alignSelf = 'flex-end';
+  downloadBtn.style.marginRight = 'auto';
+  shareBtn.style.marginLeft = 'auto';
+
+  // Show/hide overlay on hover
+  const container = imgElem.parentElement;
+  container.style.position = 'relative';
+  container.addEventListener('mouseenter', function() {
+    overlay.style.display = 'flex';
+  });
+  container.addEventListener('mouseleave', function() {
+    overlay.style.display = 'none';
+    shareMenu.classList.remove('active');
+  });
+
+  return overlay;
+}
+
+// Patch appendMessage to add overlay for AI images
+const origAppendMessage = appendMessage;
+appendMessage = function(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null, userImages = null, hasGeneratedImage = false, imageBase64 = null) {
+  // Use custom rendering for any AI message with imageBase64
+  if (!(sender === 'ai' && imageBase64)) {
+    origAppendMessage.apply(this, arguments);
+    return;
+  }
+  // For AI image, custom rendering
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('message', sender);
+  const contentDiv = document.createElement('div');
+  contentDiv.classList.add('message-content');
+  messageDiv.appendChild(contentDiv);
+
+  // Create .message-image container
+  const imageContainer = document.createElement('div');
+  imageContainer.className = 'message-image';
+  // Image
+  const imgElem = document.createElement('img');
+  imgElem.src = 'data:image/png;base64,' + imageBase64;
+  imgElem.alt = 'Generated Image';
+  imgElem.style.cursor = 'pointer';
+  imageContainer.appendChild(imgElem);
+  // Download button
+  const downloadBtn = document.createElement('button');
+  downloadBtn.className = 'message-image-action message-image-download';
+  downloadBtn.title = 'Download Image';
+  downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+  downloadBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const a = document.createElement('a');
+    a.href = imgElem.src;
+    a.download = 'krish-ai-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+  imageContainer.appendChild(downloadBtn);
+  // Share button
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'message-image-action message-image-share';
+  shareBtn.title = 'Share Image';
+  shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+  imageContainer.appendChild(shareBtn);
+  // Share menu
+  const shareMenu = document.createElement('div');
+  shareMenu.className = 'message-image-share-menu';
+  imageContainer.appendChild(shareMenu);
+  // Build share menu
+  function buildShareMenu(imgUrl, text) {
+    shareMenu.innerHTML = '';
+    [
+      { name: 'LinkedIn', icon: 'fab fa-linkedin' },
+      { name: 'Instagram', icon: 'fab fa-instagram' },
+      { name: 'Facebook', icon: 'fab fa-facebook' },
+      { name: 'WhatsApp', icon: 'fab fa-whatsapp' },
+    ].forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'message-image-share-option';
+      btn.innerHTML = `<i class="${opt.icon}"></i> ${opt.name}`;
+      btn.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        try {
+          const res = await fetch(imgUrl);
+          const blob = await res.blob();
+          const file = new File([blob], 'krish-image.png', { type: blob.type });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Shared from Krish.AI',
+              text: 'Check out this image!'
+            });
+          } else {
+            alert('Direct image sharing is not supported on this platform. Please download the image and share manually.');
+          }
+        } catch (err) {
+          alert('Sharing failed or is not supported in your browser. Please download the image and share manually.');
+        }
+        shareMenu.classList.remove('active');
+      });
+      shareMenu.appendChild(btn);
+    });
+  }
+  // Show/hide share menu
+  shareBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    buildShareMenu(imgElem.src, 'Check out this image!');
+    // Close other open share menus
+    document.querySelectorAll('.message-image-share-menu.active').forEach(menu => {
+      if (menu !== shareMenu) menu.classList.remove('active');
+    });
+    shareMenu.classList.toggle('active');
+  });
+  document.addEventListener('click', function(e) {
+    if (!shareMenu.contains(e.target) && !shareBtn.contains(e.target)) {
+      shareMenu.classList.remove('active');
+    }
+  });
+  // Clicking image opens preview modal
+  imgElem.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const modal = document.getElementById('image-preview-modal');
+    const modalImg = document.getElementById('image-preview-modal-img');
+    if (modal && modalImg) {
+      modalImg.src = imgElem.src;
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      if (window.showModalButtons) window.showModalButtons();
+    }
+  });
+  contentDiv.appendChild(imageContainer);
+  // Add any text content below image
+  const formatted = enhancedFormatAIResponse(content);
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = formatted;
+  // Remove the image from the formatted content if present
+  tempDiv.querySelectorAll('img').forEach(img => img.remove());
+  if (tempDiv.innerHTML.trim()) {
+    contentDiv.appendChild(tempDiv);
+  }
+  messageDiv.appendChild(contentDiv);
+  // Add message actions (copy, speak, like, etc.)
+  addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex, timestamp);
+  messagesContainer.appendChild(messageDiv);
+  scrollToBottom();
+  // Save to chat history if needed
+  if (save && currentChatId) {
+    const chat = chats.find(c => c.id === currentChatId);
+    if (chat) {
+      const messageToSave = { content, sender, timestamp: new Date().toISOString(), hasGeneratedImage, imageBase64 };
+      chat.messages.push(messageToSave);
+      saveChats();
+      renderChatHistory();
+    }
+  }
+};
+
+// Image Preview Modal Download & Share Icon Logic
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('image-preview-modal');
+    const modalImg = document.getElementById('image-preview-modal-img');
+    const downloadBtn = document.getElementById('image-preview-modal-download');
+    const shareBtn = document.getElementById('image-preview-modal-share');
+    const shareMenu = document.getElementById('image-preview-modal-share-menu');
+
+    if (!modal || !modalImg || !downloadBtn || !shareBtn || !shareMenu) return;
+
+    // Show buttons when modal is opened with an image
+    window.showModalButtons = function() {
+      if (modal.style.display === 'flex' && modalImg.src) {
+        downloadBtn.style.display = 'flex';
+        shareBtn.style.display = 'flex';
+      } else {
+        downloadBtn.style.display = 'none';
+        shareBtn.style.display = 'none';
+        shareMenu.classList.remove('active');
+      }
+    }
+
+    // Show/hide on modal display change
+    const observer = new MutationObserver(window.showModalButtons);
+    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+
+    // Download logic
+    downloadBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!modalImg.src) return;
+      const a = document.createElement('a');
+      a.href = modalImg.src;
+      a.download = 'krish-preview-image.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  });
+})();
