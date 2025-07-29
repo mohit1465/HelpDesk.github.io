@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krish.AI</title>
 
-    <link rel="stylesheet" href="test-style.css">
+    <link rel="stylesheet" href="css/krish-ai.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" /><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,6 +115,10 @@
             </div>
         </div>
     </div>
+    <!-- Scroll to bottom button -->
+    <button id="scroll-to-bottom-btn" class="scroll-to-bottom-btn" style="display:none;">
+        <i class="fas fa-arrow-down"></i>
+    </button>
     
     <div class="chat-input-container">
         <div id="image-preview-container"></div>
@@ -168,13 +172,36 @@
         </div>
     </div>
 </div>
+<!-- Image Preview Modal -->
+<div id="image-preview-modal" style="display:none;">
+  <div class="image-preview-modal-overlay"></div>
+  <div class="image-preview-modal-content">
+    <button class="image-preview-modal-close" aria-label="Close">&times;</button>
+    <img id="image-preview-modal-img" src="" alt="Preview" />
+    <button id="image-preview-modal-download" class="image-preview-modal-action" title="Download" style="display:none;">
+      <i class="fas fa-download"></i>
+    </button>
+    <button id="image-preview-modal-share" class="image-preview-modal-action" title="Share" style="display:none;">
+      <i class="fas fa-share-alt"></i>
+    </button>
+    <div id="image-preview-modal-share-menu"></div>
+  </div>
+</div>
 </body>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
-    <script src="test-script.js"></script>
+    <!-- Auto-Search API Integration -->
+    <script src="search-api.js"></script>
+    <script src="js/krish-ai.js"></script>
 
     <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
 </html>
+
+
+
+
+
+
