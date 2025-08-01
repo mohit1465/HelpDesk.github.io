@@ -82,11 +82,6 @@ document.getElementById('ContactUsTriggerBtn').addEventListener('click', functio
     SectionMenu('ContactUs', document.getElementById('ContactUsLink'));
 });
 
-
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-}
-
 function setTheme(theme) {
     if (theme === 'dark') {
         body.setAttribute('data-theme', 'dark');
@@ -100,9 +95,6 @@ function setTheme(theme) {
 }
 
 window.onload = () => {
-    if (isMobileDevice()) {
-        document.body.innerHTML = '<h1>This website is not available on mobile devices. Please use a desktop.</h1>';
-    }
     const savedTheme = localStorage.getItem('currentTheme') || 'dark';
     setTheme(savedTheme);
 };
@@ -122,15 +114,6 @@ themeToggleBtn.addEventListener('click', () => {
         localStorage.setItem('currentTheme', 'dark');
     }
 });
-
-
-
-
-
-
-
-
-
 
 const feedback = {
     UI: null,
@@ -317,4 +300,251 @@ form.addEventListener('submit', function (event) {
     }
   });
 });
+
+
+// --- What's New feature switcher with animated pill ==================================================================================================
+
+
+function moveActivePill() {
+  const wnHead = document.querySelector('.wn-head');
+  const pill = wnHead.querySelector('.wn-active-pill');
+  const activeBtn = wnHead.querySelector('.wn-switch-btn.active');
+  if (!pill || !activeBtn) return;
+  const isMobile = window.innerWidth <= 850 || getComputedStyle(wnHead).flexDirection === 'column';
+  if (isMobile) {
+    // Vertical tabs: animate pill's top/height
+    const headRect = wnHead.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const top = btnRect.top - headRect.top;
+    const height = btnRect.height;
+    pill.style.left = '0px';
+    pill.style.width = '100%';
+    pill.style.top = top + 'px';
+    pill.style.height = height + 'px';
+  } else {
+    // Horizontal tabs: animate pill's left/width
+    const headRect = wnHead.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const left = btnRect.left - headRect.left;
+    const width = btnRect.width;
+    pill.style.left = left + 'px';
+    pill.style.width = width + 'px';
+    pill.style.top = '8px';
+    pill.style.height = 'calc(100% - 16px)';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const wnBtns = document.querySelectorAll('.wn-switch-btn');
+  const wnContents = document.querySelectorAll('.wn-feature-content');
+  const previewImg = document.querySelector('.wn-preview-img img');
+  
+  // Define the image positions for each feature (translateY percentages)
+  const imagePositions = {
+    'resizer': '24%',
+    'text': '12%',
+    'image': '0%',
+    'krish': '-12%',
+    'notes': '-24%'
+  };
+  
+  function updateImagePosition(feature) {
+    if (previewImg && imagePositions[feature]) {
+      previewImg.style.transform = `translateY(${imagePositions[feature]})`;
+    }
+  }
+  
+  wnBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      wnBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      wnContents.forEach(c => c.classList.add('hidden'));
+      const feature = btn.getAttribute('data-feature');
+      const showContent = document.querySelector('.wn-feature-content[data-feature="' + feature + '"]');
+      if (showContent) showContent.classList.remove('hidden');
+      updateImagePosition(feature);
+      moveActivePill();
+    });
+  });
+  
+  // Initialize with the first feature
+  const activeBtn = document.querySelector('.wn-switch-btn.active');
+  if (activeBtn) {
+    const initialFeature = activeBtn.getAttribute('data-feature');
+    updateImagePosition(initialFeature);
+  }
+  
+  moveActivePill();
+  window.addEventListener('resize', moveActivePill);
+});
+
+// --- Cursor fade effect for wn-content ---
+(function() {
+  const wnContent = document.querySelector('.card-content');
+  const cursorFade = wnContent ? wnContent.querySelector('.wn-cursor-fade') : null;
+  if (!wnContent || !cursorFade) return;
+  let mouseX = 0, mouseY = 0, visible = false, rafId;
+  let fadeOpacity = 0, targetOpacity = 0;
+  function animate() {
+    // Animate opacity
+    fadeOpacity += (targetOpacity - fadeOpacity) * 0.18;
+    cursorFade.style.opacity = fadeOpacity;
+    if (visible) {
+      cursorFade.style.transform = `translate(${mouseX - 300}px, ${mouseY - 300}px)`;
+    }
+    rafId = requestAnimationFrame(animate);
+  }
+  wnContent.addEventListener('mousemove', e => {
+    if (window.innerWidth <= 900) return; // Hide on mobile/tablet
+    const rect = wnContent.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+    visible = true;
+    targetOpacity = 0.22;
+  });
+  wnContent.addEventListener('mouseleave', () => {
+    visible = false;
+    targetOpacity = 0;
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth <= 900) {
+      targetOpacity = 0;
+    }
+  });
+  animate();
+})();
+
+const card = document.querySelector('.card');
+const glowEffect = document.querySelector('.glow-effect');
+const borderHighlight = document.querySelector('.border-highlight');
+
+let mouseX = 0;
+let mouseY = 0;
+let currentX = 0;
+let currentY = 0;
+let animationFrame;
+
+card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+    
+    if (!animationFrame) {
+        animationFrame = requestAnimationFrame(updateGlow);
+    }
+});
+
+card.addEventListener('mouseleave', () => {
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+    glowEffect.style.opacity = '0';
+    borderHighlight.style.setProperty('--mouse-x', '0px');
+    borderHighlight.style.setProperty('--mouse-y', '0px');
+});
+
+function updateGlow() {
+    const lerpFactor = 0.1;
+    currentX += (mouseX - currentX) * lerpFactor;
+    currentY += (mouseY - currentY) * lerpFactor;
+    
+    const glowElement = glowEffect.querySelector('::before') || glowEffect;
+    glowEffect.style.setProperty('--x', `${currentX}px`);
+    glowEffect.style.setProperty('--y', `${currentY}px`);
+    
+    const glowBefore = glowEffect.querySelector('::before');
+    if (glowBefore) {
+        glowBefore.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    } else {
+        glowEffect.style.backgroundPosition = `${currentX}px ${currentY}px`;
+    }
+    
+    const glowPseudo = document.createElement('style');
+    glowPseudo.textContent = `
+        .glow-effect::before {
+            transform: translate(${currentX}px, ${currentY}px);
+        }
+    `;
+    document.head.appendChild(glowPseudo);
+    
+    const borderStyle = document.createElement('style');
+    borderStyle.textContent = `
+        .border-highlight::before {
+            background: conic-gradient(
+                from ${Math.atan2(currentY - 200, currentX - 200) * 180 / Math.PI}deg at ${currentX}px ${currentY}px,
+                #ff6200be 0deg,
+                transparent 60deg,
+                transparent 300deg,
+                #ff6200be 360deg
+            );
+        }
+    `;
+    const existingStyle = document.querySelector('#border-style');
+    if (existingStyle) existingStyle.remove();
+    borderStyle.id = 'border-style';
+    document.head.appendChild(borderStyle);
+    
+    animationFrame = requestAnimationFrame(updateGlow);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    .glow-effect::before {
+        left: var(--x, 0);
+        top: var(--y, 0);
+    }
+`;
+document.head.appendChild(style);
+
+
+// Card hover effect tags card ===================================================================================================
+
+const tagcard = document.querySelectorAll('.tag-card');
+const floatingElements = document.querySelectorAll('.float-1, .float-2, .float-3');
+
+tagcard.forEach(tagcard => {
+  tagcard.addEventListener('mousemove', (e) => {
+      const rect = tagcard.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = (y - centerY) / 10;
+      const rotateY = (centerX - x) / 10;
+      
+      tagcard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px) scale(1.02)`;
+  });
+  
+  tagcard.addEventListener('mouseleave', () => {
+      tagcard.style.transform = '';
+  });
+});
+
+// Floating elements animation
+floatingElements.forEach((element, index) => {
+    element.style.animationDelay = `${index * 2}s`;
+});
+
+// Add ripple effect styles
+const styletagcard = document.createElement('styletagcard');
+styletagcard.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0);
+        animation: ripple-animation 0.6s ease-out;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(styletagcard);
 
