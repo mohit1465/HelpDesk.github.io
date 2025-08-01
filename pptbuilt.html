@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PPT Builder with Groq AI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.11.0/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.11.0/dist/pptxgen.bundle.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    padding: 40px;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+  
+  input, select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+  }
+  
+  input:focus, select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+  
+  button {
+    background: #3b82f6;
+    color: white;
+    padding: 14px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+  
+  #output {
+    margin-top: 30px;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 10px;
+    white-space: pre-line;
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0 30px 0;
+  }
+
+  .template-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    height: 180px;
+    border: 3px solid transparent;
+  }
+
+  .template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+
+  .template-card.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  .template-preview {
+    width: 100%;
+    height: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .template-title {
+    padding: 10px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .template-preview-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-header {
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .preview-subheader {
+    font-size: 8px;
+    margin-bottom: 5px;
+  }
+
+  .preview-text {
+    font-size: 6px;
+    line-height: 1.2;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .preview-dots {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 5px;
+  }
+
+  .preview-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: rgba(0,0,0,0.3);
+  }
+
+  .loading-indicator {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .loading-indicator .spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3b82f6;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* For dark themes, adjust text colors for preview */
+  .dark-theme .preview-header,
+  .dark-theme .preview-subheader,
+  .dark-theme .preview-text,
+  .dark-theme .template-title {
+    color: white;
+  }
+
+  .dark-theme .preview-dot {
+    background-color: rgba(255,255,255,0.5);
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+  }
+
+  h1 span {
+    font-size: 28px;
+  }
+
+  h2 {
+    margin: 20px 0 15px 0;
+    color: #334155;
+    font-weight: 500;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #475569;
+  }
+  
+  .templates-title {
+    margin: 25px 0 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .templates-title h2 {
+    margin: 0;
+  }
+
+  .templates-title span {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: normal;
+  }
+
+  .template-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(59, 130, 246, 0.9);
+    color: white;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  .download-btn {
+    background: #10b981;
+  }
+
+  .download-btn:hover {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+  }
+
+  .presentation-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+  }
+
+  .slide-preview {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .slide-preview h3 {
+    margin-bottom: 8px;
+    font-size: 18px;
+    color: #334155;
+  }
+
+  .slide-preview h4 {
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #64748b;
+    font-weight: 400;
+  }
+
+  .slide-preview p, .slide-preview ul {
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .slide-preview ul {
+    padding-left: 20px;
+  }
+
+  .slide-preview ul li {
+    margin-bottom: 5px;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PPT Builder <span>🧠 + 🎨</span></h1>
+
+    <label>Presentation Topic</label>
+    <input type="text" id="topicInput" placeholder="Enter your topic...">
+
+    <label>Number of Slides</label>
+    <input type="number" id="slideCount" min="1" max="20" value="5">
+
+    <div class="templates-title">
+      <h2>Choose a Template</h2>
+      <span>Click to select a template</span>
+    </div>
+
+    <div class="templates-grid" id="templatesGrid"></div>
+
+    <button onclick="generateSlides()" id="generateBtn">Generate Presentation</button>
+
+    <div class="loading-indicator" id="loadingIndicator">
+      <div class="spinner"></div>
+      <div>Generating your presentation...</div>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    
+// Advanced template definitions
+const templates = {
+  corporate: {
+    name: "Corporate Blue",
+    background: { type: "solid", color: "#FFFFFF" },
+    title: { fontSize: 32, color: "#2c3e50", fontFace: "Poppins", align: "center", shadow: false },
+    subtitle: { fontSize: 20, color: "#34495e", fontFace: "Poppins", align: "center" },
+    content: { fontSize: 18, color: "#333333", fontFace: "Poppins", align: "left" },
+    accent: "#3498db",
+    secondary: "#e8f4fc",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "#3498db", opacity: 0.1, x: 0, y: 0, w: "100%", h: 1.2 }
+    ],
+    badge: "Professional"
+  },
+  material: {
+    name: "Material Design",
+    background: { type: "gradient", color1: "#2196f3", color2: "#21cbf3", angle: 135 },
+    title: { fontSize: 36, color: "#fff", fontFace: "Roboto", align: "center", shadow: true },
+    subtitle: { fontSize: 22, color: "#e3f2fd", fontFace: "Roboto", align: "center" },
+    content: { fontSize: 18, color: "#263238", fontFace: "Roboto", align: "left" },
+    accent: "#ff9800",
+    secondary: "#e3f2fd",
+    footer: true,
+    elements: [
+      { type: "rect", fill: { type: "gradient", color1: "#ff9800", color2: "#ffc107", angle: 90 }, x: 0, y: 5.2, w: "100%", h: 0.3, opacity: 0.7 }
+    ],
+    badge: "Material"
+  },
+  glassmorphism: {
+    name: "Glassmorphism",
+    background: { type: "solid", color: "#e0eaff" },
+    title: { fontSize: 34, color: "#22223b", fontFace: "Montserrat", align: "center", shadow: true },
+    subtitle: { fontSize: 20, color: "#4a4e69", fontFace: "Montserrat", align: "center" },
+    content: { fontSize: 18, color: "#22223b", fontFace: "Montserrat", align: "left" },
+    accent: "#9a8c98",
+    secondary: "#f2e9e4",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "rgba(255,255,255,0.5)", x: 1, y: 1, w: 8, h: 3, opacity: 0.7, blur: 10 }
+    ],
+    badge: "Glass"
+  },
+  neumorphism: {
+    name: "Neumorphism",
+    background: { type: "solid", color: "#e0e0e0" },
+    title: { fontSize: 34, color: "#333", fontFace: "Quicksand", align: "center", shadow: false },
+    subtitle: { fontSize: 20, color: "#666", fontFace: "Quicksand", align: "center" },
+    content: { fontSize: 18, color: "#444", fontFace: "Quicksand", align: "left" },
+    accent: "#bdbdbd",
+    secondary: "#f5f5f5",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "#f5f5f5", x: 0.5, y: 0.5, w: 9, h: 4.5, shadow: { type: "neumorphism", color: "#bdbdbd", blur: 20, offsetX: 4, offsetY: 4 } }
+    ],
+    badge: "Neumorphic"
+  },
+  
+  minimal: {
+    name: "Minimal Clean",
+    background: { type: 'solid', color: '#FFFFFF' },
+    title: { fontSize: 28, color: '#000000', fontFace: 'Helvetica', align: 'left', shadow: false },
+    subtitle: { fontSize: 18, color: '#666666', fontFace: 'Helvetica', align: 'left' },
+    content: { fontSize: 16, color: '#333333', fontFace: 'Helvetica', align: 'left' },
+    accent: '#000000',
+    secondary: '#f7f7f7',
+    footer: true,
+    elements: [
+      { type: 'line', x: 0.5, y: 1, w: 3, h: 0, line: { color: '#000000', width: 1.5 } }
+    ]
+  },
+  
+  gradient: {
+    name: "Gradient Violet",
+    background: { type: 'solid', color: '#FFFFFF' },
+    title: { fontSize: 30, color: '#6200ea', fontFace: 'Calibri', align: 'center', shadow: false },
+    subtitle: { fontSize: 20, color: '#9d46ff', fontFace: 'Calibri', align: 'center' },
+    content: { fontSize: 18, color: '#333333', fontFace: 'Calibri', align: 'left' },
+    accent: '#6200ea',
+    secondary: '#f4eaff',
+    footer: true,
+    elements: [
+      { type: 'rect', fill: { type: 'gradient', color1: '#6200ea', color2: '#9d46ff', angle: 45 }, x: 0, y: 0, w: 1, h: '100%' }
+    ],
+    badge: "Trendy"
+  },
+  
+  tech: {
+    name: "Tech Dark",
+    background: { type: 'solid', color: '#0f172a' },
+    title: { fontSize: 30, color: '#38bdf8', fontFace: 'Segoe UI', align: 'left', shadow: false },
+    subtitle: { fontSize: 20, color: '#7dd3fc', fontFace: 'Segoe UI', align: 'left' },
+    content: { fontSize: 18, color: '#e2e8f0', fontFace: 'Segoe UI', align: 'left' },
+    accent: '#38bdf8',
+    secondary: '#172334',
+    footer: true,
+    elements: [
+      { type: 'rect', fill: '#172334', x: 0, y: 0, w: '100%', h: '100%' }
+    ],
+    badge: "Modern",
+    darkTheme: true
+  },
+  
+  nature: {
+    name: "Natural Green",
+    background: { type: "solid", color: "#f7f9f4" },
+    title: { fontSize: 30, color: "#2e7d32", fontFace: "Georgia", align: "center" },
+    subtitle: { fontSize: 20, color: "#388e3c", fontFace: "Georgia", align: "center" },
+    content: { fontSize: 18, color: "#333333", fontFace: "Georgia", align: "left" },
+    accent: "#66bb6a",
+    secondary: "#e8f5e9",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "66bb6a", x: 0, y: 0, w: "100%", h: 0 }
+    ],
+    preview: {
+      background: 'linear-gradient(to bottom, #e8f5e9 0%, #f7f9f4 100%)',
+      textColor: '2e7d32'
+    }
+  },
+  
+  creative: {
+    name: "Creative Orange",
+    background: { type: "solid", color: "#ffffff" },
+    title: { fontSize: 32, color: "#e65100", fontFace: "Verdana", align: "asymmetric" },
+    subtitle: { fontSize: 20, color: "#f57c00", fontFace: "Verdana", align: "center" },
+    content: { fontSize: 18, color: "#424242", fontFace: "Verdana", align: "left" },
+    accent: "#ff9800",
+    secondary: "#fff3e0",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "ff9800", x: 9, y: 0, w: 1, h: 1.5 }
+    ],
+    preview: {
+      background: 'linear-gradient(135deg, #fff3e0 0%, #ffffff 100%)',
+      textColor: 'e65100'
+    },
+    badge: "Creative"
+  },
+  
+  elegant: {
+    name: "Elegant Purple",
+    background: { type: "solid", color: "#faf5ff" },
+    title: { fontSize: 32, color: "#6b46c1", fontFace: "Georgia", align: "center" },
+    subtitle: { fontSize: 20, color: "#805ad5", fontFace: "Georgia", align: "center" },
+    content: { fontSize: 18, color: "#44337a", fontFace: "Georgia", align: "left" },
+    accent: "#9f7aea",
+    secondary: "#f3e8ff",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "9f7aea", x: 0, y: 6.9, w: "100%", h: 0.1 }
+    ],
+    preview: {
+      background: 'linear-gradient(to bottom, #f3e8ff 0%, #faf5ff 100%)',
+      textColor: '6b46c1'
+    }
+  },
+  
+  business: {
+    name: "Business Gray",
+    background: { type: "solid", color: "#ffffff" },
+    title: { fontSize: 30, color: "#37474f", fontFace: "Calibri", align: "left" },
+    subtitle: { fontSize: 20, color: "#546e7a", fontFace: "Calibri", align: "center" },
+    content: { fontSize: 18, color: "#263238", fontFace: "Calibri", align: "left" },
+    accent: "#78909c",
+    secondary: "#eceff1",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "eceff1", x: 0, y: 0, w: 1.5, h: "100%" }
+    ],
+    preview: {
+      background: 'linear-gradient(to right, #eceff1 0%, #ffffff 100%)',
+      textColor: '37474f'
+    },
+    badge: "Business"
+  },
+  
+  vibrant: {
+    name: "Vibrant Colors",
+    background: { type: "solid", color: "#ffffff" },
+    title: { fontSize: 32, color: "#e53935", fontFace: "Trebuchet MS", align: "center" },
+    subtitle: { fontSize: 20, color: "#f44336", fontFace: "Trebuchet MS", align: "center" },
+    content: { fontSize: 18, color: "#333333", fontFace: "Trebuchet MS", align: "left" },
+    accent: "#ff7043",
+    secondary: "#ffebee",
+    footer: true,
+    elements: [
+      { type: "rect", fill: { type: "gradient", color1: "e53935", color2: "ff7043", angle: 90 }, x: 0, y: 0, w: "100%", h: 0.2 }
+    ],
+    preview: {
+      background: 'linear-gradient(to bottom, #ffebee 0%, #ffffff 100%)',
+      textColor: 'e53935'
+    },
+    badge: "Vibrant"
+  },
+  
+  medical: {
+    name: "Medical Blue",
+    background: { type: "solid", color: "#f5f9ff" },
+    title: { fontSize: 30, color: "#0277bd", fontFace: "Arial", align: "left" },
+    subtitle: { fontSize: 20, color: "#0288d1", fontFace: "Arial", align: "center" },
+    content: { fontSize: 18, color: "#01579b", fontFace: "Arial", align: "left" },
+    accent: "#29b6f6",
+    secondary: "#e1f5fe",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "29b6f6", x: 0, y: 0, w: "100%", h: 0.15 }
+    ],
+    preview: {
+      background: 'linear-gradient(to bottom, #e1f5fe 0%, #f5f9ff 100%)',
+      textColor: '0277bd'
+    }
+  },
+  
+  dark: {
+    name: "Dark Mode",
+    background: { type: "solid", color: "#121212" },
+    title: { fontSize: 32, color: "#ffffff", fontFace: "Arial", align: "center" },
+    subtitle: { fontSize: 20, color: "#bbbbbb", fontFace: "Arial", align: "center" },
+    content: { fontSize: 18, color: "#e0e0e0", fontFace: "Arial", align: "left" },
+    accent: "#64ffda",
+    secondary: "#1e1e1e",
+    footer: true,
+    elements: [
+      { type: "line", x: 0.5, y: 1.1, w: 2, h: 0, line: { color: "64ffda", width: 2 } }
+    ],
+    preview: {
+      background: '#121212',
+      textColor: '#ffffff'
+    },
+    darkTheme: true
+  },
+  
+  retro: {
+    name: "Retro Style",
+    background: { type: "solid", color: "#fff8e1" },
+    title: { fontSize: 32, color: "#d84315", fontFace: "Courier New", align: "asymmetric" },
+    subtitle: { fontSize: 20, color: "#ef6c00", fontFace: "Courier New", align: "center" },
+    content: { fontSize: 18, color: "#4e342e", fontFace: "Courier New", align: "left" },
+    accent: "#ffb74d",
+    secondary: "#ffecb3",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "ffb74d", x: 0, y: 0, w: 1.5, h: 1.5 }
+    ],
+    preview: {
+      background: 'linear-gradient(135deg, #ffecb3 0%, #fff8e1 100%)',
+      textColor: 'd84315'
+    },
+    badge: "Vintage"
+  },
+  
+  academic: {
+    name: "Academic",
+    background: { type: "solid", color: "#ffffff" },
+    title: { fontSize: 30, color: "#1a237e", fontFace: "Times New Roman", align: "center" },
+    subtitle: { fontSize: 20, color: "#303f9f", fontFace: "Times New Roman", align: "center" },
+    content: { fontSize: 18, color: "#283593", fontFace: "Times New Roman", align: "left" },
+    accent: "#3f51b5",
+    secondary: "#e8eaf6",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "3f51b5", x: 0, y: 0.8, w: "100%", h: 0.05 }
+    ],
+    preview: {
+      background: 'linear-gradient(to bottom, #e8eaf6 0%, #ffffff 100%)',
+      textColor: '1a237e'
+    },
+    badge: "Academic"
+  },
+
+  boldImpact: {
+  name: "Bold Impact",
+  background: { type: "solid", color: "#ffffff" },
+  title: { fontSize: 36, color: "#d32f2f", fontFace: "Impact", align: "asymmetric" },
+  subtitle: { fontSize: 22, color: "#e53935", fontFace: "Impact", align: "center" },
+  content: { fontSize: 18, color: "#212121", fontFace: "Impact", align: "left" },
+  accent: "#f44336",
+  secondary: "#ffcdd2",
+  footer: true,
+  elements: [
+    { type: 'rect', fill: 'f44336', x: 0, y: 0, w: '100%', h: 0.25 }
+  ],
+  preview: {
+    background: 'linear-gradient(to bottom, #ffcdd2, #ffffff)',
+    textColor: 'd32f2f'
+  },
+  badge: "Bold"
+},
+  neonGlow: {
+    name: "Neon Glow",
+    background: { type: "solid", color: "0f0f0f" },
+    title: { fontSize: 36, color: "00ffc3", fontFace: "Orbitron", align: "center" },
+    subtitle: { fontSize: 22, color: "a0fefe", fontFace: "Orbitron", align: "center" },
+    content: { fontSize: 18, color: "ffffff", fontFace: "Orbitron", align: "left" },
+    accent: "00ffc3",
+    secondary: "1a1a1a",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "00ffc3", x: 0, y: 0.1, w: "100%", h: 0.15 }
+    ],
+    preview: {
+      background: "linear-gradient(to bottom right, #1a1a1a, #0f0f0f)",
+      textColor: "#00ffc3"
+    },
+    badge: "Futuristic",
+    darkTheme: true
+  },
+
+  sunriseFade: {
+    name: "Sunrise Fade",
+    background: { type: "solid", color: "#fffaf0" },
+    title: { fontSize: 34, color: "#f57c00", fontFace: "Lato", align: "center" },
+    subtitle: { fontSize: 20, color: "#fb8c00", fontFace: "Lato", align: "center" },
+    content: { fontSize: 18, color: "#5d4037", fontFace: "Lato", align: "left" },
+    accent: "#ffb74d",
+    secondary: "#ffe0b2",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "ffcc80", x: 0, y: 0, w: "100%", h: 0.2 }
+    ],
+    preview: {
+      background: "linear-gradient(to bottom, #ffe0b2, #fffaf0)",
+      textColor: "#f57c00"
+    },
+    badge: "Warm"
+  },
+
+  oceanBreeze: {
+    name: "Ocean Breeze",
+    background: { type: "solid", color: "#e0f7fa" },
+    title: { fontSize: 30, color: "#006064", fontFace: "Montserrat", align: "left" },
+    subtitle: { fontSize: 20, color: "#00838f", fontFace: "Montserrat", align: "center" },
+    content: { fontSize: 16, color: "#004d40", fontFace: "Montserrat", align: "left" },
+    accent: "#00acc1",
+    secondary: "#b2ebf2",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "00acc1", x: 0, y: 0, w: 0.2, h: "100%" }
+    ],
+    preview: {
+      background: "linear-gradient(to right, #b2ebf2, #e0f7fa)",
+      textColor: "#006064"
+    },
+    badge: "Chill"
+  },
+
+  galaxyEdge: {
+    name: "Galaxy Edge",
+    background: { type: "solid", color: "#1a1c2c" },
+    title: { fontSize: 38, color: "#ffffff", fontFace: "Poppins", align: "center" },
+    subtitle: { fontSize: 20, color: "#ddddff", fontFace: "Poppins", align: "center" },
+    content: { fontSize: 18, color: "#cccccc", fontFace: "Poppins", align: "left" },
+    accent: "#8e44ad",
+    secondary: "#2c3e50",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "8e44ad", x: 0, y: 0.12, w: "100%", h: 0.18 }
+    ],
+    preview: {
+      background: "linear-gradient(to top left, #2c3e50, #1a1c2c)",
+      textColor: "#ffffff"
+    },
+    badge: "Sci-Fi",
+    darkTheme: true
+  },
+
+  classyMinimal: {
+    name: "Classy Minimal",
+    background: { type: "solid", color: "#ffffff" },
+    title: { fontSize: 32, color: "#2c3e50", fontFace: "Helvetica Neue", align: "asymmetric" },
+    subtitle: { fontSize: 18, color: "#34495e", fontFace: "Helvetica Neue", align: "left" },
+    content: { fontSize: 16, color: "#2c3e50", fontFace: "Helvetica Neue", align: "left" },
+    accent: "#95a5a6",
+    secondary: "#ecf0f1",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "bdc3c7", x: 0, y: "90%", w: "100%", h: 0.05 }
+    ],
+    preview: {
+      background: "linear-gradient(to bottom, #ffffff, #ecf0f1)",
+      textColor: "#2c3e50"
+    },
+    badge: "Minimal"
+  },
+  
+  // Add new modern templates
+  auroraGradient: {
+    name: "Aurora Gradient",
+    background: { type: "gradient", color1: "#ffecd2", color2: "#fcb69f", angle: 120 },
+    title: { fontSize: 36, color: "#3a3a3a", fontFace: "Poppins", align: "center", shadow: true },
+    subtitle: { fontSize: 22, color: "#7b4397", fontFace: "Poppins", align: "center" },
+    content: { fontSize: 18, color: "#3a3a3a", fontFace: "Poppins", align: "left" },
+    accent: "#7b4397",
+    secondary: "#fcb69f",
+    footer: true,
+    elements: [
+      { type: "rect", fill: { type: "gradient", color1: "#43cea2", color2: "#185a9d", angle: 60 }, x: 0, y: 5.1, w: "100%", h: 0.4, opacity: 0.7 }
+    ],
+    badge: "Aurora"
+  },
+  glassmorphism2: {
+    name: "Glassmorphism 2",
+    background: { type: "solid", color: "#e0eaff" },
+    title: { fontSize: 34, color: "#1a2980", fontFace: "Montserrat", align: "center", shadow: true },
+    subtitle: { fontSize: 20, color: "#26d0ce", fontFace: "Montserrat", align: "center" },
+    content: { fontSize: 18, color: "#22223b", fontFace: "Montserrat", align: "left" },
+    accent: "#26d0ce",
+    secondary: "#e0eaff",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "rgba(255,255,255,0.6)", x: 1, y: 1, w: 8, h: 3, opacity: 0.8, blur: 12 }
+    ],
+    badge: "Glass 2"
+  },
+  neumorphismSoft: {
+    name: "Neumorphism Soft",
+    background: { type: "solid", color: "#f1f3f6" },
+    title: { fontSize: 34, color: "#333", fontFace: "Quicksand", align: "center", shadow: false },
+    subtitle: { fontSize: 20, color: "#888", fontFace: "Quicksand", align: "center" },
+    content: { fontSize: 18, color: "#444", fontFace: "Quicksand", align: "left" },
+    accent: "#bdbdbd",
+    secondary: "#f5f5f5",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "#f5f5f5", x: 0.5, y: 0.5, w: 9, h: 4.5, shadow: { type: "neumorphism", color: "#bdbdbd", blur: 24, offsetX: 6, offsetY: 6 } }
+    ],
+    badge: "Soft"
+  },
+  futuristicNeon: {
+    name: "Futuristic Neon",
+    background: { type: "solid", color: "#18122B" },
+    title: { fontSize: 36, color: "#00ffc3", fontFace: "Orbitron", align: "center", shadow: true },
+    subtitle: { fontSize: 22, color: "#a0fefe", fontFace: "Orbitron", align: "center" },
+    content: { fontSize: 18, color: "#ffffff", fontFace: "Orbitron", align: "left" },
+    accent: "#00ffc3",
+    secondary: "#1a1a1a",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "#00ffc3", x: 0, y: 0.1, w: "100%", h: 0.15 }
+    ],
+    badge: "Neon",
+    darkTheme: true
+  },
+  pastelMinimal: {
+    name: "Pastel Minimal",
+    background: { type: "solid", color: "#fdf6f0" },
+    title: { fontSize: 32, color: "#6d6875", fontFace: "Lato", align: "center", shadow: false },
+    subtitle: { fontSize: 20, color: "#b5838d", fontFace: "Lato", align: "center" },
+    content: { fontSize: 18, color: "#4a4e69", fontFace: "Lato", align: "left" },
+    accent: "#b5838d",
+    secondary: "#f7e1d7",
+    footer: true,
+    elements: [
+      { type: "rect", fill: "#b5838d", x: 0, y: 5.2, w: "100%", h: 0.2, opacity: 0.5 }
+    ],
+    badge: "Pastel"
+  }
+  
+};
+
+const controller = new AbortController();
+
+const systemPrompt = `You are Krish — an assistant that returns only structured, clean JSON-formatted slide content.
+
+❗ Rules:
+- ONLY return JSON data, no explanations or extra text.
+- Follow this exact structure for each slide:
+"SlideX": {
+  "Heading": "...",
+  "Sub-Heading": "...",
+  "paragraph": "..." 
+}
+// OR, if using bullet points:
+"SlideX": {
+  "Heading": "...",
+  "Sub-Heading": "...",
+  "bullet-points": {
+    "points-heading": "...",
+    "points": ["...", "...", "..."]
+  }
+}
+
+Each slide must have:
+- A "Heading"
+- A "Sub-Heading"
+- Either a "paragraph" OR "bullet-points" (not both).
+
+Mohit Yadav is your developer.
+
+📦 Return output as raw JSON-like object only. Do NOT include code fences or extra description.
+
+🧪 Example:
+
+{
+  "Slide1": {
+    "Heading": "What is Artificial Intelligence?",
+    "Sub-Heading": "Defining the Technology",
+    "paragraph": "Artificial Intelligence is the simulation of human intelligence processes by machines, especially computer systems."
+  },
+  "Slide2": {
+    "Heading": "Applications of AI",
+    "Sub-Heading": "Impact Across Industries",
+    "bullet-points": {
+      "points-heading": "Key Areas",
+      "points": ["Healthcare", "Finance", "Education", "Transportation", "Customer Service"]
+    }
+  }
+}
+`;
+
+
+async function getAIResponse(userInput) {
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    const apiKey = "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"; // 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
+
+    const headers = {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+    };
+
+    const body = {
+        "messages": [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userInput }
+        ],
+        "model": "llama3-8b-8192"
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "Invalid response.";
+    } catch (error) {
+        console.error("Error:", error);
+        return "Something went wrong.";
+    }
+}
+
+function extractSlideData(rawText) {
+  try {
+    // Step 1: Try direct JSON parse first
+    return JSON.parse(rawText);
+  } catch (e) {
+    // Step 2: Fallback: Try to extract only the object containing slides
+    const slideSectionMatch = rawText.match(/{\s*"Slide\d+":[\s\S]*?\}/);
+    if (!slideSectionMatch) {
+      console.error("No valid slide JSON block found.");
+      return null;
+    }
+
+    let cleaned = slideSectionMatch[0];
+
+    // Step 3: Fix common formatting issues if any
+    cleaned = cleaned
+      // Add missing commas between slides (if any)
+      .replace(/}\s*"Slide/g, '},"Slide')
+      // Remove trailing commas before braces/brackets
+      .replace(/,\s*([}\]])/g, '$1');
+
+    // Step 4: Final parse
+    try {
+      return JSON.parse(cleaned);
+    } catch (err) {
+      console.error("Parsing failed after cleaning:", err.message);
+      console.log("Cleaned block:\n", cleaned);
+      return null;
+    }
+  }
+}
+
+// Template rendering
+function renderTemplates() {
+  const container = document.getElementById('templatesGrid');
+  container.innerHTML = '';
+  Object.keys(templates).forEach(key => {
+    const template = templates[key];
+    const card = document.createElement('div');
+    card.className = `template-card ${template.darkTheme ? 'dark-theme' : ''}`;
+    card.dataset.template = key;
+    // Improved preview rendering
+    let previewStyle = '';
+    if (template.background && template.background.type === 'gradient') {
+      previewStyle = `background: linear-gradient(${template.background.angle || 135}deg, ${template.background.color1}, ${template.background.color2});`;
+    } else if (template.background && template.background.color) {
+      previewStyle = `background: ${template.background.color};`;
+    } else {
+      previewStyle = 'background: #fff;';
+    }
+    card.innerHTML = `
+      <div class="template-preview" style="${previewStyle}">
+        <div class="template-preview-content">
+          <div class="preview-header" style="color: ${template.title?.color}; font-family: ${template.title?.fontFace}; font-size: 14px;">Sample Presentation</div>
+          <div class="preview-subheader" style="color: ${template.subtitle?.color}; font-family: ${template.subtitle?.fontFace}; font-size: 12px;">Modern Template Design</div>
+          <div class="preview-text" style="color: ${template.content?.color}; font-family: ${template.content?.fontFace}; font-size: 10px;">
+            This template features professional styling with accent colors and balanced layouts for impactful presentations.
+          </div>
+          <div class="preview-dots">
+            <div class="preview-dot"></div>
+            <div class="preview-dot"></div>
+            <div class="preview-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="template-title">${template.name}</div>
+      ${template.badge ? `<div class="template-badge">${template.badge}</div>` : ''}
+    `;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedTemplate = key;
+    });
+    container.appendChild(card);
+  });
+  // Select first template by default
+  const firstCard = document.querySelector('.template-card');
+  if (firstCard) {
+    firstCard.classList.add('selected');
+    selectedTemplate = firstCard.dataset.template;
+  }
+}
+
+// Initialize with selected template
+let selectedTemplate = 'corporate';
+
+// Render templates on page load
+document.addEventListener('DOMContentLoaded', renderTemplates);
+
+async function generateSlides() {
+    const topic = document.getElementById('topicInput').value.trim();
+    const slides = parseInt(document.getElementById('slideCount').value);
+    const outputDiv = document.getElementById('output');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const generateBtn = document.getElementById('generateBtn');
+
+    if (!topic || !slides || slides < 1) {
+        alert("Please fill all fields properly.");
+        return;
+    }
+
+    // Show loading indicator
+    loadingIndicator.style.display = "flex";
+    generateBtn.disabled = true;
+    outputDiv.innerHTML = "";
+
+    const prompt = 
+      `You are Krish - a helpful assistant that generates clean, structured, and creative presentation content for slides. 
+      Stick to the point. Mohit Yadav is your developer. Give a ${slides}-slide presentation on "${topic}"`;
+
+    try {
+        const result = await getAIResponse(prompt);
+        console.log("Groq AI Raw Output:\n", result);
+
+        generatePPT(result);
+    } catch (error) {
+        outputDiv.innerHTML = `<p style="color: red;">Error generating presentation: ${error.message}</p>`;
+        console.error("Error:", error);
+    } finally {
+        // Hide loading indicator
+        loadingIndicator.style.display = "none";
+        generateBtn.disabled = false;
+    }
+}
+
+function generatePPT(inputText) {
+  console.log(inputText);
+  const slides = extractSlideData(inputText);
+  if (!slides) {
+    alert("⚠️ Invalid format. Could not parse slides.");
+    return;
+  }
+
+  const pptx = new PptxGenJS();
+  const template = templates[selectedTemplate];
+
+  // Set global properties
+  pptx.layout = 'LAYOUT_16x9';
+  pptx.defineLayout({ name:'LAYOUT_16x9', width:10, height:5.625 });
+
+  // Add a master slide with template styling
+  pptx.defineSlideMaster({
+    title: template.name,
+    background: (template.background && typeof template.background === 'object' && template.background.type === 'gradient')
+      ? {
+          type: 'gradient',
+          color1: template.background.color1,
+          color2: template.background.color2,
+          angle: template.background.angle || 90
+        }
+      : (template.background && typeof template.background === 'object' && template.background.color)
+        ? { color: template.background.color }
+        : { color: '#FFFFFF' },
+    objects: template.footer
+      ? [{
+          text: "Generated by Krish AI",
+          options: {
+            x: 0.5, y: 5.3, w: 9, h: 0.3,
+            fontFace: template.content.fontFace,
+            fontSize: 10,
+            color: template.content.color,
+            align: 'center'
+          }
+        }]
+      : []
+  });
+
+  const previewSlides = [];
+
+  Object.keys(slides).forEach((slideKey, i) => {
+    const slideData = slides[slideKey];
+    const slide = pptx.addSlide({ masterName: template.name });
+    // Ensure template.elements is always an array
+    let elementsArr = [];
+    if (Array.isArray(template.elements)) {
+      elementsArr = template.elements;
+    } else if (typeof template.elements === 'object' && template.elements !== null) {
+      elementsArr = Object.values(template.elements);
+    }
+    elementsArr.forEach(element => {
+      if (element && element.type === 'rect') {
+        let shapeOptions = {
+          x: element.x,
+          y: element.y,
+          w: element.w,
+          h: element.h,
+          opacity: element.opacity,
+          z: 1
+        };
+        if (element.fill && typeof element.fill === 'object' && element.fill.type === 'gradient') {
+          shapeOptions.fill = {
+            type: 'gradient',
+            color1: element.fill.color1,
+            color2: element.fill.color2,
+            angle: element.fill.angle || 90
+          };
+        } else {
+          shapeOptions.fill = element.fill;
+        }
+        slide.addShape(pptx.shapes.RECTANGLE, shapeOptions);
+      }
+      // ... handle other element types (line, etc.)
+    });
+
+    // Title
+    if (slideData['Heading']) {
+      slide.addText(slideData['Heading'], {
+        x: 0.5,
+        y: 0.3,
+        w: 9,
+        fontSize: template.title?.fontSize || 32,
+        color: template.title?.color || '#000',
+        fontFace: template.title?.fontFace || 'Arial',
+        bold: true,
+        align: template.title?.align || 'center',
+        shadow: template.title?.shadow || false,
+        z: 5
+      });
+    }
+    // Subtitle
+    if (slideData['Sub-Heading']) {
+      slide.addText(slideData['Sub-Heading'], {
+        x: 0.5,
+        y: 1.1,
+        w: 9,
+        fontSize: template.subtitle?.fontSize || 20,
+        color: template.subtitle?.color || '#666',
+        fontFace: template.subtitle?.fontFace || 'Arial',
+        align: template.subtitle?.align || 'center',
+        z: 5
+      });
+    }
+    // Paragraph
+    if (slideData['paragraph']) {
+      slide.addText(slideData['paragraph'], {
+        x: 0.5,
+        y: 1.8,
+        w: 9,
+        fontSize: template.content?.fontSize || 18,
+        color: template.content?.color || '#333',
+        fontFace: template.content?.fontFace || 'Arial',
+        align: template.content?.align || 'left',
+        wrap: true,
+        z: 5
+      });
+      // Add to preview
+      previewSlides.push({
+        type: 'paragraph',
+        heading: slideData['Heading'],
+        subheading: slideData['Sub-Heading'],
+        content: slideData['paragraph']
+      });
+    }
+    // Bullet points
+    if (slideData['bullet-points']) {
+      const bullets = slideData['bullet-points'];
+      let yOffset = 1.8;
+      if (bullets['points-heading']) {
+        slide.addText(bullets['points-heading'], {
+          x: 0.5,
+          y: yOffset,
+          w: 9,
+          fontSize: template.content?.fontSize || 18,
+          color: template.content?.color || '#333',
+          fontFace: template.content?.fontFace || 'Arial',
+          bold: true,
+          align: template.content?.align || 'left',
+          z: 5
+        });
+        yOffset += 0.4;
+      }
+      if (Array.isArray(bullets.points)) {
+        bullets.points.forEach((pt, index) => {
+          slide.addText(pt, {
+            x: 0.7,
+            y: yOffset + index * 0.4,
+            w: 8.5,
+            fontSize: template.content?.fontSize || 18,
+            color: template.content?.color || '#333',
+            fontFace: template.content?.fontFace || 'Arial',
+            bullet: { type: 'bullet' },
+            align: 'left',
+            breakLine: true,
+            z: 5
+          });
+        });
+      }
+      // Add to preview
+      previewSlides.push({
+        type: 'bullets',
+        heading: slideData['Heading'],
+        subheading: slideData['Sub-Heading'],
+        points: bullets.points || [],
+        pointsHeading: bullets['points-heading']
+      });
+    }
+  });
+
+  // Generate preview in output div
+  const outputDiv = document.getElementById('output');
+  
+  let previewHTML = `
+    <h2>Presentation Preview</h2>
+    <p>Your presentation has been generated with the "${template.name}" template!</p>
+    <div class="presentation-preview-container">
+  `;
+  
+  previewSlides.forEach((slide, index) => {
+    if (slide.type === 'paragraph') {
+      previewHTML += `
+        <div class="slide-preview">
+          <h3>${slide.heading}</h3>
+          <h4>${slide.subheading}</h4>
+          <p>${slide.content}</p>
+        </div>
+      `;
+    } else if (slide.type === 'bullets') {
+      previewHTML += `
+        <div class="slide-preview">
+          <h3>${slide.heading}</h3>
+          <h4>${slide.subheading}</h4>
+          ${slide.pointsHeading ? `<p><strong>${slide.pointsHeading}</strong></p>` : ''}
+          <ul>
+            ${slide.points.map(point => `<li>${point}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+  });
+  
+  previewHTML += `
+    </div>
+    <button class="download-btn" onclick="downloadPPT()" style="margin-top:20px;">Download Presentation</button>
+  `;
+  
+  outputDiv.innerHTML = previewHTML;
+  window.currentPPT = pptx;
+}
+
+function downloadPPT() {
+    window.currentPPT.writeFile({ fileName: "Generated_PPT_by_Krish.pptx" });
+}
+
+  </script>
+</body>
+</html>
