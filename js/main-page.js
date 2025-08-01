@@ -50,25 +50,26 @@ function SectionMenu(section, element) {
         sec.classList.add('hidden');
     });
 
-    const selectedSection = document.getElementById(section);
-    if (selectedSection) {
-        selectedSection.classList.remove('hidden');
-    }
+    document.getElementById(section).classList.remove('hidden');
 
-    const navItems = document.querySelectorAll('.nav-item');
+    // Remove active class from all nav items (both desktop and mobile)
+    const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item');
     navItems.forEach(item => {
         item.classList.remove('active');
     });
 
-    let targetElement;
-    if (element instanceof HTMLElement) {
-        targetElement = element;
-    } else {
-        targetElement = document.getElementById(element);
-    }
-
-    if (targetElement) {
-        targetElement.classList.add('active');
+    // Add active class to clicked element
+    element.classList.add('active');
+    
+    // Sync active state between desktop and mobile nav
+    if (element.classList.contains('nav-item')) {
+        // Desktop nav clicked, sync to mobile
+        const mobileEquivalent = document.querySelector(`.mobile-nav-item[onclick*="${section}"]`);
+        if (mobileEquivalent) mobileEquivalent.classList.add('active');
+    } else if (element.classList.contains('mobile-nav-item')) {
+        // Mobile nav clicked, sync to desktop
+        const desktopEquivalent = document.querySelector(`.nav-item[onclick*="${section}"]`);
+        if (desktopEquivalent) desktopEquivalent.classList.add('active');
     }
 }
 
@@ -496,6 +497,131 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Store initial image data
+let imageData = [];
+let isInitialized = false;
+
+// Initialize image data
+function initializeImageData() {
+  const scatteredImages = document.querySelectorAll('.wn-scattered-image');
+  imageData = [];
+  
+  scatteredImages.forEach((img, index) => {
+    const rect = img.getBoundingClientRect();
+    const rotation = getComputedStyle(img).getPropertyValue('--rotation') || '0deg';
+    const screenCenterX = window.innerWidth / 2;
+    
+    imageData.push({
+      element: img,
+      rotation: rotation,
+      isLeftSide: (rect.left + rect.width / 2) < screenCenterX,
+      baseOpacity: window.innerWidth <= 830 ? 0.1 : 0.2
+    });
+  });
+  
+  isInitialized = true;
+}
+
+// Scroll-based animation for scattered images
+function handleScatteredImagesScroll() {
+  const whatsNewSection = document.getElementById('whatsNew');
+  
+  if (!whatsNewSection) return;
+  
+  // Initialize if not done yet
+  if (!isInitialized) {
+    initializeImageData();
+  }
+  
+  if (imageData.length === 0) return;
+  
+  const sectionRect = whatsNewSection.getBoundingClientRect();
+  const sectionTop = sectionRect.top;
+  const windowHeight = window.innerHeight;
+  
+  // Calculate scroll progress (0 to 1)
+  // Animation starts when section top reaches viewport top
+  // Animation completes when section has scrolled up by 600px
+  let scrollProgress = 0;
+  if (sectionTop <= 0) {
+    scrollProgress = Math.min(1, Math.abs(sectionTop) / 600);
+  }
+  
+  imageData.forEach((data) => {
+    const { element, rotation, isLeftSide, baseOpacity } = data;
+    
+    // Add scrolling class when actively scrolling
+    if (scrollProgress > 0) {
+      element.classList.add('scrolling');
+    } else {
+      element.classList.remove('scrolling');
+    }
+    
+    // Calculate movement distance based on scroll progress
+    const maxMovement = window.innerWidth * 0.9; // Move 90% of screen width
+    const movement = scrollProgress * maxMovement;
+    
+    // Apply transform based on side
+    if (scrollProgress > 0) {
+      if (isLeftSide) {
+        // Move left images to the left
+        element.style.transform = `translateX(-${movement}px) rotate(${rotation})`;
+      } else {
+        // Move right images to the right
+        element.style.transform = `translateX(${movement}px) rotate(${rotation})`;
+      }
+    } else {
+      // Reset transform when not scrolling
+      element.style.transform = `rotate(${rotation})`;
+    }
+    
+    // Fade out as they move
+    const opacity = Math.max(0.02, baseOpacity - (scrollProgress * 0.48));
+    element.style.opacity = opacity;
+  });
+}
+
+// Throttle scroll events for better performance
+let scrollTimeout;
+function throttledScroll() {
+  if (!scrollTimeout) {
+    scrollTimeout = setTimeout(() => {
+      handleScatteredImagesScroll();
+      scrollTimeout = null;
+    }, 1); // ~60fps
+  }
+}
+
+// Add scroll event listener
+window.addEventListener('scroll', throttledScroll);
+
+// Initialize on page load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    isInitialized = false; // Force re-initialization
+    handleScatteredImagesScroll();
+  }, 100);
+});
+
+// Also initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      handleScatteredImagesScroll();
+    }, 100);
+  });
+} else {
+  setTimeout(() => {
+    handleScatteredImagesScroll();
+  }, 100);
+}
+
+// Reinitialize on window resize
+window.addEventListener('resize', () => {
+  isInitialized = false;
+  handleScatteredImagesScroll();
+});
 
 
 // Card hover effect tags card ===================================================================================================
