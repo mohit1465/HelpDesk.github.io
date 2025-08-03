@@ -679,6 +679,22 @@ body{
     background: var(--header-left-btn-hover);
     border-left: 2px solid var(--buttons-bg);
 }
+/* 
+.file-item.editing {
+    background: var(--header-left-btn-hover);
+}
+
+.file-item.editing .file-name {
+    background: red;
+} 
+    
+.file-item.editing {
+    background: #37373d;
+}
+
+.file-item.editing .file-name {
+    display: none;
+} */
 
 .file-item.selected {
     background: var(--main-bg);
@@ -702,6 +718,7 @@ body{
 
 
 .file-icon {
+    color: var(--text-color);
     flex-shrink: 0;
 }
 
@@ -952,7 +969,7 @@ body{
 
 /* Inline Input */
 .inline-input {
-    background: #3c3c3c;
+    background: transparent;
     border: 1px solid #007acc;
     border-radius: 3px;
     color: #ffffff;
@@ -968,15 +985,6 @@ body{
     border-color: #0086d4;
     box-shadow: 0 0 0 1px rgba(0, 122, 204, 0.3);
 }
-
-.file-item.editing {
-    background: #37373d;
-}
-
-.file-item.editing .file-name {
-    display: none;
-}
-
 .inline-input-container {
     display: flex;
     align-items: center;
@@ -1121,6 +1129,7 @@ body{
     left: 0;
     right: 0;
     padding: 5px 10px 8px 10px;
+    backdrop-filter: blur(3px);
     background-color: var(--gradient-bg-background-color);
     background: var(--main-bg);
     color: var(--text-color);
@@ -1177,8 +1186,8 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
-    height: 48px;
+    min-width: 46px;
+    height: 46px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(8px);
     position: relative;
@@ -1187,12 +1196,12 @@ body{
 
 .send-btn:hover:not(:disabled) {
     background: var(--text-color);
-    transform: translateY(-2px) scale(1.02);
+    transform: scale(0.98);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .send-btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
+    transform: scale(0.98);
     transition: all 0.1s ease;
 }
 
@@ -1626,24 +1635,115 @@ body{
     }
 }
 
-/* Code Diff Highlighting */
-.monaco-editor .inserted-line {
-    background-color: rgba(76, 175, 80, 0.2) !important;
+/* Sidebar Status Bar Styles */
+.sidebar-status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--header-bg);
+    border-top: 1px solid var(--header-border);
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'Courier New', monospace;
+    z-index: 10;
 }
 
-.monaco-editor .deleted-line {
-    background-color: rgba(244, 67, 54, 0.2) !important;
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
 }
 
-/* Custom Monaco Editor Styling */
-.monaco-editor {
-    background: #1e1e1e !important;
+.status-label {
+    color: var(--text-color);
+    opacity: 0.8;
+    font-weight: 500;
 }
 
-.monaco-editor .margin {
-    background: #1e1e1e !important;
+.status-value {
+    color: var(--primary-section-color);
+    font-weight: 600;
 }
 
-.monaco-editor .monaco-editor-background {
-    background: #1e1e1e !important;
+.status-separator {
+    color: var(--text-color);
+    opacity: 0.6;
+    margin: 0 2px;
+}
+
+.file-tree {
+    height: calc(100% - 80px);
+    overflow-y: auto;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .sidebar-status-bar {
+    background: var(--header-bg);
+    border-top-color: var(--header-border);
+}
+
+[data-theme="dark"] .status-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .status-value {
+    color: var(--primary-section-color);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 950px) {
+    .sidebar-status-bar {
+        font-size: 10px;
+        padding: 6px 8px;
+        position: absolute;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        z-index: 1001;
+        background: var(--header-bg);
+        border-top: 1px solid var(--header-border);
+    }
+    
+    .sidebar {
+        padding-bottom: 60px;
+    }
+    
+    .file-tree {
+        height: calc(100vh - 140px);
+        padding-bottom: 60px;
+    }
+    
+    .sidebar.show .sidebar-status-bar {
+        display: flex;
+    }
+    
+    .sidebar:not(.show) .sidebar-status-bar {
+        display: none;
+    }
+    
+    .sidebar-status-bar {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    
+    .status-item {
+        font-size: 9px;
+        gap: 1px;
+    }
+    
+    .status-label {
+        font-size: 9px;
+    }
+    
+    .status-value {
+        font-size: 9px;
+        font-weight: 700;
+    }
 }

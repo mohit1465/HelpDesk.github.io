@@ -133,12 +133,84 @@ function getSystemPrompt() {
   const isoWithOffset = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${sign}${hours}:${mins}`;
   const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
   return `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE.
-You are Intrecting with User.
+You are Interacting with User.
 
 Current user context:
 - Local Time: ${isoWithOffset}
 - Date: ${dateStr}
 
+## File Operations Guide
+
+You can assist with file operations in the PrimeX editor. Here's how to handle them:
+
+### Creating Files
+- Use [create_file] path/to/filename.extension [content] to create a new file
+- Example: [create_file] src/utils/helper.js [console.log('Hello');]
+- For multi-line content, use [create_file] path/to/file.js [
+  // Your code here
+  function example() {
+    return 'Hello';
+  }
+]
+
+### Deleting Files/Folders
+- Use [delete_file] path/to/file to delete a file
+- Use [delete_folder] path/to/folder to delete a folder (recursively)
+- Example: [delete_file] src/old-script.js
+- The system will show a confirmation dialog before deletion
+
+### Best Practices
+1. Always use forward slashes (/) in paths
+2. Check if file exists before creating
+3. Be cautious with deletions - they can't be undone
+4. Use relative paths from project root
+5. For nested folders, ensure parent directories exist
+
+### Error Handling
+- If a file operation fails, the system will show an error message
+- Check for common issues like:
+  - Invalid characters in filenames
+  - Permission issues
+  - Non-existent parent directories
+
+### Example Interactions
+
+User: Create a new config file
+→
+[query] I'll create a new config file for you. Here's what I'll add:
+[create_file] config.json [
+  {
+    "apiEndpoint": "https://api.example.com",
+    "theme": "dark",
+    "version": "1.0.0"
+  }
+]
+[query] Config file created successfully! 🎉
+
+User: Delete the test folder
+→
+[query] I'll help you delete the test folder. This action will remove the folder and all its contents permanently. Are you sure you want to proceed?
+[delete_folder] test
+[query] The test folder has been deleted successfully.
+
+User: Create a new component
+→
+[query] I'll create a new React component for you. Here's what I'll add:
+[create_file] src/components/NewComponent.jsx [
+  import React from 'react';
+
+  const NewComponent = () => {
+    return (
+      <div className="new-component">
+        <h2>New Component</h2>
+        <p>Start editing here</p>
+      </div>
+    );
+  };
+
+  export default NewComponent;
+]
+[query] Component created successfully! 🚀
 
 Your job is to respond to any user input ([user_query]) by following this format:
 
@@ -899,6 +971,7 @@ function addAIMessageActions(messageDiv, contentDiv, content, userQuery, message
                         chat.messages[messageIndex].content = newResponse;
                         saveChats();
                         addAIMessageActions(messageDiv, contentDiv, newResponse, userQuery, messageIndex);
+                        // No timestampDiv here
                     }
                 }
                 animate();
@@ -2258,7 +2331,9 @@ appendMessage = function(content, sender, save = true, userQuery = null, message
     buildShareMenu(imgElem.src, 'Check out this image!');
     // Close other open share menus
     document.querySelectorAll('.message-image-share-menu.active').forEach(menu => {
-      if (menu !== shareMenu) menu.classList.remove('active');
+      if (menu !== shareMenu) {
+        menu.classList.remove('active');
+      }
     });
     shareMenu.classList.toggle('active');
   });

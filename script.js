@@ -169,8 +169,10 @@ window.onload = () => {
 
 function setTheme(theme) {
     if (theme === 'dark') {
+        monaco.editor.setTheme('hc-black');
         body.setAttribute('data-theme', 'dark');
     } else {
+        monaco.editor.setTheme('vs-light');
         body.removeAttribute('data-theme');
     }
 }
@@ -179,30 +181,16 @@ themeToggleBtn.addEventListener('click', () => {
     const currentTheme = body.getAttribute('data-theme');
 
     if (currentTheme === 'dark') {
+        monaco.editor.setTheme('vs-light');
         body.removeAttribute('data-theme');
         localStorage.setItem('currentTheme', 'light'); // Save theme
     } else {
         // Switch to dark theme
+        monaco.editor.setTheme('hc-black');
         body.setAttribute('data-theme', 'dark');
         localStorage.setItem('currentTheme', 'dark'); // Save theme
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function toggleMobileMenu() {
     const mobileMenu = document.getElementById('mobileMenu');
@@ -255,9 +243,6 @@ document.getElementById('load-file-mobile').addEventListener('click', function()
     toggleMobileMenu();
 });
 
-
-
-
 function toggleDiv(divId) {
     const div = document.getElementById(divId);
     const leftDiv = document.getElementById('leftDiv');
@@ -296,16 +281,6 @@ function toggleDiv(divId) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 function loadFileIntoTab(fileName, fileContent, fileId) {
     const tabId = fileId || fileName;
@@ -478,8 +453,161 @@ function logoutUser() {
     });
 }
 
+function updateStatusBar() {
+    const currentLineEl = document.getElementById('currentLine');
+    const currentColumnEl = document.getElementById('currentColumn');
+    const totalLinesEl = document.getElementById('totalLines');
+    const fileSizeEl = document.getElementById('fileSize');
+    
+    if (!currentLineEl || !currentColumnEl || !totalLinesEl || !fileSizeEl) {
+        return;
+    }
+    
+    // Default values when no file is loaded
+    let line = 0, column = 0, totalLines = 0, fileSize = '0 Bytes';
+    let hasContent = false;
+    
+    // If no active tab or no open tabs, reset to defaults
+    if (!activeTab || openTabs.size === 0) {
+        currentLineEl.textContent = line;
+        currentColumnEl.textContent = column;
+        totalLinesEl.textContent = totalLines;
+        fileSizeEl.textContent = fileSize;
+        return;
+    }
+    
+    try {
+        if (editor && monaco) {
+            // Get cursor position from Monaco Editor
+            const position = editor.getPosition();
+            const model = editor.getModel();
+            
+            if (model) {
+                const content = model.getValue();
+                hasContent = content.length > 0;
+                
+                if (hasContent) {
+                    totalLines = model.getLineCount();
+                    
+                    if (position) {
+                        line = position.lineNumber;
+                        column = position.column;
+                    }
+                    
+                    // Calculate file size
+                    const sizeInBytes = new Blob([content]).size;
+                    fileSize = formatFileSize(sizeInBytes);
+                }
+            }
+        } else {
+            // Fallback to textarea if Monaco Editor is not available
+            const textarea = document.getElementById('codeEditor');
+            if (textarea) {
+                const content = textarea.value || '';
+                hasContent = content.length > 0;
+                
+                if (hasContent) {
+                    const lines = content.split('\n');
+                    totalLines = lines.length;
+                    
+                    // Calculate cursor position in textarea
+                    const cursorPos = textarea.selectionStart;
+                    const textBeforeCursor = content.substring(0, cursorPos);
+                    const linesBeforeCursor = textBeforeCursor.split('\n');
+                    line = linesBeforeCursor.length;
+                    column = linesBeforeCursor[linesBeforeCursor.length - 1].length + 1;
+                    
+                    // Calculate file size
+                    const sizeInBytes = new Blob([content]).size;
+                    fileSize = formatFileSize(sizeInBytes);
+                }
+            }
+        }
+        
+        // Check if we have any active tabs with content
+        if (!hasContent && activeTab && openTabs.has(activeTab)) {
+            const tabContent = openTabs.get(activeTab).content || '';
+            if (tabContent.length > 0) {
+                const lines = tabContent.split('\n');
+                totalLines = lines.length;
+                line = 1;
+                column = 1;
+                const sizeInBytes = new Blob([tabContent]).size;
+                fileSize = formatFileSize(sizeInBytes);
+            }
+        }
+        
+    } catch (error) {
+        console.log('Error updating status bar:', error);
+    }
+    
+    // Update the status bar elements
+    currentLineEl.textContent = line;
+    currentColumnEl.textContent = column;
+    totalLinesEl.textContent = totalLines;
+    fileSizeEl.textContent = fileSize;
+}
 
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    if (i === 0) {
+        return bytes + ' ' + sizes[i];
+    }
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
 
+// Initialize status bar updates
+function initializeStatusBar() {
+    // Update status bar initially
+    updateStatusBar();
+    
+    // Update status bar when Monaco Editor cursor position changes
+    if (editor && monaco) {
+        editor.onDidChangeCursorPosition(() => {
+            updateStatusBar();
+        });
+        
+        editor.onDidChangeModelContent(() => {
+            updateStatusBar();
+        });
+    }
+    
+    // Update status bar when textarea cursor position changes (fallback)
+    const textarea = document.getElementById('codeEditor');
+    if (textarea) {
+        textarea.addEventListener('input', updateStatusBar);
+        textarea.addEventListener('keyup', updateStatusBar);
+        textarea.addEventListener('mouseup', updateStatusBar);
+        textarea.addEventListener('focus', updateStatusBar);
+    }
+    
+    // Update status bar when switching tabs
+    const originalSwitchToTab = window.switchToTab;
+    if (originalSwitchToTab) {
+        window.switchToTab = function(tabId) {
+            originalSwitchToTab(tabId);
+            setTimeout(updateStatusBar, 100); // Small delay to ensure editor is updated
+        };
+    }
+}
+
+// Call initializeStatusBar when Monaco Editor is ready
+if (typeof initializeMonacoEditor === 'function') {
+    const originalInitializeMonacoEditor = initializeMonacoEditor;
+    initializeMonacoEditor = function() {
+        originalInitializeMonacoEditor();
+        setTimeout(initializeStatusBar, 500); // Delay to ensure Monaco is fully loaded
+    };
+} else {
+    // Initialize immediately if Monaco Editor is not used
+    document.addEventListener('DOMContentLoaded', initializeStatusBar);
+}
 
 // Configuration
 const CONFIG = {
@@ -547,7 +675,7 @@ function initializeMonacoEditor() {
         editor = monaco.editor.create(document.getElementById('editor'), {
             value: CONFIG.DEFAULT_CODE,
             language: CONFIG.DEFAULT_LANGUAGE,
-            theme: 'vs-dark',
+            theme: 'vs-light',
             fontSize: 14,
             fontFamily: 'Consolas, Monaco, "Courier New", monospace',
             lineNumbers: 'on',
@@ -564,8 +692,8 @@ function initializeMonacoEditor() {
             parameterHints: { enabled: true },
             folding: true,
             lineDecorationsWidth: 10,
-            lineNumbersMinChars: 3,
-            glyphMargin: true,
+            lineNumbersMinChars: 2,
+            glyphMargin: false,
             contextmenu: true,
             mouseWheelZoom: true,
             smoothScrolling: true,
@@ -1153,7 +1281,7 @@ function getFileIconColor(language) {
         'css': '#1572b6',
         'json': '#000000',
         'markdown': '#083fa1',
-        'plaintext': '#cccccc'
+        'plaintext': '#888888'
     };
     
     return colorMap[language] || '#cccccc';
@@ -1349,10 +1477,10 @@ function createInlineInput(type, defaultName, parentFolder) {
     inputElement.style.paddingLeft = `${depth}px`;
     
     const iconSvg = type === 'folder' ? 
-        `<svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="#dcb67a">
+        `<svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="#888888">
             <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
         </svg>` :
-        `<svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="#cccccc">
+        `<svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="#888888">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
         </svg>`;
     
@@ -1372,16 +1500,28 @@ function createInlineInput(type, defaultName, parentFolder) {
     input.select();
     
     // Handle input events
-    input.addEventListener('blur', handleInlineInputComplete);
-    input.addEventListener('keydown', function(e) {
+    const handleKeyDown = function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            // Remove the blur listener to prevent duplicate calls
+            input.removeEventListener('blur', handleInlineInputComplete);
             handleInlineInputComplete.call(this);
         } else if (e.key === 'Escape') {
             e.preventDefault();
             cancelInlineInput(inputElement);
         }
-    });
+    };
+    
+    input.addEventListener('blur', handleInlineInputComplete);
+    input.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up event listeners when input is removed
+    const originalRemove = inputElement.remove;
+    inputElement.remove = function() {
+        input.removeEventListener('blur', handleInlineInputComplete);
+        input.removeEventListener('keydown', handleKeyDown);
+        originalRemove.call(this);
+    };
 }
 
 // Handle completion of inline input
@@ -3072,6 +3212,122 @@ function changeFileNameAndExtension() {
     }
 }
 
+// Chat message handling with file operations
+function initializeChatSystem() {
+    // Store the original appendMessage function if it exists
+    const originalAppendMessage = window.appendMessage || function() {
+        // Default implementation if appendMessage doesn't exist
+        const messagesContainer = document.getElementById('messages');
+        if (messagesContainer) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${arguments[1] || 'user'}`;
+            messageDiv.textContent = arguments[0];
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    };
+
+    // Process file operations from AI response
+    function processFileOperations(content) {
+        // Process create file commands: [create_file] path/to/file [content]
+        const createFileRegex = /\[create_file\]\s*([^\s\[\]]+)(?:\s*\[([\s\S]*?)\])?/g;
+        let createMatch;
+        let result = content;
+        
+        while ((createMatch = createFileRegex.exec(content)) !== null) {
+            const filePath = createMatch[1].trim();
+            const fileContent = (createMatch[2] || '').trim();
+            
+            // Use the existing file creation function
+            if (typeof createFileFromInput === 'function') {
+                createFileFromInput(filePath, window.selectedFolder);
+                
+                // If content was provided, update the file content
+                if (fileContent) {
+                    const tabId = window.selectedFolder ? 
+                        `${window.selectedFolder}/${filePath}` : filePath;
+                    if (window.openTabs && window.openTabs.has(tabId)) {
+                        const tab = window.openTabs.get(tabId);
+                        tab.content = fileContent;
+                        tab.isModified = true;
+                        if (window.fileContents) {
+                            window.fileContents.set(tabId, fileContent);
+                        }
+                        
+                        // If this is the active tab, update the editor
+                        if (window.activeTab === tabId && window.monaco && window.monaco.editor) {
+                            const editor = window.monaco.editor.getModels()[0];
+                            if (editor) {
+                                editor.setValue(fileContent);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Process delete file commands: [delete_file] path/to/file
+        const deleteFileRegex = /\[delete_file\]\s*([^\s\[\]]+)/g;
+        while ((deleteMatch = deleteFileRegex.exec(content)) !== null) {
+            const filePath = deleteMatch[1].trim();
+            if (typeof deleteFile === 'function' && typeof showConfirmToast === 'function') {
+                showConfirmToast(
+                    `Are you sure you want to delete "${filePath}"?`,
+                    () => {
+                        deleteFile(filePath);
+                        showToast(`File "${filePath}" deleted`, 'success');
+                    },
+                    () => {
+                        showToast('File deletion cancelled', 'info');
+                    }
+                );
+            }
+        }
+        
+        // Process delete folder commands: [delete_folder] path/to/folder
+        const deleteFolderRegex = /\[delete_folder\]\s*([^\s\[\]]+)/g;
+        let deleteFolderMatch;
+        while ((deleteFolderMatch = deleteFolderRegex.exec(content)) !== null) {
+            const folderPath = deleteFolderMatch[1].trim();
+            if (typeof deleteFolder === 'function' && typeof showConfirmToast === 'function') {
+                showConfirmToast(
+                    `Are you sure you want to delete the folder "${folderPath}" and all its contents?`,
+                    () => {
+                        deleteFolder(folderPath);
+                        showToast(`Folder "${folderPath}" deleted`, 'success');
+                    },
+                    () => {
+                        showToast('Folder deletion cancelled', 'info');
+                    }
+                );
+            }
+        }
+        
+        // Remove the file operation commands from the displayed content
+        return result
+            .replace(/\[create_file\][^\[]*/g, '')
+            .replace(/\[delete_file\][^\[]*/g, '')
+            .replace(/\[delete_folder\][^\[]*/g, '')
+            .trim();
+    }
+
+    // Override the global appendMessage function
+    window.appendMessage = function(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null, userImages = null, hasGeneratedImage = false, imageBase64 = null) {
+        // Process file operations for AI messages
+        if (sender === 'ai' && content) {
+            content = processFileOperations(content);
+        }
+        
+        // Call the original appendMessage function
+        return originalAppendMessage(content, sender, save, userQuery, messageIndex, stream, timestamp, userImages, hasGeneratedImage, imageBase64);
+    };
+}
+
+// Initialize the chat system when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChatSystem();
+});
+
 // Add event listeners for file operations
 document.addEventListener('DOMContentLoaded', () => {
     // Prevent multiple event listener setups
@@ -3276,7 +3532,7 @@ function showContextMenu(event) {
                 text: 'Copy', 
                 action: 'copy', 
                 icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                    <path d="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
                 </svg>` 
             },
             { type: 'divider' },
@@ -3291,7 +3547,7 @@ function showContextMenu(event) {
                 text: 'Download', 
                 action: 'download', 
                 icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                 </svg>` 
             },
             { type: 'divider' },
@@ -3334,7 +3590,7 @@ function showContextMenu(event) {
                 text: 'Copy', 
                 action: 'copy', 
                 icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                    <path d="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
                 </svg>` 
             },
             { type: 'divider' },
@@ -3399,7 +3655,7 @@ function showContextMenu(event) {
                 text: 'Paste', 
                 action: 'paste', 
                 icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M19,2H14.82C14.4,0.84 13.3,0 12,0C10.7,0 9.6,0.84 9.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2Z"/>
+                    <path d="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
                 </svg>` 
             },
             { type: 'divider' },
@@ -3567,7 +3823,6 @@ function handleContextMenuClick(event) {
                     `Are you sure you want to delete this ${itemType}?`,
                     () => {
                         deleteItem(itemName, clickedType === 'folder');
-                        showToast(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted successfully`, 'success');
                     },
                     () => {
                         showToast('Delete cancelled', 'info');
@@ -3634,7 +3889,7 @@ function pasteItem(targetItem, targetType) {
     // Determine target folder
     let targetFolder = null;
     if (targetType === 'folder') {
-        targetFolder = targetItem.dataset.name || targetItem.dataset.path;
+        targetFolder = targetItem.dataset.path;
     } else if (targetType === 'file') {
         // If pasting on a file, paste in the same folder as the file
         const fileData = projectFiles.get(targetItem.dataset.name);
@@ -3754,8 +4009,12 @@ function initializeContextMenu() {
         }
     });
     
-    // Hide context menu on scroll
-    document.addEventListener('scroll', hideContextMenu);
+    // Hide on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideContextMenu();
+        }
+    });
 }
 
 function createNewFileInContext(parentPath) {
@@ -3896,3 +4155,471 @@ window.addEventListener('resize', function() {
 // Global functions for onclick handlers
 window.applyCode = applyCode;
 window.closeTab = closeTab;
+
+// Status Bar Functions
+function updateStatusBar() {
+    const currentLineEl = document.getElementById('currentLine');
+    const currentColumnEl = document.getElementById('currentColumn');
+    const totalLinesEl = document.getElementById('totalLines');
+    const fileSizeEl = document.getElementById('fileSize');
+    
+    if (!currentLineEl || !currentColumnEl || !totalLinesEl || !fileSizeEl) {
+        return;
+    }
+    
+    // Default values when no file is loaded
+    let line = 0, column = 0, totalLines = 0, fileSize = '0 Bytes';
+    let hasContent = false;
+    
+    // If no active tab or no open tabs, reset to defaults
+    if (!activeTab || openTabs.size === 0) {
+        currentLineEl.textContent = line;
+        currentColumnEl.textContent = column;
+        totalLinesEl.textContent = totalLines;
+        fileSizeEl.textContent = fileSize;
+        return;
+    }
+    
+    try {
+        if (editor && monaco) {
+            // Get cursor position from Monaco Editor
+            const position = editor.getPosition();
+            const model = editor.getModel();
+            
+            if (model) {
+                const content = model.getValue();
+                hasContent = content.length > 0;
+                
+                if (hasContent) {
+                    totalLines = model.getLineCount();
+                    
+                    if (position) {
+                        line = position.lineNumber;
+                        column = position.column;
+                    }
+                    
+                    // Calculate file size
+                    const sizeInBytes = new Blob([content]).size;
+                    fileSize = formatFileSize(sizeInBytes);
+                }
+            }
+        } else {
+            // Fallback to textarea if Monaco Editor is not available
+            const textarea = document.getElementById('codeEditor');
+            if (textarea) {
+                const content = textarea.value || '';
+                hasContent = content.length > 0;
+                
+                if (hasContent) {
+                    const lines = content.split('\n');
+                    totalLines = lines.length;
+                    
+                    // Calculate cursor position in textarea
+                    const cursorPos = textarea.selectionStart;
+                    const textBeforeCursor = content.substring(0, cursorPos);
+                    const linesBeforeCursor = textBeforeCursor.split('\n');
+                    line = linesBeforeCursor.length;
+                    column = linesBeforeCursor[linesBeforeCursor.length - 1].length + 1;
+                    
+                    // Calculate file size
+                    const sizeInBytes = new Blob([content]).size;
+                    fileSize = formatFileSize(sizeInBytes);
+                }
+            }
+        }
+        
+        // Check if we have any active tabs with content
+        if (!hasContent && activeTab && openTabs.has(activeTab)) {
+            const tabContent = openTabs.get(activeTab).content || '';
+            if (tabContent.length > 0) {
+                const lines = tabContent.split('\n');
+                totalLines = lines.length;
+                line = 1;
+                column = 1;
+                const sizeInBytes = new Blob([tabContent]).size;
+                fileSize = formatFileSize(sizeInBytes);
+            }
+        }
+        
+    } catch (error) {
+        console.log('Error updating status bar:', error);
+    }
+    
+    // Update the status bar elements
+    currentLineEl.textContent = line;
+    currentColumnEl.textContent = column;
+    totalLinesEl.textContent = totalLines;
+    fileSizeEl.textContent = fileSize;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    if (i === 0) {
+        return bytes + ' ' + sizes[i];
+    }
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Initialize status bar updates
+function initializeStatusBar() {
+    // Update status bar initially
+    updateStatusBar();
+    
+    // Update status bar when Monaco Editor cursor position changes
+    if (editor && monaco) {
+        editor.onDidChangeCursorPosition(() => {
+            updateStatusBar();
+        });
+        
+        editor.onDidChangeModelContent(() => {
+            updateStatusBar();
+        });
+    }
+    
+    // Update status bar when textarea cursor position changes (fallback)
+    const textarea = document.getElementById('codeEditor');
+    if (textarea) {
+        textarea.addEventListener('input', updateStatusBar);
+        textarea.addEventListener('keyup', updateStatusBar);
+        textarea.addEventListener('mouseup', updateStatusBar);
+        textarea.addEventListener('focus', updateStatusBar);
+    }
+    
+    // Update status bar when switching tabs
+    const originalSwitchToTab = window.switchToTab;
+    if (originalSwitchToTab) {
+        window.switchToTab = function(tabId) {
+            originalSwitchToTab(tabId);
+            setTimeout(updateStatusBar, 100); // Small delay to ensure editor is updated
+        };
+    }
+}
+
+// Call initializeStatusBar when Monaco Editor is ready
+if (typeof initializeMonacoEditor === 'function') {
+    const originalInitializeMonacoEditor = initializeMonacoEditor;
+    initializeMonacoEditor = function() {
+        originalInitializeMonacoEditor();
+        setTimeout(initializeStatusBar, 500); // Delay to ensure Monaco is fully loaded
+    };
+} else {
+    // Initialize immediately if Monaco Editor is not used
+    document.addEventListener('DOMContentLoaded', initializeStatusBar);
+}
+
+// AI Context Manager
+const aiContextManager = {
+    currentContext: {
+        language: null,
+        filePath: null,
+        projectStructure: {}
+    },
+
+    // Analyze user input to detect programming language and file context
+    analyzeInput: function(input) {
+        // Reset context
+        this.resetContext();
+        
+        // Check for language-specific patterns
+        const languagePatterns = {
+            'python': /python|py\b/i,
+            'javascript': /javascript|js\b/i,
+            'html': /html\b/i,
+            'css': /css\b/i,
+            'java': /java\b/i,
+            'c++': /c\+\+/i,
+            'c#': /c#/i,
+            'php': /php\b/i,
+            'ruby': /ruby|rb\b/i,
+            'go': /go\b|golang/i,
+            'rust': /rust\b/i,
+            'swift': /swift\b/i,
+            'kotlin': /kotlin\b/i,
+            'typescript': /typescript|ts\b/i,
+            'c': /\bc\b(?!\+\+)/i,
+            'c++': /c\+\+/i,
+            'c#': /c#/i,
+            'php': /php\b/i,
+            'ruby': /ruby|rb\b/i,
+            'go': /go\b|golang/i,
+            'rust': /rust\b/i,
+            'swift': /swift\b/i,
+            'kotlin': /kotlin\b/i,
+            'typescript': /typescript|ts\b/i,
+            'json': /json\b/i,
+            'markdown': /markdown|md\b/i,
+            'yaml': /yaml|yml\b/i,
+            'xml': /xml\b/i
+        };
+
+        // Detect language from input
+        for (const [lang, pattern] of Object.entries(languagePatterns)) {
+            if (pattern.test(input)) {
+                this.currentContext.language = lang;
+                break;
+            }
+        }
+
+        // Try to detect file path in the input
+        const filePathMatch = input.match(/(?:file|path)[\s:]+([\w\/.-]+\.[a-zA-Z0-9]+)/i);
+        if (filePathMatch && filePathMatch[1]) {
+            this.currentContext.filePath = filePathMatch[1];
+        } else if (this.currentContext.language) {
+            // If no explicit path but we have a language, create a default filename
+            const ext = this.getExtensionForLanguage(this.currentContext.language);
+            this.currentContext.filePath = `untitled.${ext}`;
+        }
+
+        return this.currentContext;
+    },
+
+    // Get file extension for a programming language
+    getExtensionForLanguage: function(language) {
+        const extensions = {
+            'python': 'py',
+            'javascript': 'js',
+            'typescript': 'ts',
+            'html': 'html',
+            'css': 'css',
+            'java': 'java',
+            'c': 'c',
+            'c++': 'cpp',
+            'c#': 'cs',
+            'php': 'php',
+            'ruby': 'rb',
+            'go': 'go',
+            'rust': 'rs',
+            'swift': 'swift',
+            'kotlin': 'kt',
+            'json': 'json',
+            'markdown': 'md',
+            'yaml': 'yaml',
+            'xml': 'xml'
+        };
+        return extensions[language.toLowerCase()] || 'txt';
+    },
+
+    // Create a file from AI response
+    createFileFromAIContext: function(content, fileName = null) {
+        const filePath = fileName || this.currentContext.filePath;
+        if (!filePath) return null;
+
+        // Create the file
+        if (typeof createFileFromInput === 'function') {
+            createFileFromInput(filePath, window.selectedFolder);
+            
+            // Update the file content
+            const tabId = window.selectedFolder ? 
+                `${window.selectedFolder}/${filePath}` : filePath;
+                
+            if (window.openTabs && window.openTabs.has(tabId)) {
+                const tab = window.openTabs.get(tabId);
+                tab.content = content;
+                tab.isModified = true;
+                
+                if (window.fileContents) {
+                    window.fileContents.set(tabId, content);
+                }
+                
+                // Update the editor if this is the active tab
+                if (window.activeTab === tabId && window.monaco && window.monaco.editor) {
+                    const editor = window.monaco.editor.getModels()[0];
+                    if (editor) {
+                        editor.setValue(content);
+                    }
+                }
+                
+                // Switch to the tab
+                if (typeof switchToTab === 'function') {
+                    switchToTab(tabId);
+                }
+                
+                showToast(`Created file: ${filePath}`, 'success');
+                return tabId;
+            }
+        }
+        return null;
+    },
+
+    // Reset the current context
+    resetContext: function() {
+        this.currentContext = {
+            language: null,
+            filePath: null,
+            projectStructure: {}
+        };
+    }
+};
+
+// Enhanced processFileOperations function
+function processFileOperations(content) {
+    // Process create file commands: [create_file] path/to/file [content]
+    const createFileRegex = /\[create_file\]\s*([^\s\[\]]+)(?:\s*\[([\s\S]*?)\])?/g;
+    let createMatch;
+    let result = content;
+    
+    // Extract and process file creation commands
+    const fileCreations = [];
+    while ((createMatch = createFileRegex.exec(content)) !== null) {
+        const filePath = createMatch[1].trim();
+        const fileContent = (createMatch[2] || '').trim();
+        fileCreations.push({ path: filePath, content: fileContent });
+    }
+    
+    // Process each file creation
+    fileCreations.forEach(({ path, content }) => {
+        // Use the AI context manager to create the file
+        aiContextManager.createFileFromAIContext(content, path);
+    });
+    
+    // Process delete file commands: [delete_file] path/to/file
+    const deleteFileRegex = /\[delete_file\]\s*([^\s\[\]]+)/g;
+    let deleteMatch;
+    while ((deleteMatch = deleteFileRegex.exec(content)) !== null) {
+        const filePath = deleteMatch[1].trim();
+        if (typeof deleteFile === 'function' && typeof showConfirmToast === 'function') {
+            showConfirmToast(
+                `Are you sure you want to delete "${filePath}"?`,
+                () => {
+                    deleteFile(filePath);
+                    showToast(`File "${filePath}" deleted`, 'success');
+                },
+                () => {
+                    showToast('File deletion cancelled', 'info');
+                }
+            );
+        }
+    }
+    
+    // Process delete folder commands: [delete_folder] path/to/folder
+    const deleteFolderRegex = /\[delete_folder\]\s*([^\s\[\]]+)/g;
+    let deleteFolderMatch;
+    while ((deleteFolderMatch = deleteFolderRegex.exec(content)) !== null) {
+        const folderPath = deleteFolderMatch[1].trim();
+        if (typeof deleteFolder === 'function' && typeof showConfirmToast === 'function') {
+            showConfirmToast(
+                `Are you sure you want to delete the folder "${folderPath}" and all its contents?`,
+                () => {
+                    deleteFolder(folderPath);
+                    showToast(`Folder "${folderPath}" deleted`, 'success');
+                },
+                () => {
+                    showToast('Folder deletion cancelled', 'info');
+                }
+            );
+        }
+    }
+    
+    // Process code blocks in the AI response
+    const codeBlockRegex = /```(\w*)\n([\s\S]*?)\n```/g;
+    let codeBlockMatch;
+    const codeBlocks = [];
+    
+    // Extract all code blocks
+    while ((codeBlockMatch = codeBlockRegex.exec(content)) !== null) {
+        const language = codeBlockMatch[1] || aiContextManager.currentContext.language || 'text';
+        const code = codeBlockMatch[2].trim();
+        codeBlocks.push({ language, code });
+    }
+    
+    // If we have exactly one code block and a context, create a file
+    if (codeBlocks.length === 1 && aiContextManager.currentContext.language) {
+        const { language, code } = codeBlocks[0];
+        const fileName = aiContextManager.currentContext.filePath || 
+            `untitled.${aiContextManager.getExtensionForLanguage(language)}`;
+        
+        aiContextManager.createFileFromAIContext(code, fileName);
+    } else if (codeBlocks.length > 1) {
+        // Multiple code blocks - create files for each
+        codeBlocks.forEach(({ language, code }, index) => {
+            const fileName = `untitled_${index + 1}.${aiContextManager.getExtensionForLanguage(language)}`;
+            aiContextManager.createFileFromAIContext(code, fileName);
+        });
+    }
+    
+    // Remove the file operation commands from the displayed content
+    return result
+        .replace(/\[create_file\][^\[]*/g, '')
+        .replace(/\[delete_file\][^\[]*/g, '')
+        .replace(/\[delete_folder\][^\[]*/g, '')
+        .trim();
+}
+
+// Update the initializeChatSystem function to use the new context manager
+function initializeChatSystem() {
+    // Store the original appendMessage function if it exists
+    const originalAppendMessage = window.appendMessage || function() {
+        // Default implementation if appendMessage doesn't exist
+        const messagesContainer = document.getElementById('messages');
+        if (messagesContainer) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${arguments[1] || 'user'}`;
+            messageDiv.textContent = arguments[0];
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    };
+
+    // Override the global appendMessage function
+    window.appendMessage = function(content, sender, save = true, userQuery = null, messageIndex = -1, stream = false, timestamp = null, userImages = null, hasGeneratedImage = false, imageBase64 = null) {
+        // Process user messages to update AI context
+        if (sender === 'user' && content) {
+            aiContextManager.analyzeInput(content);
+        }
+        
+        // Process file operations for AI messages
+        if (sender === 'ai' && content) {
+            content = processFileOperations(content);
+        }
+        
+        // Call the original appendMessage function
+        return originalAppendMessage(content, sender, save, userQuery, messageIndex, stream, timestamp, userImages, hasGeneratedImage, imageBase64);
+    };
+}
+
+// File Mention System
+const fileMentionState = {
+    isActive: false,
+    startPos: -1,
+    query: '',
+    selectedIndex: 0,
+    files: []
+};
+
+// Get all files for mention
+function getFilesForMention() {
+    const files = [];
+    projectFiles.forEach((file, path) => {
+        files.push({
+            name: path.split('/').pop(),
+            path: path,
+            language: file.language || detectLanguageFromExtension(path)
+        });
+    });
+    return files;
+}
+
+// Filter files based on query
+function filterFiles(query) {
+    if (!query) return fileMentionState.files;
+    const q = query.toLowerCase();
+    return fileMentionState.files.filter(file => 
+        file.name.toLowerCase().includes(q) || 
+        file.path.toLowerCase().includes(q)
+    );
+}
+
+// Hide file mention dropdown
+function hideFileMentionDropdown() {
+    const dropdown = document.getElementById('fileMentionDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    fileMentionState.isActive = false;
+    fileMentionState.query = '';
+    fileMentionState.selectedIndex = 0;
+}

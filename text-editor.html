@@ -3,71 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Text Editor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/matchesonscrollbar.min.css">
+    <title>AI Code Editor - Cursor Clone</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="css/text-editor.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <header class="header">
-        <div class="leftContainer">
-            <div class="logo-container">
-                <img src="assets/Text Editor logo light.png" alt="PrimeX Logo" class="logo" id="logo">
-            </div>
-            <nav class="leftBtns">
-                <div class="leftBtn">
-                    <div class="file-dropbtn">File</div>
-                    <div class="file-dropdown-content">
-                        <a href="#" id="new-file">New</a>
-                        <a href="#" id="open-file">Open</a>
-                        <a href="#" id="save-file">Save</a>
-                        <a href="#" id="save-as-file">Save As</a>
-                        <a href="#" id="change-name">Change Name</a>
-                        <a href="#" id="search" onclick="toggleSearchPanel()">Find & Replace</a>
+    <div class="app-container">
+        <header class="header">
+            <div class="leftContainer">
+                <div class="logo-container">
+                    <img src="assets/Text Editor logo light.png" alt="PrimeX Logo" class="logo" id="logo">
+                </div>
+                <nav class="leftBtns">
+                    <div class="leftBtn">
+                        <div class="file-dropbtn">File</div>
+                        <div class="file-dropdown-content">
+                            <a href="#" id="new-file">New</a>
+                            <a href="#" id="open-file">Open</a>
+                            <a href="#" id="save-file">Save</a>
+                            <a href="#" id="save-as-file">Save As</a>
+                            <a href="#" id="change-name">Change Name</a>
+                            <a href="#" id="search">Find & Replace</a>
+                        </div>
                     </div>
-                </div>
-                <div class="leftBtn">
-                    <a href="#" id="save-online">Save Online</a>
-                </div>
-                <div class="leftBtn">
-                    <a href="#" id="load-file">Load Online</a>
-                </div>
-            </nav>
-        </div>
-
-        <div class="rightContainer">
+                    <div class="leftBtn">
+                        <a href="#" id="save-online">Save Online</a>
+                    </div>
+                    <div class="leftBtn">
+                        <a href="#" id="load-file">Load Online</a>
+                    </div>
+                </nav>
+            </div>
             <div class="icons">
                 <a class="icon-link">
-                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-                        <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
-                            <mask class="moon" id="moon-mask">
-                                <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                                <circle cx="24" cy="10" r="6" fill="black" />
-                            </mask>
-                            <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
-                            <g class="sun-beams" stroke="currentColor">
-                                <line x1="12" y1="1" x2="12" y2="3" />
-                                <line x1="12" y1="21" x2="12" y2="23" />
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                                <line x1="1" y1="12" x2="3" y2="12" />
-                                <line x1="21" y1="12" x2="23" y2="12" />
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                            </g>
-                        </svg>
-                    </button>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                    <svg class="sun-and-moon" width="21" height="21" viewBox="0 0 24 24">
+                        <mask class="moon" id="moon-mask">
+                            <rect x="0" y="0" width="100%" height="100%" fill="white"/>
+                            <circle cx="24" cy="10" r="6" fill="black"/>
+                        </mask>
+                        <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor"/>
+                        <g class="sun-beams" stroke="currentColor">
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </g>
+                    </svg>
+                </button>
                 </a>
-                <a class="icon-link">
-                    <i class="fa fa-user" id="metaMenu"></i>
-                </a>
+                <a class="icon-link" onclick="toggleUserMenu()"><i class="fa fa-user" id="fa-user"></i>
                 <a class="icon-link" onclick="toggleBox(event)">
                     <div class="menu-icon">
                         <div class="dot"></div>
@@ -82,135 +72,320 @@
                     </div>
                 </a>
             </div>
-        </div>
+            
+            <div class="user-menu" id="user-menu">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <img src="assets/profile.png" alt="User Photo">
+                    <h3 class="profile-initial" id="profile-initial"></h3>
+                    <div id="user-name-email">
+                        <h2><span id="userData">Welcome</span></h2>
+                        <p id="userEmail"></p>
+                    </div>
+                </div>
         
-        <div class="user-menu" id="user-menu">
-            <!-- Profile Header -->
-            <div class="profile-header">
-                <img src="assets/profile.png" alt="User Photo">
-                <h3 class="profile-initial" id="profile-initial"></h3>
-                <div id="user-name-email">
-                    <h2><span id="userData">Welcome</span></h2>
-                    <p id="userEmail"></p>
+                <div class="buttons" id="auth-check-option">
+                    <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
                 </div>
-            </div>
     
-            <div class="buttons" id="auth-check-option">
-                <span id="login-signup" onclick="redirectToLogin()" class="edit-profile">Login | signup</span>
-            </div>
-
-            <div id="profilefiles">
-                <div id='users-files-bottom-option'>
-                    <a href=""><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
-                    <a href=""><i class="fas fa-cog bottom-option-icon settings"></i></a>
+                <div id="profilefiles">
+                    <div id='users-files-bottom-option'>
+                        <a href=""><i class="fas fa-folder-plus bottom-option-icon filesBtn"></i></a>
+                        <a href=""><i class="fas fa-cog bottom-option-icon settings"></i></a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <div class="mainContainer">
-        <div class="box directory" id="leftDiv">
-            <div class="dirTop">
-              <h3>Directory</h3>
-              <div>
-                <a id="new-file" title="Add File"><i class="material-icons">insert_drive_file</i></a>
-                <a onclick="addFolder('New Folder')" title="Add Folder"><i class="material-icons" style="font-size: 25px;">create_new_folder</i></a>
-              </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar - File Explorer -->
+            <div class="sidebar" id="leftDiv">
+                <div class="sidebar-header">
+                    <h3>Explorer</h3>
+                    <div class="sidebar-actions">
+                        <button id="newFileInExplorerBtn" class="btn-icon" title="New File">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                            </svg>
+                        </button>
+                        <button id="newFolderBtn" class="btn-icon" title="New Folder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+                            </svg>
+                        </button>
+                        <button id="refreshBtn" class="btn-icon" title="Refresh">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="file-tree" id="fileTree">
+                    <!-- File tree will be populated by JavaScript -->
+                </div>
+                
+                <!-- Status Bar -->
+                <div class="sidebar-status-bar" id="sidebarStatusBar">
+                    <div class="status-item">
+                        <span class="status-label">Ln:</span>
+                        <span class="status-value" id="currentLine">0</span>
+                        <span class="status-separator">,</span>
+                        <span class="status-label">Col:</span>
+                        <span class="status-value" id="currentColumn">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Total Ln:</span>
+                        <span class="status-value" id="totalLines">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">File Size:</span>
+                        <span class="status-value" id="fileSize">0 KB</span>
+                    </div>
+                </div>
+                
+                <!-- Context Menu -->
+                <div id="contextMenu" class="context-menu hidden">
+                    <!-- Dynamic menu items will be populated by JavaScript -->
+                </div>
             </div>
-            <ul id="dirTabs">
-            </ul>
-            <div class="context-menu" id="context-menu">
-                <ul>
-                    <li>Delete</li>
-                </ul>
-            </div>
-        </div>
-        <div class="box editorBox" id="middleDiv">
-            <div class="btn-container">
-                <button class="mobile-file-btn" onclick="toggleMobileMenu()">
-                    <i class="fa fa-bars"></i>
-                </button>
-                <button class="btn btn-left" onclick="toggleDiv('leftDiv')">
-                    <i class="fa fa-folder"></i>
-                </button>
-                <button class="btn btn-right" onclick="toggleDiv('rightDiv')">
-                    <i class='fas fa-running'></i>
-                </button>
-            </div>
-            <div class="mobile-menu-popup" id="mobileMenu">
-                <a href="#" id="new-file-mobile">New</a>
-                <a href="#" id="open-file-mobile">Open</a>
-                <a href="#" id="save-file-mobile">Save</a>
-                <a href="#" id="save-as-file-mobile">Save As</a>
-                <a href="#" id="change-name-mobile">Change Name</a>
-                <a href="#" id="search-mobile" onclick="toggleSearchPanel()">Find & Replace</a>
-                <hr>
-                <a href="#" id="save-online-mobile">Save Online</a>
-                <a href="#" id="load-file-mobile">Load Online</a>
-            </div>
-            <div class="editor-container">
-                <div class="tabs" id="tabs"></div>
-                <div class="search-replace-panel" id="searchReplacePanel">
-                    <div class="search-controls">
-                        <div class="search-inputs">
-                            <div class="search-row">
-                                <input type="text" id="searchInput" placeholder="Find..." autocomplete="off">
-                                <div class="search-actions">
-                                    <button id="findPrev" title="Previous (Shift+Ctrl+G)"><i class="fa fa-chevron-up"></i></button>
-                                    <button id="findNext" title="Next (Ctrl+G)"><i class="fa fa-chevron-down"></i></button>
-                                    <button id="toggleReplace" title="Toggle Replace"><i class="fa fa-exchange"></i></button>
-                                    <button id="closeSearch" title="Close"><i class="fa fa-times"></i></button>
+
+            <!-- Editor Area -->
+            <div class="editor-area" id="middleDiv">
+                <!-- Tab Container -->
+                <div class="tab-container" id="tabContainer">
+                    <!-- Tabs will be added dynamically when files are opened -->
+                </div>
+
+                <!-- Editor Panel -->
+                <div class="editor-panel">
+                    <div class="editor-actions" id="editorActions">
+                        <button id="formatBtn" class="btn-icon" title="Format Code">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </button>
+                        <button id="copyBtn" class="btn-icon" title="Copy Code">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 1H4C2.89,1 2,2.89 2,5V19c0 1.1.9 2 2 2h12c1.1,0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V5h12v12zm-4 0H8V5h4v12z"/>
+                            </svg>
+                        </button>
+                        <button id="downloadBtn" class="btn-icon" title="Download">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                            </svg>
+                        </button>
+                        <button id="clearBtn" class="btn-icon" title="Clear">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div id="editor" class="editor-container"></div>
+                    
+                    <!-- Welcome Screen -->
+                    <div id="welcomeScreen" class="welcome-screen hidden">
+                        <div class="welcome-content">
+                            <div class="welcome-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="#007acc">
+                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                </svg>
+                            </div>
+                            <h2>Welcome to AI Code Editor</h2>
+                            <p>Start coding with AI assistance</p>
+                            
+                            <div class="welcome-actions">
+                                <button id="welcomeNewFileBtn" class="btn-welcome btn-primary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                    </svg>
+                                    New File
+                                </button>
+                                <button id="welcomeOpenFileBtn" class="btn-welcome btn-secondary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+                                    </svg>
+                                    Open File
+                                </button>
+                            </div>
+                            
+                            <div class="welcome-recent">
+                                <h3>Quick Start</h3>
+                                <div class="quick-start-items">
+                                    <button class="quick-start-item" data-template="html">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#e34c26">
+                                            <path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/>
+                                        </svg>
+                                        <span>HTML Template</span>
+                                    </button>
+                                    <button class="quick-start-item" data-template="react">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#61dafb">
+                                            <path d="M12 10.11c1.03 0 1.87.84 1.87 1.89s-.84 1.85-1.87 1.85-1.87-.82-1.87-1.85.84-1.89 1.87-1.89M7.37 20c.63.38 2.01-.2 3.6-1.7-.52-.59-1.03-1.23-1.51-1.9a22.7 22.7 0 0 1-2.4-.36c-.51 2.14-.32 3.61.31 3.96m.71-5.74l-.29-.51c.11.29.22.58.29.86.27.06.57.11.88.16l-.3.51m6.54-.76l.81-1.5-.81-1.5c-.3-.53-.62-1-.91-1.47C13.17 9 12.6 9 12 9s-1.17 0-1.71.03c-.29.47-.61.94-.91 1.47L8.57 12l.81 1.5c.3.53.62 1 .91 1.47.54.03 1.11.03 1.71.03s1.17 0 1.71-.03c.29-.47.61-.94.91-1.47M8.08 9.74l.3-.51c-.31.05-.61.1-.88.16.07.28.18.57.29.86l.29-.51m2.89-4.04C9.38 4.2 8 3.62 7.37 4c-.63.35-.82 1.82-.31 3.96.77-.16 1.58-.28 2.4-.36.48.67.99 1.31 1.51 1.9M8.08 9.74l.3-.51c-.31.05-.61.1-.88.16.07.28.18.57.29.86l.29-.51m2.89-4.04C9.38 4.2 8 3.62 7.37 4c-.63.35-.82 1.82-.31 3.96.77-.16 1.58-.28 2.4-.36.48.67.99 1.31 1.51 1.9z"/>
+                                        </svg>
+                                        <span>React Component</span>
+                                    </button>
+                                    <button class="quick-start-item" data-template="python">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#3776ab">
+                                            <path d="M19.14 7.5A2.86 2.86 0 0 1 22 10.36v3.28A2.86 2.86 0 0 1 19.14 16.5H12c-.39 0-.64.25-.64.64v3.86A2.86 2.86 0 0 1 8.5 24H4.86A2.86 2.86 0 0 1 2 21.14V17.86A2.86 2.86 0 0 1 4.86 15h7.14c.39 0 .64-.25.64-.64V10.5c0-.39-.25-.64-.64-.64H4.86A2.86 2.86 0 0 1 2 7v-4.14A2.86 2.86 0 0 1 4.86 0h7.14A2.86 2.86 0 0 1 14.86 2.86v3.28c0 .39.25.64.64.64h3.64z"/>
+                                        </svg>
+                                        <span>Python Script</span>
+                                    </button>
+                                    <button class="quick-start-item" data-template="javascript">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#f7df1e">
+                                            <path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/>
+                                        </svg>
+                                        <span>JavaScript</span>
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="replace-row" id="replaceRow">
-                                <input type="text" id="replaceInput" placeholder="Replace with...">
-                                <div class="replace-actions">
-                                    <button id="replaceBtn">Replace</button>
-                                    <button id="replaceAllBtn">Replace All</button>
-                                </div>
-                            </div>
-                            <div class="search-info" id="searchInfo">
-                                <span id="matchCount">No results</span>
-                                <label><input type="checkbox" id="matchCase"> Match case</label>
-                                <label><input type="checkbox" id="wholeWord"> Whole word</label>
-                                <label><input type="checkbox" id="regexSearch"> Use regex</label>
-                            </div>
-                            <div class="search-shortcuts">
-                                <small>
-                                    Shortcuts: 
-                                    Ctrl+F (Find), 
-                                    Ctrl+H (Replace), 
-                                    Ctrl+G (Next), 
-                                    Shift+Ctrl+G (Previous)
-                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
-                <textarea id="editor"></textarea>
-                <div id="suggestions"></div>
             </div>
-        </div>
-        <div class="box" id="rightDiv">
-            <div class="file-info">
-                <div id="cursor-position">Ln: 1, Col: 1</div>
-                <div id="total-lines">Total Ln: 1</div>
-                <div id="file-size">File Size: 0 KB</div>
-            </div>
-            <div>
-                <div class="Output">
-                    <iframe id="outputFrame"></iframe>
+
+            <!-- Right Panel - AI Chat -->
+            <div class="chat-panel" id="rightDiv">
+                <div class="chat-header">
+                    <h3>AI Assistant</h3>
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">Ready</span>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant-message">
+                        <div class="message-content">
+                            <p>👋 Hello! I'm your AI coding assistant. I can help you:</p>
+                            <ul>
+                                <li>Write new code from scratch</li>
+                                <li>Fix bugs and errors</li>
+                                <li>Refactor and optimize code</li>
+                                <li>Add features and functionality</li>
+                                <li>Explain code concepts</li>
+                            </ul>
+                            <p>Just describe what you want, and I'll update your code automatically!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="input-wrapper">
+                        <div class="file-mention-dropdown" id="fileMentionDropdown" style="display: none;">
+                            <div class="file-mention-header">Mention Files</div>
+                            <div class="file-mention-list" id="fileMentionList">
+                                <!-- Files will be populated here -->
+                            </div>
+                        </div>
+                        <textarea 
+                            id="promptInput" 
+                            placeholder="Describe what you want to code... (e.g., 'Create a React component for a todo list')"
+                            rows="3"
+                        ></textarea>
+                        <button id="sendBtn" class="send-btn" title="Send (Ctrl+Enter)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="file-mention-dropdown" id="fileMentionDropdown" style="display: none;">
+                        <div class="file-mention-header">Mention Files</div>
+                        <div class="file-mention-list" id="fileMentionList">
+                            <!-- Files will be populated here -->
+                        </div>
+                    </div>
+                    <div class="input-actions">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoApply" checked>
+                            <span>Auto-apply changes</span>
+                        </label>
+                        <button id="clearChatBtn" class="btn-text">Clear Chat</button>
+                    </div>
                 </div>
             </div>
+        </main>
+
+        <!-- Mobile Controls -->
+        <div class="btn-container">
+            <button class="mobile-file-btn" onclick="toggleMobileMenu()">
+                <i class="fa fa-bars"></i>
+            </button>
+            <button class="btn-div btn-left" onclick="toggleDiv('leftDiv')">
+                <i class="fa fa-folder"></i>
+            </button>
+            <button class="btn-div btn-right" onclick="toggleDiv('rightDiv')">
+                <i class='fas fa-running'></i>
+            </button>
+        </div>
+        <div class="mobile-menu-popup" id="mobileMenu">
+            <a href="#" id="new-file-mobile">New</a>
+            <a href="#" id="open-file-mobile">Open</a>
+            <a href="#" id="save-file-mobile">Save</a>
+            <a href="#" id="save-as-file-mobile">Save As</a>
+            <a href="#" id="change-name-mobile">Change Name</a>
+            <a href="#" id="search-mobile" onclick="toggleSearchPanel()">Find & Replace</a>
+            <hr>
+            <a href="#" id="save-online-mobile">Save Online</a>
+            <a href="#" id="load-file-mobile">Load Online</a>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>AI is thinking...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="open">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            Open
+        </div>
+        <div class="context-menu-item" data-action="rename">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+            </svg>
+            Rename
+        </div>
+        <div class="context-menu-item" data-action="duplicate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+            </svg>
+            Duplicate
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="newFile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            New File
+        </div>
+        <div class="context-menu-item" data-action="newFolder">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+            </svg>
+            New Folder
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item context-menu-danger" data-action="delete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+            </svg>
+            Delete
         </div>
     </div>
 
-
-    <footer>
-        <div class="footer-content">
-        </div>
-    </footer>
-
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <div class="outer-box">
         <h3>More Apps</h3>
@@ -237,35 +412,17 @@
             </div>
         </div>
     </div>
-
-
-    <input type="file" id="file-input" style="display: none;">
-    <script src="js/data.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/javascript-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/css-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/html-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/xml-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/search.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/searchcursor.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/search/matchesonscrollbar.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/mode/overlay.min.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script> <!-- Added Firestore SDK -->
-  
-    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
-
-    <script src="js/firebase-config.js"></script>
-    <script src="js/main.js"></script>
-    
-    <script src="js/text-editor.js"></script>
 </body>
+
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/main.js"></script>
+
+<script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
+
+<script src="script.js"></script>
+
 </html>
