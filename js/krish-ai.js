@@ -57,11 +57,6 @@ function toggleUserMenu() {
         }
     });
 }
-
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-}
-
 window.onload = () => {
     const savedTheme = localStorage.getItem('currentTheme') || 'dark';
     setTheme(savedTheme);
@@ -103,11 +98,6 @@ function setTheme(theme) {
         body.removeAttribute('data-theme');
     }
 }
-
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-}
-
 themeToggleBtn.addEventListener('click', () => {
     const currentTheme = body.getAttribute('data-theme');
 

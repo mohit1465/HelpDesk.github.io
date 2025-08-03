@@ -11,10 +11,6 @@
     --buttons: linear-gradient(to left , #fa6441 60%, rgb(54, 54, 54) 30%, rgb(41, 41, 41) 30%);
     --text-color-dark: #f4f9f9;
     --buttons-bg: #fa6441;
-    --header-bg: #f0f0f0;
-    --header-border: #cbcbcb;
-    --header-left: #f6f6f6d7;
-    --header-left-btn-hover: #ffffffb6;
     --primary-color: #151a28;
     --footer-bg: #f4f9f9;
     --primary-section-color: #fa6441;
@@ -42,10 +38,6 @@
     --primary-color: #f4f9f9;
     --footer-bg: #000000;
     --buttons-bg: #fa6441;
-    --header-border: #283745;
-    --header-bg: #1c1c30;
-    --header-left: #00172bd9;
-    --header-left-btn-hover: #ffffff19;
     --gradient-bg-background-color: #151a28;
     --chat-input-container: linear-gradient(to bottom, #171e2d, #1f263b);
 }
@@ -217,7 +209,7 @@ body {
     transition: all .3s ease-in-out;
 }
 
-.icon-link i:hover{
+.icon-link i, .icon-link button:hover{
     color: #fa6441;
 }
 
@@ -446,16 +438,27 @@ body {
     object-fit: contain;
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
-#AI-logo{
-    font-size: 30px;
-    text-decoration: none;
-    color: var(--text-color);
-    font-family: "Playfair Display", serif;
-    font-weight: 400;
-    font-style: italic;
-    transition: all 0.3s ease;
-}
 
 /* Chat System Styles */
 .chat-container {

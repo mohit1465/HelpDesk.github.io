@@ -1,3 +1,123 @@
+// Toast Notification System
+function showToast(message, type = 'info', duration = 3000) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        console.error('Toast container not found');
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    // Add toast to container
+    toastContainer.appendChild(toast);
+
+    // Auto remove after duration
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toastContainer.removeChild(toast);
+                }
+            }, 300);
+        }
+    }, duration);
+
+    // Add click to dismiss
+    toast.addEventListener('click', () => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toastContainer.removeChild(toast);
+                }
+            }, 300);
+        }
+    });
+}
+
+// Confirmation Toast System
+function showConfirmToast(message, onConfirm, onCancel = null) {
+    return new Promise((resolve) => {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found');
+            resolve(false);
+            return;
+        }
+
+        const confirmToast = document.createElement('div');
+        confirmToast.className = 'toast confirm-toast';
+        
+        confirmToast.innerHTML = `
+            <div class="confirm-message">${message}</div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-yes">Yes</button>
+                <button class="confirm-btn confirm-no">No</button>
+            </div>
+        `;
+
+        // Add toast to container
+        toastContainer.appendChild(confirmToast);
+
+        const yesBtn = confirmToast.querySelector('.confirm-yes');
+        const noBtn = confirmToast.querySelector('.confirm-no');
+
+        function removeToast() {
+            if (confirmToast.parentNode) {
+                confirmToast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (confirmToast.parentNode) {
+                        toastContainer.removeChild(confirmToast);
+                    }
+                }, 300);
+            }
+        }
+
+        function handleConfirm() {
+            removeToast();
+            if (onConfirm) onConfirm();
+            resolve(true);
+        }
+
+        function handleCancel() {
+            removeToast();
+            if (onCancel) onCancel();
+            resolve(false);
+        }
+
+        // Button event listeners
+        yesBtn.addEventListener('click', handleConfirm);
+        noBtn.addEventListener('click', handleCancel);
+
+        // Click outside to cancel
+        function handleOutsideClick(e) {
+            if (!confirmToast.contains(e.target)) {
+                handleCancel();
+                document.removeEventListener('click', handleOutsideClick);
+            }
+        }
+
+        // Add outside click listener after a short delay to prevent immediate trigger
+        setTimeout(() => {
+            document.addEventListener('click', handleOutsideClick);
+        }, 100);
+
+        // Auto-remove event listener when toast is removed
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList' && !toastContainer.contains(confirmToast)) {
+                    document.removeEventListener('click', handleOutsideClick);
+                    observer.disconnect();
+                }
+            });
+        });
+        observer.observe(toastContainer, { childList: true });
+    });
+}
+
 auth.onAuthStateChanged(user => {
     const profileImage = document.querySelector('.profile-header img');
     if (user) {
@@ -23,7 +143,7 @@ auth.onAuthStateChanged(user => {
             }
         }).catch(error => {
             console.error('Error fetching user data:', error);
-            alert('Error fetching user data.');
+            showToast('Error fetching user data.', 'error');
         });
     } else {
       profileImage.style.display = 'block';
@@ -41,7 +161,7 @@ function logoutUser() {
     auth.signOut().then(() => {
         const currentTheme = body.getAttribute('data-theme');
         localStorage.setItem('currentTheme', currentTheme);
-        alert("Logged out successfully!");
+        showToast('Logged out successfully!', 'success');
         window.location.href = '';
     });
 }
