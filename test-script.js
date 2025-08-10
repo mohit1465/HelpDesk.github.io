@@ -139,79 +139,6 @@ Current user context:
 - Local Time: ${isoWithOffset}
 - Date: ${dateStr}
 
-## File Operations Guide
-
-You can assist with file operations in the PrimeX editor. Here's how to handle them:
-
-### Creating Files
-- Use [create_file] path/to/filename.extension [content] to create a new file
-- Example: [create_file] src/utils/helper.js [console.log('Hello');]
-- For multi-line content, use [create_file] path/to/file.js [
-  // Your code here
-  function example() {
-    return 'Hello';
-  }
-]
-
-### Deleting Files/Folders
-- Use [delete_file] path/to/file to delete a file
-- Use [delete_folder] path/to/folder to delete a folder (recursively)
-- Example: [delete_file] src/old-script.js
-- The system will show a confirmation dialog before deletion
-
-### Best Practices
-1. Always use forward slashes (/) in paths
-2. Check if file exists before creating
-3. Be cautious with deletions - they can't be undone
-4. Use relative paths from project root
-5. For nested folders, ensure parent directories exist
-
-### Error Handling
-- If a file operation fails, the system will show an error message
-- Check for common issues like:
-  - Invalid characters in filenames
-  - Permission issues
-  - Non-existent parent directories
-
-### Example Interactions
-
-User: Create a new config file
-→
-[query] I'll create a new config file for you. Here's what I'll add:
-[create_file] config.json [
-  {
-    "apiEndpoint": "https://api.example.com",
-    "theme": "dark",
-    "version": "1.0.0"
-  }
-]
-[query] Config file created successfully! 🎉
-
-User: Delete the test folder
-→
-[query] I'll help you delete the test folder. This action will remove the folder and all its contents permanently. Are you sure you want to proceed?
-[delete_folder] test
-[query] The test folder has been deleted successfully.
-
-User: Create a new component
-→
-[query] I'll create a new React component for you. Here's what I'll add:
-[create_file] src/components/NewComponent.jsx [
-  import React from 'react';
-
-  const NewComponent = () => {
-    return (
-      <div className="new-component">
-        <h2>New Component</h2>
-        <p>Start editing here</p>
-      </div>
-    );
-  };
-
-  export default NewComponent;
-]
-[query] Component created successfully! 🚀
-
 Your job is to respond to any user input ([user_query]) by following this format:
 
 1. Use [query] for your main response — make it friendly, natural, and match the level of detail the user expects.
@@ -258,7 +185,7 @@ User: generate a picture of a cat astronaut
 →
 [generate] generate a picture of a cat astronaut
 
-Always match the user's intent. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally. You can also use emoji in reply to make conversations more engaging and friendly! 😊
+Always match the user's intent. Highlight the key words in between response for proper understanding. If the user asks for detail, give detail — even if the phrasing includes "few words." Respond intelligently, not literally. You can also use emoji in reply to make conversations more engaging and friendly! 😊
 
 Now reply User :
 `;
@@ -738,29 +665,101 @@ function appendMessage(content, sender, save = true, userQuery = null, messageIn
     messageDiv.appendChild(contentDiv);
 
     if (sender === 'ai' && stream) {
-        // Streaming animation for new AI responses
-        let i = 0;
+        // Get formatted content with markdown processing
         const formatted = enhancedFormatAIResponse(content);
-        // Remove HTML tags for animation, but keep tags for final rendering
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = formatted;
-        const plainText = tempDiv.textContent || '';
-        let displayText = '';
-        function animate() {
-            if (i < plainText.length) {
-                // Animate character by character
-                displayText += plainText[i] === '\n' ? '<br>' : plainText[i];
-                contentDiv.innerHTML = displayText + '<span class="blinking-cursor">|</span>';
-                i++;
-                setTimeout(animate, 12); // Adjust speed here
-            } else {
-                contentDiv.innerHTML = formatted;
-                // Attach action icons after animation
-                addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
-                // No timestampDiv here
+        contentDiv.innerHTML = formatted;
+        
+        // Hide all block elements initially
+        const blockElements = contentDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, pre, code, ul, ol, li, blockquote, div, ::marker');
+        blockElements.forEach(el => {
+            el.style.display = 'none';
+            el.style.opacity = '0';
+            el.style.transition = 'opacity 0.3s ease-in-out';
+        });
+        
+        // Process text nodes for word-by-word animation
+        const textNodes = [];
+        const walker = document.createTreeWalker(
+            contentDiv,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.nodeValue.trim()) {
+                textNodes.push(node);
             }
         }
-        animate();
+        
+        // Replace text nodes with spans containing words
+        textNodes.forEach(textNode => {
+            const parent = textNode.parentNode;
+            if (parent.nodeName === 'CODE' || parent.nodeName === 'PRE') {
+                // Don't animate code blocks word by word
+                parent.style.display = 'block';
+                parent.style.opacity = '1';
+                return;
+            }
+            
+            const words = textNode.nodeValue.split(/(\s+)/);
+            const fragment = document.createDocumentFragment();
+            
+            words.forEach(word => {
+                if (word.trim() === '') {
+                    fragment.appendChild(document.createTextNode(word));
+                    return;
+                }
+                
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.style.opacity = '0';
+                span.style.transition = 'opacity 0.3s ease-in-out';
+                fragment.appendChild(span);
+                
+                // Add space after word if it's not the last word
+                if (words.indexOf(word) < words.length - 1) {
+                    fragment.appendChild(document.createTextNode(' '));
+                }
+            });
+            
+            parent.replaceChild(fragment, textNode);
+        });
+        
+        // Show block elements and fade in words one by one
+        let delay = 0;
+        const wordSpans = contentDiv.querySelectorAll('span');
+        
+        // First show all block elements
+        blockElements.forEach(el => {
+            el.style.display = '';
+            el.style.opacity = '1';
+        });
+        
+        // Then fade in words one by one
+        wordSpans.forEach((span, index) => {
+            setTimeout(() => {
+                span.style.opacity = '1';
+                
+                // If this is the last word, attach actions after a small delay
+                if (index === wordSpans.length - 1) {
+                    setTimeout(() => {
+                        addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
+                    }, 50);
+                }
+            }, delay);
+            
+            // Increase delay for next word
+            delay += 30; // 30ms between words
+        });
+        
+        // If there are no words (only code blocks), attach actions immediately
+        if (wordSpans.length === 0) {
+            setTimeout(() => {
+                addAIMessageActions(messageDiv, contentDiv, content, userQuery, messageIndex);
+            }, 100);
+        }
     } else if (sender === 'ai') {
         contentDiv.innerHTML = enhancedFormatAIResponse(content);
         

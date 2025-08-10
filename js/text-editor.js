@@ -1,6 +1,17 @@
+// Initialize global variables
 const body = document.body;
 const themeToggleBtn = document.getElementById('theme-toggle');
 const logoimg = document.getElementById('logo');
+
+// Initialize file system maps
+const projectFiles = new Map();
+const fileContents = new Map();
+const openTabs = new Map();
+let projectFolders = new Map();
+let activeTab = null;
+let selectedFolder = null;
+let expandedFolders = new Set();
+let isCreatingItem = false;
 
 // Toast Notification System
 function showToast(message, type = 'info', duration = 3000) {
@@ -323,26 +334,7 @@ function loadFileIntoTab(fileName, fileContent, fileId) {
     updateTabContainer();
     switchToTab(tabId);
     
-    // If editor is initialized, update its content
-    if (window.monaco && window.monaco.editor) {
-        let model = monaco.editor.getModels().find(m => m.uri.toString() === `inmemory://model/${tabId}`);
-        
-        if (!model) {
-            // Create a new model if it doesn't exist
-            model = monaco.editor.createModel(
-                fileContent,
-                language,
-                monaco.Uri.parse(`inmemory://model/${tabId}`)
-            );
-        } else {
-            // Update existing model
-            model.setValue(fileContent);
-            monaco.editor.setModelLanguage(model, language);
-        }
-        
-        // Set the model to the editor
-        editor.setModel(model);
-    }
+    // Defer model creation to switchToTab to avoid double-create races
     
     return tabId;
 }
@@ -621,42 +613,6 @@ const CONFIG = {
 let editor = null;
 let currentLanguage = CONFIG.DEFAULT_LANGUAGE;
 let chatHistory = [];
-let openTabs = new Map();
-let activeTab = null;
-let fileContents = new Map();
-let projectFiles = new Map();
-let projectFolders = new Map(); // Changed to Map to store folder state
-let expandedFolders = new Set();
-let selectedFolder = null;
-let contextMenuTarget = null;
-let isCreatingItem = false;
-
-// System prompt for Gemini
-const SYSTEM_PROMPT = `You are an expert AI coding assistant integrated into a code editor. Your role is to help users write, modify, and improve code based on their natural language requests.
-
-IMPORTANT INSTRUCTIONS:
-1. Always respond with complete, working code that can be directly inserted into the editor
-2. When modifying existing code, provide the ENTIRE updated code, not just the changes
-3. Include all necessary imports, dependencies, and setup code
-4. Write clean, well-commented, production-ready code
-5. Follow best practices for the target programming language
-6. If the user's request is unclear, make reasonable assumptions and explain them
-7. Always test your logic before responding
-8. For web development, create modern, responsive, and accessible interfaces
-9. Include error handling where appropriate
-10. Optimize for readability and maintainability
-
-RESPONSE FORMAT:
-- Provide a brief explanation of what you're doing (1-2 sentences)
-- Then provide the complete code
-- End with any important notes or next steps
-
-Current editor language: {language}
-Current code in editor: {currentCode}
-
-User request: {userPrompt}
-
-Respond with complete, working code that addresses the user's request.`;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -717,6 +673,15 @@ function initializeMonacoEditor() {
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Alt | monaco.KeyCode.KeyF, function() {
             formatCode();
         });
+
+        // After Monaco is ready, load files from localStorage so the first file's content is shown in the editor
+        if (typeof loadFilesFromLocalStorage === 'function') {
+            try {
+                loadFilesFromLocalStorage();
+            } catch (e) {
+                console.error('Failed to load files after Monaco init:', e);
+            }
+        }
     });
 }
 
@@ -900,6 +865,9 @@ async function handleSendMessage() {
         showToast('Please enter a prompt', 'error');
         return;
     }
+    
+    // Add user message to context
+    contextManager.addMessage('user', prompt);
 
     // Disable send button and show loading
     const sendBtn = document.getElementById('sendBtn');
@@ -908,7 +876,7 @@ async function handleSendMessage() {
     showLoadingOverlay(true);
 
     try {
-        // Add user message to chat
+        // Add user message to chat UI
         addMessageToChat('user', prompt);
         promptInput.value = '';
         promptInput.style.height = '';
@@ -917,11 +885,50 @@ async function handleSendMessage() {
         // Get current code from editor
         const currentCode = editor ? editor.getValue() : '';
 
-        // Send request to Gemini
-        const response = await sendToGemini(prompt, currentCode);
+        // Update file context with current editor state
+        const activeTab = window.activeTab;
+        if (activeTab) {
+            const language = detectLanguageFromExtension(activeTab);
+            contextManager.updateFileContext(activeTab, language, currentCode);
+        }
+
+        const currentPrompt = prompt;
         
-        // Add assistant response to chat
+        // Send request to Gemini with full context
+        const fullPrompt = `
+        You are an expert AI coding assistant integrated into a code editor. Your role is to help users write, modify, and improve code based on their natural language requests.
+
+        IMPORTANT INSTRUCTIONS:
+        1. Always respond with complete, working code that can be directly inserted into the editor
+        2. When modifying existing code, provide the ENTIRE updated code, not just the changes
+        3. Include all necessary imports, dependencies, and setup code
+        4. Write clean, well-commented, production-ready code
+        5. Follow best practices for the target programming language
+        6. If the user's request is unclear, make reasonable assumptions and explain them
+        7. Always test your logic before responding
+        8. For web development, create modern, responsive, and accessible interfaces
+        9. Include error handling where appropriate
+        10. Optimize for readability and maintainability
+
+        RESPONSE FORMAT:
+        - Provide a brief explanation of what you're doing (1-2 sentences)
+        - Then provide the complete code
+        - End with any important notes or next steps
+
+        Current editor language: {language}
+        Current code in editor: {currentCode}
+
+        User request: {userPrompt}
+
+        Respond with complete, working code that addresses the user's request.
+        
+        Previous conversation context:\n${contextManager.getFullContext()}\n\nCurrent request: ${prompt}`;
+        
+        const response = await sendToGemini(fullPrompt, currentCode, currentPrompt);
+        
+        // Add assistant response to chat and context
         addMessageToChat('assistant', response.explanation);
+        contextManager.addMessage('assistant', response.explanation);
 
         // Auto-apply code if enabled
         const autoApply = document.getElementById('autoApply').checked;
@@ -952,11 +959,11 @@ async function handleSendMessage() {
 }
 
 // Send request to Gemini API
-async function sendToGemini(userPrompt, currentCode) {
-    const systemPrompt = SYSTEM_PROMPT
+async function sendToGemini(fullPrompt, currentCode, currentPrompt) {
+    const systemPrompt = fullPrompt
         .replace('{language}', currentLanguage)
         .replace('{currentCode}', currentCode || 'No code in editor')
-        .replace('{userPrompt}', userPrompt);
+        .replace('{userPrompt}', currentPrompt);
 
     const requestBody = {
         contents: [
@@ -1360,33 +1367,59 @@ function updateTabContainer() {
 function switchToTab(tabId) {
     if (!openTabs.has(tabId)) return;
     
-    // Save current tab content
+    // Save current tab content if there's an active tab and editor
     if (activeTab && editor) {
         const currentContent = editor.getValue();
         fileContents.set(activeTab, currentContent);
         
-        // Mark as modified if content changed
-        const tab = openTabs.get(activeTab);
-        if (tab && currentContent !== tab.content) {
-            tab.isModified = true;
+        // Update the tab's content in openTabs
+        const currentTab = openTabs.get(activeTab);
+        if (currentTab) {
+            currentTab.content = currentContent;
+            currentTab.isModified = (currentContent !== currentTab.originalContent);
         }
     }
     
     // Switch to new tab
     activeTab = tabId;
     const tab = openTabs.get(tabId);
-    currentLanguage = tab.language;
+    if (!tab) return;
     
-    // Update editor
-    if (editor) {
-        const content = fileContents.get(tabId) || tab.content;
-        editor.setValue(content);
-        monaco.editor.setModelLanguage(editor.getModel(), currentLanguage);
+    // Update current language and get the content
+    currentLanguage = tab.language || detectLanguageFromExtension(tab.name) || 'plaintext';
+    const content = fileContents.get(tabId) || tab.content || '';
+    
+    // Update file context
+    contextManager.updateFileContext(tab.name, currentLanguage, content);
+    
+    // Update editor with the new content
+    if (window.monaco && window.monaco.editor) {
+        let model = monaco.editor.getModels().find(m => m.uri.toString() === `inmemory://model/${tabId}`);
+        
+        if (!model) {
+            // Create a new model if it doesn't exist
+            model = monaco.editor.createModel(
+                content,
+                currentLanguage,
+                monaco.Uri.parse(`inmemory://model/${tabId}`)
+            );
+        } else {
+            // Update existing model
+            model.setValue(content);
+            monaco.editor.setModelLanguage(model, currentLanguage);
+        }
+        
+        // Set the model to the editor
+        if (editor) {
+            editor.setModel(model);
+        }
     }
     
+    // Update UI
     updateTabContainer();
     updateFileTree();
     updateEditorVisibility();
+    updateStatusBar();
 }
 
 function closeTab(tabId) {
@@ -1498,7 +1531,7 @@ function createInlineInput(type, defaultName, parentFolder) {
     const input = inputElement.querySelector('.inline-input');
     input.focus();
     input.select();
-    
+        
     // Handle input events
     const handleKeyDown = function(e) {
         if (e.key === 'Enter') {
@@ -1522,6 +1555,55 @@ function createInlineInput(type, defaultName, parentFolder) {
         input.removeEventListener('keydown', handleKeyDown);
         originalRemove.call(this);
     };
+}
+
+function createFileOnLoad(filePath, fileName, fileContent) {
+    try {
+        // Ensure we have a valid file path and name
+        if (!filePath || !fileName) {
+            console.error('Invalid file path or name', { filePath, fileName });
+            return false;
+        }
+
+        // Extract parent folder from file path
+        const pathParts = filePath.split('/');
+        const parentFolder = pathParts.length > 1 ? pathParts.slice(0, -1).join('/') : null;
+        
+        // Check if file already exists in project files
+        if (projectFiles.has(filePath)) {
+            console.log(`File already exists in project files: ${filePath}`);
+            return false;
+        }
+        
+        // Create file data object
+        const fileData = {
+            id: `file_${Date.now()}`,
+            name: fileName,
+            path: filePath,
+            language: detectLanguageFromExtension(fileName) || 'plaintext',
+            content: fileContent,
+            isModified: false,
+            lastModified: new Date().toISOString(),
+            type: 'file',
+            folder: parentFolder
+        };
+        
+        // Add to project files and file contents
+        projectFiles.set(filePath, fileData);
+        fileContents.set(filePath, fileContent);
+        
+        // Update the file tree to reflect the new file
+        updateFileTree();
+        
+        // Open the file in a tab
+        loadFileIntoTab(fileName, fileContent, filePath);
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Error in createFileOnLoad:', error);
+        return false;
+    }
 }
 
 // Handle completion of inline input
@@ -1616,6 +1698,19 @@ function getDefaultContent(language) {
 // Get default content for language (alias for compatibility)
 function getDefaultContentForLanguage(language) {
     return getDefaultContent(language);
+}
+
+// Save file content
+function saveFile() {
+    // Update file context after saving
+    if (activeTab) {
+        const tab = openTabs.get(activeTab);
+        if (tab) {
+            const language = detectLanguageFromExtension(activeTab);
+            contextManager.updateFileContext(activeTab, language, tab.content);
+        }
+    }
+    // ... rest of the function remains the same ...
 }
 
 // Add file to tree
@@ -2412,6 +2507,7 @@ function handleFileTreeClick(e) {
     
     // Check if tab already exists
     if (openTabs.has(fileName)) {
+        // Ensure only switching; model creation happens in switchToTab
         switchToTab(fileName);
         updateFileTree();
         return;
@@ -2452,6 +2548,7 @@ function handleFileTreeClick(e) {
     
     openTabs.set(newTab.id, newTab);
     fileContents.set(newTab.id, content);
+    // Only switch; switchToTab will handle editor model
     switchToTab(newTab.id);
 }
 
@@ -3211,6 +3308,64 @@ function changeFileNameAndExtension() {
         showToast(`File renamed to "${newName}" successfully!`, 'success');
     }
 }
+
+// Context Manager to maintain conversation history and file context
+class ContextManager {
+    constructor() {
+        this.conversationHistory = [];
+        this.maxHistoryLength = 10; // Keep last 10 messages
+        this.currentFileContext = {
+            path: null,
+            language: null,
+            content: null
+        };
+    }
+
+    // Add a message to the conversation history
+    addMessage(role, content) {
+        this.conversationHistory.push({ role, content, timestamp: new Date() });
+        
+        // Trim history if it gets too long
+        if (this.conversationHistory.length > this.maxHistoryLength) {
+            this.conversationHistory.shift();
+        }
+    }
+
+    // Update the current file context
+    updateFileContext(path, language, content) {
+        this.currentFileContext = { path, language, content };
+    }
+
+    // Get the conversation context as a formatted string
+    getConversationContext() {
+        return this.conversationHistory
+            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+            .join('\n');
+    }
+
+    // Get the current file context as a formatted string
+    getFileContext() {
+        if (!this.currentFileContext.path) return 'No active file';
+        
+        return `Current File: ${this.currentFileContext.path}\n` +
+               `Language: ${this.currentFileContext.language || 'Unknown'}\n` +
+               `Content:\n${this.currentFileContext.content || 'Empty file'}`;
+    }
+
+    // Get the full context for the AI
+    getFullContext() {
+        return `=== CONVERSATION HISTORY ===\n${this.getConversationContext()}\n\n` +
+               `=== CURRENT FILE CONTEXT ===\n${this.getFileContext()}`;
+    }
+
+    // Clear the conversation history
+    clearHistory() {
+        this.conversationHistory = [];
+    }
+}
+
+// Initialize global context manager
+const contextManager = new ContextManager();
 
 // Chat message handling with file operations
 function initializeChatSystem() {
@@ -4266,6 +4421,275 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Saves the current file data to localStorage
+ * @returns {void}
+ */
+// Track last save time to prevent excessive saves
+let lastSaveTime = 0;
+const MIN_SAVE_INTERVAL = 1000; // 1 second minimum between saves
+function saveFileToLocalStorage() {
+    // Don't save too frequently
+    const now = Date.now();
+    if (now - lastSaveTime < MIN_SAVE_INTERVAL) {
+        return;
+    }
+
+    lastSaveTime = now;
+    updateStatusBar();
+    try {
+        // Use the global activeTab variable which holds the file path/ID
+        if (!activeTab) return;
+
+        const tabData = openTabs.get(activeTab);
+        if (!tabData) return;
+
+        const filePath = activeTab; // activeTab is the key/path
+        const fileName = tabData.name;
+
+        // Get file content based on editor type (Monaco or textarea)
+        let fileContent = '';
+        if (editor && monaco) {
+            fileContent = editor.getValue();
+        } else {
+            const textarea = document.getElementById('codeEditor');
+            if (textarea) {
+                fileContent = textarea.value;
+            }
+        }
+
+        // Get existing file data from localStorage or initialize empty object
+        const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+
+        // Update or add the current file data. This overwrites the existing entry if the key (filePath) matches.
+        savedFiles[filePath] = {
+            name: fileName,
+            path: filePath,
+            content: fileContent,
+            lastModified: new Date().toISOString()
+        };
+
+        // Save back to localStorage
+        localStorage.setItem('fileData', JSON.stringify(savedFiles));
+        
+    } catch (error) {
+        console.error('Error saving file to localStorage:', error);
+    }
+}
+
+
+
+// function saveFileToLocalStorage() {
+//     // Don't save too frequently
+//     const now = Date.now();
+//     if (now - lastSaveTime < MIN_SAVE_INTERVAL) {
+//         return;
+//     }
+    
+//     lastSaveTime = now;
+//     updateStatusBar();
+//     try {
+        
+//         // Get the active tab
+//         const activeTab = document.querySelector('.tab.active');
+//         if (!activeTab) return;
+        
+//         const fileName = activeTab.textContent.trim();
+//         const tabId = activeTab.getAttribute('data-tab');
+//         const filePath = activeTab.getAttribute('data-path') || '/' + fileName;
+        
+//         // Get file content based on editor type (Monaco or textarea)
+//         let fileContent = '';
+//         if (editor && monaco) {
+//             fileContent = editor.getValue();
+//         } else {
+//             const textarea = document.getElementById('codeEditor');
+//             if (textarea) {
+//                 fileContent = textarea.value;
+//             }
+//         }
+        
+//         // Create file data object
+//         const fileData = {
+//             name: fileName,
+//             path: filePath,
+//             content: fileContent,
+//             lastModified: new Date().toISOString()
+//         };
+        
+//         // Get existing file data from localStorage or initialize empty object
+//         const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+        
+//         // Update or add the current file data
+//         savedFiles[filePath] = fileData;
+        
+//         // Save back to localStorage
+//         localStorage.setItem('fileData', JSON.stringify(savedFiles));
+        
+//         console.log(`File ${fileName} saved to localStorage`);
+        
+//     } catch (error) {
+//         console.error('Error saving file to localStorage:', error);
+//     }
+// }
+
+
+// Loads and displays files from localStorage in the file tree
+function loadFilesFromLocalStorage() {
+    try {
+        const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+        const fileTree = document.getElementById('fileTree');
+        
+        if (!fileTree) {
+            console.error('File tree element not found');
+            return;
+        }
+        
+        console.log('Loading files from localStorage...', savedFiles);
+        
+        // Clear existing project data
+        projectFiles.clear();
+        projectFolders.clear();
+        
+        // Track processed paths to handle duplicates
+        const processedPaths = new Set();
+        
+        // First pass: Create all folders
+        for (const [path, fileData] of Object.entries(savedFiles)) {
+            try {
+                const pathParts = path.split('/');
+                if (pathParts.length > 1) {
+                    // This file is in a folder, ensure the folder exists
+                    let currentPath = '';
+                    for (let i = 0; i < pathParts.length - 1; i++) {
+                        const folderName = pathParts[i];
+                        currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+                        
+                        if (!projectFolders.has(currentPath)) {
+                            projectFolders.set(currentPath, {
+                                name: folderName,
+                                path: currentPath,
+                                parent: i > 0 ? pathParts.slice(0, i).join('/') : null
+                            });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`Error creating folders for ${path}:`, error);
+            }
+        }
+        
+        // Second pass: Add all files
+        for (const [path, fileData] of Object.entries(savedFiles)) {
+            try {
+                if (processedPaths.has(path)) continue;
+                
+                const fileName = fileData.name || path.split('/').pop();
+                const fileContent = typeof fileData === 'object' ? fileData.content : fileData;
+                
+                console.log(`Processing file: ${path} (${fileName})`);
+                
+                // Add to project files
+                const parentPath = path.includes('/') ? path.split('/').slice(0, -1).join('/') : null;
+                const language = detectLanguageFromExtension(fileName) || 'plaintext';
+                
+                projectFiles.set(path, {
+                    id: `file_${Date.now()}_${path}`,  // Ensure unique ID
+                    name: fileName,
+                    path: path,
+                    language: language,
+                    content: fileContent,
+                    isModified: false,
+                    lastModified: new Date().toISOString(),
+                    type: 'file',
+                    folder: parentPath
+                });
+                
+                // Add to file contents with the same key used in loadFileIntoTab
+                fileContents.set(path, fileContent);
+                
+                // Also add to openTabs with the same structure as loadFileIntoTab
+                openTabs.set(path, {
+                    id: path,
+                    name: fileName,
+                    language: language,
+                    content: fileContent,
+                    isModified: false,
+                    folder: parentPath
+                });
+                
+                processedPaths.add(path);
+                console.log(`Successfully added file: ${path}`);
+                
+            } catch (error) {
+                console.error(`Error processing file ${path}:`, error);
+            }
+        }
+
+        console.log(`Successfully loaded ${processedPaths.size} files from localStorage`);
+        
+        // Update the file tree
+        if (typeof updateFileTree === 'function') {
+            updateFileTree();
+        }
+        
+        // Load the first file if available
+        if (processedPaths.size > 0) {
+            const firstFilePath = processedPaths.values().next().value;
+            const firstFile = projectFiles.get(firstFilePath);
+            if (firstFile) {
+                loadFileIntoTab(firstFile.name, firstFile.content, firstFile.path);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading files from localStorage:', error);
+        showToast('Error loading files from storage', 'error');
+    }
+}
+
+// Set up file tree toggle to refresh when shown (files themselves are loaded after Monaco init)
+document.addEventListener('DOMContentLoaded', () => {
+    const fileTreeToggle = document.querySelector('.file-tree-toggle');
+    if (fileTreeToggle) {
+        fileTreeToggle.addEventListener('click', () => {
+            setTimeout(() => {
+                if (typeof loadFilesFromLocalStorage === 'function') {
+                    loadFilesFromLocalStorage();
+                }
+            }, 100);
+        });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
 // Initialize status bar updates
 function initializeStatusBar() {
     // Update status bar initially
@@ -4279,16 +4703,30 @@ function initializeStatusBar() {
         
         editor.onDidChangeModelContent(() => {
             updateStatusBar();
+            saveFileToLocalStorage(); // Save immediately on change
         });
     }
-    
     // Update status bar when textarea cursor position changes (fallback)
     const textarea = document.getElementById('codeEditor');
     if (textarea) {
-        textarea.addEventListener('input', updateStatusBar);
-        textarea.addEventListener('keyup', updateStatusBar);
-        textarea.addEventListener('mouseup', updateStatusBar);
-        textarea.addEventListener('focus', updateStatusBar);
+        // Save on every change in Monaco editor
+        editor.onDidChangeModelContent(() => {
+            updateStatusBar();
+            saveFileToLocalStorage(); // Save immediately on change
+        });
+        
+        // Also save every 10 seconds as a backup
+        setInterval(saveFileToLocalStorage, 10000);
+        
+        // Save on editor blur
+        editor.onDidBlurEditorText(() => {
+            saveFileToLocalStorage();
+        });
+        
+        // Save on cursor position change
+        editor.onDidChangeCursorPosition(() => {
+            saveFileToLocalStorage();
+        });
     }
     
     // Update status bar when switching tabs

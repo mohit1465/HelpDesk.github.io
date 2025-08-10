@@ -622,6 +622,7 @@ body{
 
 /* Sidebar - File Explorer */
 .sidebar {
+    position: relative;
     width: 250px;
     background: var(--main-bg);
     border-right: 1px solid var(--main-br);
@@ -633,6 +634,7 @@ body{
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--main-bg);
     border-bottom: 1px solid var(--main-br);
     padding: 8px 12px;
     max-height: 35px;
@@ -925,12 +927,12 @@ body{
 /* Context Menu */
 .context-menu {
     position: fixed;
-    background: #2d2d30;
-    border: 1px solid #3e3e42;
+    background-image: var(--chat-input-container);
+    border: var(--main-br) 1px solid;
+    box-shadow: 3px 10px 10px rgba(0, 0, 0, 0.073);
     border-radius: 6px;
     padding: 4px 0;
     min-width: 160px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 1000;
     font-size: 13px;
 }
@@ -944,13 +946,18 @@ body{
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    color: #cccccc;
+    color: var(--text-color);
+    border-top: 1px solid #00000000;
+    border-bottom: 1px solid #00000000;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 .context-menu-item:hover {
-    background: #37373d;
+    background-color: var(--main-bg);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.071);
+    border-top: 1px solid var(--main-br);
+    border-bottom: 1px solid var(--main-br);
 }
 
 .context-menu-item.context-menu-danger {
@@ -963,7 +970,7 @@ body{
 
 .context-menu-separator {
     height: 1px;
-    background: #3e3e42;
+    background: var(--main-br);
     margin: 4px 0;
 }
 
@@ -1641,8 +1648,8 @@ body{
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--header-bg);
-    border-top: 1px solid var(--header-border);
+    background: var(--main-bg);
+    border-top: 1px solid var(--main-br);
     padding: 8px 12px;
     font-size: 11px;
     color: var(--text-color);
@@ -1657,7 +1664,7 @@ body{
     display: flex;
     align-items: center;
     gap: 2px;
-    line-height: 1.2;
+    line-height: 1.9;
 }
 
 .status-label {
@@ -1684,8 +1691,8 @@ body{
 
 /* Dark theme adjustments */
 [data-theme="dark"] .sidebar-status-bar {
-    background: var(--header-bg);
-    border-top-color: var(--header-border);
+    background: var(--main-bg);
+    border-top-color: var(--main-br);
 }
 
 [data-theme="dark"] .status-label {
