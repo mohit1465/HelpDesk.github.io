@@ -974,6 +974,13 @@ body{
     margin: 4px 0;
 }
 
+/* Context menu divider (migrated from JS) */
+.context-menu-divider {
+    height: 1px;
+    background-color: var(--main-br);
+    margin: 5px 0;
+}
+
 /* Inline Input */
 .inline-input {
     background: transparent;
@@ -1115,6 +1122,56 @@ body{
     font-size: 13px;
 }
 
+/* Mention chips in chat and input */
+.mention-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    margin: 0 1px;
+    border-radius: 6px;
+    background: rgb(255, 255, 255);
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .mention-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Prompt input highlighter overlay inherits container styles */
+#promptInputMirror .mention-chip {
+    background: rgba(255, 255, 255, 0.912);
+    color: #151a28;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] #promptInputMirror .mention-chip {
+    background: rgb(255, 255, 255);
+    color: #f4f9f9;
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Mention bar layout */
+#mentionBar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0; /* container controls spacing */
+}
+
+.chat-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* stack chips/dropdowns above input */
+}
+
+/* Ensure dropdown appears above input in normal flow */
+.file-mention-dropdown {
+    position: static;
+    margin-bottom: 0;
+}
 .message-content pre {
     background: #1e1e1e;
     padding: 12px;
@@ -1141,12 +1198,23 @@ body{
     background: var(--main-bg);
     color: var(--text-color);
     border-top: var(--main-br) 1px solid;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* ensure spacing within absolute footer */
+    z-index: 5; /* keep above main content */
 }
 
 .input-wrapper {
+    position: relative; /* promptInputMirror anchor */
+    z-index: 1; /* above mirror */
     display: flex;
+    align-items: flex-end; /* keep send button baseline-aligned */
     gap: 8px;
-    margin-bottom: 8px;
+}
+
+.file-mention-dropdown{
+    z-index: 2; /* above mirror and input */
+    margin-bottom: 0;
 }
 
 #promptInput {
@@ -1170,6 +1238,8 @@ body{
     overflow-y: hidden;
     box-sizing: border-box;
     backdrop-filter: blur(8px);
+    position: relative;
+    background-color: transparent;
 }
 
 #promptInput:focus {

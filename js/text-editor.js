@@ -614,12 +614,235 @@ let editor = null;
 let currentLanguage = CONFIG.DEFAULT_LANGUAGE;
 let chatHistory = [];
 
+// Extract @mentions in user prompt like @index.html or @css/styles.css
+function extractMentionedFilePaths(text) {
+    if (!text) return [];
+    // Match @something with path-ish chars; stop at whitespace or punctuation
+    const regex = /@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g;
+    const paths = new Set();
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        const raw = match[1].trim();
+        if (raw) paths.add(raw);
+    }
+    return Array.from(paths);
+}
+
+// Build a compact attachment section for AI prompt from project files
+function buildMentionedFilesContext(paths) {
+    if (!Array.isArray(paths) || paths.length === 0) return '';
+    const lines = [];
+    paths.forEach((p) => {
+        if (p === 'editor') {
+            const content = editor ? (editor.getValue() || '') : '';
+            const MAX_CHARS = 12000;
+            const body = content.length > MAX_CHARS ? content.slice(0, MAX_CHARS) + '\n/* ...truncated... */' : content;
+            lines.push(`- editor (current buffer):\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+            return;
+        }
+        if (p === 'current-file') {
+            const key = window.activeTab || '';
+            let content = '';
+            if (key) {
+                if (window.activeTab === key && editor && editor.getValue) {
+                    try { content = editor.getValue() || ''; } catch (_) {}
+                }
+                if (!content && fileContents.has(key)) content = fileContents.get(key) || '';
+            }
+            const MAX_CHARS = 12000;
+            const body = content.length > MAX_CHARS ? content.slice(0, MAX_CHARS) + '\n/* ...truncated... */' : content;
+            lines.push(`- ${key || 'current file'}:\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+            return;
+        }
+        // Resolve file by exact key or by file name fallback
+        let fileKey = null;
+        if (projectFiles.has(p)) {
+            fileKey = p;
+        } else {
+            // Try to resolve by name match
+            const lower = p.toLowerCase();
+            for (const [k] of projectFiles.entries()) {
+                if (k.toLowerCase() === lower || k.split('/').pop().toLowerCase() === lower) {
+                    fileKey = k;
+                    break;
+                }
+            }
+        }
+
+        if (!fileKey) {
+            lines.push(`- ${p}: NOT FOUND`);
+            return;
+        }
+
+        // Get content from open tab model, fileContents, or stored data
+        let content = '';
+        const tab = openTabs.get(fileKey);
+        if (tab && window.monaco && editor && editor.getModel && window.activeTab === fileKey) {
+            try { content = editor.getValue() || ''; } catch (_) {}
+        }
+        if (!content && fileContents.has(fileKey)) {
+            content = fileContents.get(fileKey) || '';
+        }
+        if (!content) {
+            const file = projectFiles.get(fileKey);
+            content = (file && (file.content || file.defaultContent || '')) || '';
+        }
+
+        // Limit very large files to keep prompt bounded
+        const MAX_CHARS = 12000; // ~12k chars per file
+        let body = content;
+        let note = '';
+        if (body.length > MAX_CHARS) {
+            body = body.slice(0, MAX_CHARS) + '\n/* ...truncated... */';
+            note = ' (truncated)';
+        }
+        lines.push(`- ${fileKey}${note}:\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+    });
+    return lines.join('\n\n');
+}
+
+// Create an overlay that mirrors promptInput text with highlighted mentions
+function createPromptHighlighter() {
+    const input = document.getElementById('promptInput');
+    if (!input) return;
+    if (document.getElementById('promptInputMirror')) return;
+
+    const wrapper = input.parentElement;
+    const mirror = document.createElement('div');
+    mirror.id = 'promptInputMirror';
+    mirror.style.position = 'absolute';
+    mirror.style.left = '0px';
+    mirror.style.top = '0px';
+    mirror.style.width = input.offsetWidth + 'px';
+    mirror.style.height = input.offsetHeight + 'px';
+    mirror.style.pointerEvents = 'none';
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.wordBreak = 'break-word';
+    mirror.style.padding = window.getComputedStyle(input).padding;
+    mirror.style.borderRadius = window.getComputedStyle(input).borderRadius;
+    mirror.style.fontFamily = window.getComputedStyle(input).fontFamily;
+    mirror.style.fontSize = window.getComputedStyle(input).fontSize;
+    mirror.style.lineHeight = window.getComputedStyle(input).lineHeight;
+    mirror.style.color = 'transparent';
+    mirror.style.background = 'transparent';
+    mirror.style.zIndex = '0';
+    wrapper.style.position = 'relative';
+    wrapper.style.zIndex = '0';
+    wrapper.appendChild(mirror);
+
+    // Ensure input text stays above mirror
+    input.style.position = 'relative';
+    input.style.zIndex = '1';
+}
+
+function renderPromptHighlights() {
+    const input = document.getElementById('promptInput');
+    const mirror = document.getElementById('promptInputMirror');
+    if (!input || !mirror) return;
+
+    // Sync size and position
+    const rect = input.getBoundingClientRect();
+    const parentRect = input.parentElement.getBoundingClientRect();
+    mirror.style.left = (input.offsetLeft) + 'px';
+    mirror.style.top = (input.offsetTop) + 'px';
+    mirror.style.width = input.offsetWidth + 'px';
+    mirror.style.height = input.offsetHeight + 'px';
+    mirror.style.padding = window.getComputedStyle(input).padding;
+    mirror.style.borderRadius = window.getComputedStyle(input).borderRadius;
+    mirror.style.fontFamily = window.getComputedStyle(input).fontFamily;
+    mirror.style.fontSize = window.getComputedStyle(input).fontSize;
+    mirror.style.lineHeight = window.getComputedStyle(input).lineHeight;
+
+    const safe = escapeHtml(input.value);
+    const highlighted = safe.replace(/(^|\s)@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g, (m, pre, p2) => {
+        return `${pre}<span class="mention-chip">@${p2}</span>`;
+    });
+    mirror.innerHTML = highlighted.replace(/\n/g, '<br>');
+
+    // Keep mirror scroll aligned with input
+    mirror.scrollTop = input.scrollTop;
+}
+
+// Mention bar above prompt input
+let selectedMentions = [];
+
+function createMentionBar() {
+    const input = document.getElementById('promptInput');
+    if (!input) return;
+    const wrapper = input.closest('.input-wrapper') || input.parentElement;
+    if (!wrapper) return;
+    const container = wrapper.parentElement; // likely .chat-input-container
+    if (document.getElementById('mentionBar')) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'mentionBar';
+    // Use normal document flow above the input wrapper
+    if (container) {
+        container.insertBefore(bar, wrapper);
+    } else {
+        // Fallback: prepend inside wrapper but before input
+        wrapper.prepend(bar);
+    }
+}
+
+function renderMentionBar() {
+    const input = document.getElementById('promptInput');
+    const bar = document.getElementById('mentionBar');
+    if (!input) return;
+    if (!bar) return;
+
+    // Derive mentions present in the input (unique)
+    const text = input.value || '';
+    const allMentions = [];
+    const regex = /@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g;
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+        const key = m[1].trim();
+        if (key && !allMentions.includes(key)) allMentions.push(key);
+    }
+    selectedMentions = allMentions;
+
+    // Render chips
+    bar.innerHTML = '';
+    selectedMentions.forEach((key) => {
+        const chip = document.createElement('span');
+        chip.className = 'mention-chip';
+        chip.textContent = `@${key}`;
+        chip.style.cursor = 'default';
+
+        const remove = document.createElement('button');
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', 'Remove mention');
+        remove.style.marginLeft = '6px';
+        remove.style.border = 'none';
+        remove.style.background = 'transparent';
+        remove.style.color = 'inherit';
+        remove.style.cursor = 'pointer';
+        remove.onclick = () => removeMentionFromInput(key);
+
+        chip.appendChild(remove);
+        bar.appendChild(chip);
+    });
+}
+
+function removeMentionFromInput(key) {
+    const input = document.getElementById('promptInput');
+    if (!input) return;
+    const value = input.value;
+    const pattern = new RegExp(`(^|\\s)@${key.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(?=\\s|$)`, 'g');
+    const newValue = value.replace(pattern, (m, pre) => pre ? pre : '').replace(/\s{2,}/g, ' ').trimStart();
+    input.value = newValue;
+    input.focus();
+    renderMentionBar();
+}
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     initializeMonacoEditor();
     setupEventListeners();
     initializeFileSystem();
     initializeContextMenu();
+    initializeChatSystem();
     showToast('AI Code Editor initialized successfully!', 'success');
 });
 
@@ -698,6 +921,88 @@ function setupEventListeners() {
             handleSendMessage();
         }
     });
+
+    // Inline @mention UX for prompt input
+    const promptEl = document.getElementById('promptInput');
+    if (promptEl) {
+        // Keep files list warm
+        if (!fileMentionState.files || fileMentionState.files.length === 0) {
+            try { fileMentionState.files = getFilesForMention(); } catch (_) {}
+        }
+
+        promptEl.addEventListener('keydown', function(e) {
+            const dropdown = document.getElementById('fileMentionDropdown');
+            const isOpen = dropdown && dropdown.style.display === 'block';
+
+            if (isOpen) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    fileMentionState.selectedIndex++;
+                    showFileMentionDropdown(promptEl, fileMentionState.query);
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    fileMentionState.selectedIndex = Math.max(0, fileMentionState.selectedIndex - 1);
+                    showFileMentionDropdown(promptEl, fileMentionState.query);
+                    return;
+                }
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    const suggestions = getMentionSuggestionsList(fileMentionState.query);
+                    const chosen = suggestions[fileMentionState.selectedIndex] || suggestions[0];
+                    if (chosen) insertSelectedMention(chosen.key);
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    hideFileMentionDropdown();
+                    return;
+                }
+            }
+        });
+
+        promptEl.addEventListener('input', function(e) {
+            const pos = this.selectionStart;
+            const value = this.value;
+
+            // Find the last '@' before the caret that starts a token
+            let atPos = -1;
+            for (let i = pos - 1; i >= 0; i--) {
+                const ch = value[i];
+                if (ch === '@') { atPos = i; break; }
+                if (/\s/.test(ch)) break; // stop at whitespace
+            }
+
+            if (atPos !== -1) {
+                fileMentionState.isActive = true;
+                fileMentionState.startPos = atPos;
+                fileMentionState.query = value.slice(atPos + 1, pos);
+                if (!fileMentionState.files || fileMentionState.files.length === 0) {
+                    try { fileMentionState.files = getFilesForMention(); } catch (_) {}
+                }
+                showFileMentionDropdown(this, fileMentionState.query);
+            } else {
+                hideFileMentionDropdown();
+            }
+
+            // Update mention bar (chips above input)
+            renderMentionBar();
+        });
+
+        // Hide dropdown when clicking elsewhere
+        document.addEventListener('click', (ev) => {
+            const dropdown = document.getElementById('fileMentionDropdown');
+            if (!dropdown) return;
+            if (ev.target === promptEl || dropdown.contains(ev.target)) return;
+            hideFileMentionDropdown();
+        });
+
+        // Create and maintain mention bar above input
+        createMentionBar();
+        renderMentionBar();
+        promptEl.addEventListener('scroll', () => renderMentionBar());
+        window.addEventListener('resize', () => renderMentionBar());
+    }
 
     // Sidebar buttons
     document.getElementById('newFileInExplorerBtn').addEventListener('click', createNewFile);
@@ -837,21 +1142,13 @@ function setupEventListeners() {
     
     promptInput.addEventListener('input', function() {
         if (isPromptFocused) {
-            // Calculate new height
+            // Calculate new height without shifting upward; keep chips above, no overlap
             this.style.height = 'auto';
-            const newHeight = Math.min(this.scrollHeight, 120);
+            const maxHeight = 120;
             const minHeight = 48; // Default min height
-            
-            // Only expand if content requires more space
-            if (newHeight > minHeight) {
-                const heightDiff = newHeight - minHeight;
-                this.style.height = newHeight + 'px';
-                // Move the textarea up by the height difference
-                this.style.marginTop = `-${heightDiff}px`;
-            } else {
-                this.style.height = minHeight + 'px';
-                this.style.marginTop = '0px';
-            }
+            const newHeight = Math.min(Math.max(this.scrollHeight, minHeight), maxHeight);
+            this.style.height = newHeight + 'px';
+            this.style.marginTop = '0px';
         }
     });
 }
@@ -893,6 +1190,10 @@ async function handleSendMessage() {
         }
 
         const currentPrompt = prompt;
+
+        // Extract @file mentions and build files context for AI
+        const mentionedPaths = extractMentionedFilePaths(prompt);
+        const mentionedFilesContext = buildMentionedFilesContext(mentionedPaths);
         
         // Send request to Gemini with full context
         const fullPrompt = `
@@ -917,6 +1218,9 @@ async function handleSendMessage() {
 
         Current editor language: {language}
         Current code in editor: {currentCode}
+
+        Attached files via @mentions:
+        ${mentionedFilesContext || 'None'}
 
         User request: {userPrompt}
 
@@ -1059,11 +1363,16 @@ function addMessageToChat(sender, content) {
     messageContent.className = 'message-content';
     
     // Convert markdown-like formatting
-    const formattedContent = content
+    let formattedContent = content
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/`(.*?)`/g, '<code>$1</code>')
         .replace(/\n/g, '<br>');
+
+    // Highlight @mentions as blocks
+    formattedContent = formattedContent.replace(/(^|\s)@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g, (m, pre, p2) => {
+        return `${pre}<span class="mention-chip">@${p2}</span>`;
+    });
     
     messageContent.innerHTML = formattedContent;
     messageDiv.appendChild(messageContent);
@@ -1394,23 +1703,21 @@ function switchToTab(tabId) {
     
     // Update editor with the new content
     if (window.monaco && window.monaco.editor) {
-        let model = monaco.editor.getModels().find(m => m.uri.toString() === `inmemory://model/${tabId}`);
-        
+        const uri = monaco.Uri.parse(`inmemory://model/${tabId}`);
+        let model = monaco.editor.getModel(uri);
+
         if (!model) {
-            // Create a new model if it doesn't exist
-            model = monaco.editor.createModel(
-                content,
-                currentLanguage,
-                monaco.Uri.parse(`inmemory://model/${tabId}`)
-            );
+            model = monaco.editor.createModel(content, currentLanguage, uri);
         } else {
-            // Update existing model
-            model.setValue(content);
-            monaco.editor.setModelLanguage(model, currentLanguage);
+            if (model.getLanguageId() !== currentLanguage) {
+                monaco.editor.setModelLanguage(model, currentLanguage);
+            }
+            if (model.getValue() !== content) {
+                model.setValue(content);
+            }
         }
-        
-        // Set the model to the editor
-        if (editor) {
+
+        if (editor && editor.getModel() !== model) {
             editor.setModel(model);
         }
     }
@@ -1437,6 +1744,15 @@ function closeTab(tabId) {
     
     openTabs.delete(tabId);
     fileContents.delete(tabId);
+
+    // Dispose the underlying Monaco model to avoid URI collisions when reopening
+    if (window.monaco && window.monaco.editor) {
+        const uri = monaco.Uri.parse(`inmemory://model/${tabId}`);
+        const model = monaco.editor.getModel(uri);
+        if (model) {
+            model.dispose();
+        }
+    }
     
     // If closing active tab, switch to another tab
     if (tabId === activeTab) {
@@ -3410,10 +3726,10 @@ function initializeChatSystem() {
                         }
                         
                         // If this is the active tab, update the editor
-                        if (window.activeTab === tabId && window.monaco && window.monaco.editor) {
-                            const editor = window.monaco.editor.getModels()[0];
-                            if (editor) {
-                                editor.setValue(fileContent);
+                        if (window.activeTab === tabId && window.editor) {
+                            const currentModel = window.editor.getModel();
+                            if (currentModel) {
+                                currentModel.setValue(fileContent);
                             }
                         }
                     }
@@ -4260,45 +4576,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Add CSS for context menu
-const contextMenuCSS = `
-.context-menu {
-    position: fixed;
-    background: #2d2d2d;
-    border: 1px solid #3d3d3d;
-    border-radius: 4px;
-    padding: 5px 0;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    display: none;
-    min-width: 180px;
-}
-
-.context-menu-item {
-    padding: 8px 15px;
-    color: #e0e0e0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-}
-
-.context-menu-item:hover {
-    background-color: #3d3d3d;
-}
-
-.context-menu-divider {
-    height: 1px;
-    background-color: #3d3d3d;
-    margin: 5px 0;
-}
-`;
-
-// Add styles to the document
-const styleElement = document.createElement('style');
-styleElement.textContent = contextMenuCSS;
-document.head.appendChild(styleElement);
+// Context menu styles are now in css/text-editor.css
 
 // Handle window resize
 window.addEventListener('resize', function() {
@@ -4866,10 +5144,10 @@ const aiContextManager = {
                 }
                 
                 // Update the editor if this is the active tab
-                if (window.activeTab === tabId && window.monaco && window.monaco.editor) {
-                    const editor = window.monaco.editor.getModels()[0];
-                    if (editor) {
-                        editor.setValue(content);
+                if (window.activeTab === tabId && window.editor) {
+                    const currentModel = window.editor.getModel();
+                    if (currentModel) {
+                        currentModel.setValue(content);
                     }
                 }
                 
@@ -5060,4 +5338,155 @@ function hideFileMentionDropdown() {
     fileMentionState.isActive = false;
     fileMentionState.query = '';
     fileMentionState.selectedIndex = 0;
+}
+
+// Ensure dropdown element exists
+function ensureFileMentionDropdown() {
+    let dropdown = document.getElementById('fileMentionDropdown');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'fileMentionDropdown';
+        dropdown.classList.add('file-mention-dropdown');
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '10000';
+        dropdown.style.background = '#1e1e1e';
+        dropdown.style.color = '#ddd';
+        dropdown.style.border = '1px solid #333';
+        dropdown.style.borderRadius = '6px';
+        dropdown.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
+        dropdown.style.padding = '6px 0';
+        dropdown.style.maxHeight = '240px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.minWidth = '280px';
+        dropdown.style.display = 'none';
+        // Append to body so we can position at caret coordinates like context menu
+        document.body.appendChild(dropdown);
+    }
+    return dropdown;
+}
+
+// Compute page coordinates for the given character index in a textarea
+function getTextareaCharPagePosition(textarea, charIndex) {
+    const value = textarea.value;
+    const style = window.getComputedStyle(textarea);
+    const rect = textarea.getBoundingClientRect();
+
+    const mirror = document.createElement('div');
+    mirror.style.position = 'absolute';
+    mirror.style.left = rect.left + window.scrollX + 'px';
+    mirror.style.top = rect.top + window.scrollY + 'px';
+    mirror.style.visibility = 'hidden';
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.wordBreak = 'break-word';
+    mirror.style.overflow = 'hidden';
+    mirror.style.boxSizing = 'border-box';
+    mirror.style.width = textarea.clientWidth + 'px';
+    mirror.style.padding = style.padding;
+    mirror.style.border = style.border;
+    mirror.style.fontFamily = style.fontFamily;
+    mirror.style.fontSize = style.fontSize;
+    mirror.style.lineHeight = style.lineHeight;
+    mirror.style.letterSpacing = style.letterSpacing;
+
+    const before = escapeHtml(value.slice(0, charIndex))
+        .replace(/\n/g, '<br>')
+        .replace(/\s/g, '&nbsp;');
+    mirror.innerHTML = `${before}<span id="__caret_marker__">|</span>`;
+    document.body.appendChild(mirror);
+
+    const marker = document.getElementById('__caret_marker__');
+    const markerRect = marker.getBoundingClientRect();
+
+    // Base coordinates
+    let x = markerRect.left + window.scrollX;
+    let y = markerRect.top + window.scrollY;
+
+    // Adjust for textarea scroll
+    x -= textarea.scrollLeft;
+    y -= textarea.scrollTop;
+
+    // Cleanup
+    document.body.removeChild(mirror);
+
+    return { x, y };
+}
+
+// Build suggestions list including specials and files
+function getMentionSuggestionsList(query) {
+    const suggestions = [];
+    // Special: editor buffer
+    suggestions.push({ label: 'editor (current editor buffer)', key: 'editor', type: 'special' });
+    // Special: current file
+    if (window.activeTab) {
+        suggestions.push({ label: `current file (${window.activeTab})`, key: 'current-file', type: 'special' });
+    }
+    // Files
+    const files = fileMentionState.files && fileMentionState.files.length ? fileMentionState.files : getFilesForMention();
+    files.forEach(f => suggestions.push({ label: f.path, key: f.path, type: 'file' }));
+    if (!query) return suggestions.slice(0, 20);
+    const q = query.toLowerCase();
+    return suggestions.filter(s => s.label.toLowerCase().includes(q) || s.key.toLowerCase().includes(q)).slice(0, 50);
+}
+
+// Render and show dropdown near the prompt input
+function showFileMentionDropdown(anchorEl, query) {
+    const dropdown = ensureFileMentionDropdown();
+    const container = document.body;
+
+    const suggestions = getMentionSuggestionsList(query);
+    fileMentionState.selectedIndex = Math.min(fileMentionState.selectedIndex, Math.max(0, suggestions.length - 1));
+
+    dropdown.innerHTML = '';
+    suggestions.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.style.padding = '6px 10px';
+        item.style.cursor = 'pointer';
+        item.style.whiteSpace = 'nowrap';
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.gap = '8px';
+        if (idx === fileMentionState.selectedIndex) {
+            item.style.background = '#2a2a2a';
+        }
+        const typeTag = s.type === 'special' ? '•' : '–';
+        item.innerHTML = `<span style="opacity:.7">${typeTag}</span><span>${s.label}</span>`;
+        item.addEventListener('mouseenter', () => {
+            fileMentionState.selectedIndex = idx;
+            showFileMentionDropdown(anchorEl, query);
+        });
+        item.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // prevent textarea blur
+            insertSelectedMention(s.key);
+        });
+        dropdown.appendChild(item);
+    });
+    // Position at the '@' character location like a context menu
+    if (suggestions.length && typeof fileMentionState.startPos === 'number' && fileMentionState.startPos >= 0) {
+        const anchorPos = getTextareaCharPagePosition(anchorEl, fileMentionState.startPos);
+        // place dropdown just below the '@'
+        dropdown.style.left = `${Math.max(8, Math.min(anchorPos.x, window.scrollX + window.innerWidth - dropdown.offsetWidth - 8))}px`;
+        dropdown.style.top = `${anchorPos.y + parseFloat(getComputedStyle(anchorEl).lineHeight || '18')}px`;
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+// Insert chosen mention into the prompt input
+function insertSelectedMention(key) {
+    const promptEl = document.getElementById('promptInput');
+    if (!promptEl) return;
+    const value = promptEl.value;
+    const end = promptEl.selectionStart;
+    const start = fileMentionState.startPos >= 0 ? fileMentionState.startPos : end;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const insertion = `@${key}`;
+    const needsSpace = after.length === 0 || !/^\s/.test(after) ? ' ' : '';
+    promptEl.value = before + insertion + needsSpace + after;
+    const newCaret = (before + insertion + needsSpace).length;
+    promptEl.setSelectionRange(newCaret, newCaret);
+    hideFileMentionDropdown();
+    // Trigger input event for any bindings
+    promptEl.dispatchEvent(new Event('input'));
 }
