@@ -20,7 +20,8 @@
                         <div class="file-dropbtn">File</div>
                         <div class="file-dropdown-content">
                             <a href="#" id="new-file">New</a>
-                            <a href="#" id="open-file">Open</a>
+                            <a href="#" id="open-files">Open File</a>
+                            <a href="#" id="open-folder">Open Folder</a>
                             <a href="#" id="save-file">Save</a>
                             <a href="#" id="save-as-file">Save As</a>
                             <a href="#" id="change-name">Change Name</a>
@@ -130,7 +131,6 @@
                     <div class="status-item">
                         <span class="status-label">Ln:</span>
                         <span class="status-value" id="currentLine">0</span>
-                        <span class="status-separator">,</span>
                         <span class="status-label">Col:</span>
                         <span class="status-value" id="currentColumn">0</span>
                     </div>
@@ -310,7 +310,8 @@
         </div>
         <div class="mobile-menu-popup" id="mobileMenu">
             <a href="#" id="new-file-mobile">New</a>
-            <a href="#" id="open-file-mobile">Open</a>
+            <a href="#" id="open-file-mobile">Open File</a>
+            <a href="#" id="open-folder-mobile">Open Folder</a>
             <a href="#" id="save-file-mobile">Save</a>
             <a href="#" id="save-as-file-mobile">Save As</a>
             <a href="#" id="change-name-mobile">Change Name</a>
@@ -330,6 +331,43 @@
 
         <!-- Toast Notifications -->
         <div id="toastContainer" class="toast-container"></div>
+
+        <div class="app-footer">
+            <div class="footer-status">
+                <div class="status-item">
+                    <span class="status-label">Ln:</span>
+                    <span class="status-value" id="footerCurrentLine">0</span>
+                    <span class="status-label">Col:</span>
+                    <span class="status-value" id="footerCurrentColumn">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Total Ln:</span>
+                    <span class="status-value" id="footerTotalLines">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">File Size:</span>
+                    <span class="status-value" id="footerFileSize">0 KB</span>
+                </div>
+            </div>
+            <div class="footerControl">
+                <button id="assistantToggle" class="btn-icon" title="Assistant" aria-label="Toggle Assistant">
+                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                        <!-- Neural Assistant: hexagon + sparkle + wand + connection nodes -->
+                        <path fill="currentColor" d="M12 2l7 4v8l-7 4-7-4V6l7-4z"/>
+                        <!-- central sparkle -->
+                        <path fill="currentColor" d="M12 7.2l1.1 2.1 2.3.6-2.3.6-1.1 2.1-1.1-2.1-2.3-.6 2.3-.6 1.1-2.1z"/>
+                        <!-- magic wand -->
+                        <path d="M16.6 8.6L10 15.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+                        <!-- connection to a side node -->
+                        <path d="M18.2 12.1l-2.4 2.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+                        <!-- nodes -->
+                        <circle cx="16.6" cy="8.6" r="1.2" fill="currentColor"/>
+                        <circle cx="10" cy="15.2" r="1.1" fill="currentColor"/>
+                        <circle cx="18.2" cy="12.1" r="1" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Context Menu -->

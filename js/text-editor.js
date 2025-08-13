@@ -225,7 +225,14 @@ document.getElementById('new-file-mobile').addEventListener('click', function() 
 });
 
 document.getElementById('open-file-mobile').addEventListener('click', function() {
-    document.getElementById('open-file').click();
+    const btn = document.getElementById('open-files');
+    if (btn) btn.click();
+    toggleMobileMenu();
+});
+
+document.getElementById('open-folder-mobile').addEventListener('click', function() {
+    const btn = document.getElementById('open-folder');
+    if (btn) btn.click();
     toggleMobileMenu();
 });
 
@@ -314,15 +321,21 @@ function loadFileIntoTab(fileName, fileContent, fileId) {
         folder: null // No folder by default for files loaded from user's files
     };
     
-    // Add to project files if not already there
+    // Add to project files if not already there (store content so it can be restored after closing)
     if (!projectFiles.has(tabId)) {
         projectFiles.set(tabId, {
             name: fileName,
             fullPath: tabId,
             language: language,
             type: 'file',
-            folder: null
+            folder: null,
+            content: fileContent
         });
+    } else {
+        try {
+            const pf = projectFiles.get(tabId);
+            if (pf) pf.content = fileContent;
+        } catch (_) {}
     }
     
     // Add to open tabs and set as active
@@ -450,8 +463,13 @@ function updateStatusBar() {
     const currentColumnEl = document.getElementById('currentColumn');
     const totalLinesEl = document.getElementById('totalLines');
     const fileSizeEl = document.getElementById('fileSize');
+    const footerCurrentLineEl = document.getElementById('footerCurrentLine');
+    const footerCurrentColumnEl = document.getElementById('footerCurrentColumn');
+    const footerTotalLinesEl = document.getElementById('footerTotalLines');
+    const footerFileSizeEl = document.getElementById('footerFileSize');
     
-    if (!currentLineEl || !currentColumnEl || !totalLinesEl || !fileSizeEl) {
+    if (!(currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) &&
+        !(footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl)) {
         return;
     }
     
@@ -461,10 +479,18 @@ function updateStatusBar() {
     
     // If no active tab or no open tabs, reset to defaults
     if (!activeTab || openTabs.size === 0) {
-        currentLineEl.textContent = line;
-        currentColumnEl.textContent = column;
-        totalLinesEl.textContent = totalLines;
-        fileSizeEl.textContent = fileSize;
+        if (currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) {
+            currentLineEl.textContent = line;
+            currentColumnEl.textContent = column;
+            totalLinesEl.textContent = totalLines;
+            fileSizeEl.textContent = fileSize;
+        }
+        if (footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl) {
+            footerCurrentLineEl.textContent = line;
+            footerCurrentColumnEl.textContent = column;
+            footerTotalLinesEl.textContent = totalLines;
+            footerFileSizeEl.textContent = fileSize;
+        }
         return;
     }
     
@@ -533,11 +559,20 @@ function updateStatusBar() {
         console.log('Error updating status bar:', error);
     }
     
-    // Update the status bar elements
-    currentLineEl.textContent = line;
-    currentColumnEl.textContent = column;
-    totalLinesEl.textContent = totalLines;
-    fileSizeEl.textContent = fileSize;
+    // Update the sidebar status bar elements (if present)
+    if (currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) {
+        currentLineEl.textContent = line;
+        currentColumnEl.textContent = column;
+        totalLinesEl.textContent = totalLines;
+        fileSizeEl.textContent = fileSize;
+    }
+    // Update the footer status elements (if present)
+    if (footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl) {
+        footerCurrentLineEl.textContent = line;
+        footerCurrentColumnEl.textContent = column;
+        footerTotalLinesEl.textContent = totalLines;
+        footerFileSizeEl.textContent = fileSize;
+    }
 }
 
 function formatFileSize(bytes) {
@@ -617,12 +652,19 @@ let chatHistory = [];
 // Extract @mentions in user prompt like @index.html or @css/styles.css
 function extractMentionedFilePaths(text) {
     if (!text) return [];
-    // Match @something with path-ish chars; stop at whitespace or punctuation
-    const regex = /@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g;
     const paths = new Set();
+    // Support @{...} for names with spaces, e.g. @{new file.html}
+    const regexBraced = /@\{([^\n\r}]+)\}/g;
+    // Also support legacy simple mentions without spaces
+    const regexSimple = /@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g;
+
     let match;
-    while ((match = regex.exec(text)) !== null) {
-        const raw = match[1].trim();
+    while ((match = regexBraced.exec(text)) !== null) {
+        const raw = (match[1] || '').trim();
+        if (raw) paths.add(raw);
+    }
+    while ((match = regexSimple.exec(text)) !== null) {
+        const raw = (match[1] || '').trim();
         if (raw) paths.add(raw);
     }
     return Array.from(paths);
@@ -633,11 +675,22 @@ function buildMentionedFilesContext(paths) {
     if (!Array.isArray(paths) || paths.length === 0) return '';
     const lines = [];
     paths.forEach((p) => {
-        if (p === 'editor') {
-            const content = editor ? (editor.getValue() || '') : '';
+        if (p === 'current-tabs') {
+            // Include all open tabs' contents
             const MAX_CHARS = 12000;
-            const body = content.length > MAX_CHARS ? content.slice(0, MAX_CHARS) + '\n/* ...truncated... */' : content;
-            lines.push(`- editor (current buffer):\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+            openTabs.forEach((tab, key) => {
+                let content = '';
+                if (editor && window.activeTab === key) {
+                    try { content = editor.getValue() || ''; } catch (_) {}
+                }
+                if (!content && fileContents.has(key)) content = fileContents.get(key) || '';
+                if (!content) {
+                    const file = projectFiles.get(key);
+                    content = (file && (file.content || file.defaultContent || '')) || '';
+                }
+                const body = content.length > MAX_CHARS ? content.slice(0, MAX_CHARS) + '\n/* ...truncated... */' : content;
+                lines.push(`- ${key}:\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+            });
             return;
         }
         if (p === 'current-file') {
@@ -696,9 +749,63 @@ function buildMentionedFilesContext(paths) {
             body = body.slice(0, MAX_CHARS) + '\n/* ...truncated... */';
             note = ' (truncated)';
         }
-        lines.push(`- ${fileKey}${note}:\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
+        
+        // Get file language for better context
+        const file = projectFiles.get(fileKey);
+        const language = file ? (file.language || detectLanguageFromExtension(fileKey)) : detectLanguageFromExtension(fileKey);
+        
+        lines.push(`- ${fileKey}${note} (${language}):\n----- BEGIN FILE -----\n${body}\n----- END FILE -----`);
     });
     return lines.join('\n\n');
+}
+
+// Build a summary of mentioned files for AI context
+function buildMentionedFilesSummary(paths) {
+    if (!Array.isArray(paths) || paths.length === 0) return '';
+    
+    const summary = [];
+    
+    paths.forEach((path, index) => {
+        if (path === 'current-tabs') {
+            const tabNames = Array.from(openTabs.keys());
+            summary.push(`${index + 1}. Current open tabs: ${tabNames.join(', ')}`);
+            return;
+        }
+        
+        if (path === 'current-file') {
+            const currentFile = activeTab || 'No file currently open';
+            summary.push(`${index + 1}. Current active file: ${currentFile}`);
+            return;
+        }
+        
+        // Resolve file by exact key or by file name fallback
+        let fileKey = null;
+        if (projectFiles.has(path)) {
+            fileKey = path;
+        } else {
+            // Try to resolve by name match
+            const lower = path.toLowerCase();
+            for (const [k] of projectFiles.entries()) {
+                if (k.toLowerCase() === lower || k.split('/').pop().toLowerCase() === lower) {
+                    fileKey = k;
+                    break;
+                }
+            }
+        }
+        
+        if (fileKey) {
+            const file = projectFiles.get(fileKey);
+            const language = file ? (file.language || detectLanguageFromExtension(fileKey)) : detectLanguageFromExtension(fileKey);
+            const isOpen = openTabs.has(fileKey);
+            const status = isOpen ? ' (open in tab)' : ' (not open)';
+            
+            summary.push(`${index + 1}. ${fileKey} (${language})${status}`);
+        } else {
+            summary.push(`${index + 1}. ${path} (not found in project)`);
+        }
+    });
+    
+    return summary.join('\n');
 }
 
 // Create an overlay that mirrors promptInput text with highlighted mentions
@@ -754,7 +861,12 @@ function renderPromptHighlights() {
     mirror.style.lineHeight = window.getComputedStyle(input).lineHeight;
 
     const safe = escapeHtml(input.value);
-    const highlighted = safe.replace(/(^|\s)@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g, (m, pre, p2) => {
+    // Highlight both @{...} and simple @token mentions
+    let highlighted = safe.replace(/@\{([^\n\r}]+)\}/g, (m, p1) => {
+        const label = escapeHtml(p1.trim());
+        return `<span class="mention-chip">@{${label}}</span>`;
+    });
+    highlighted = highlighted.replace(/(^|\s)@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g, (m, pre, p2) => {
         return `${pre}<span class="mention-chip">@${p2}</span>`;
     });
     mirror.innerHTML = highlighted.replace(/\n/g, '<br>');
@@ -764,7 +876,26 @@ function renderPromptHighlights() {
 }
 
 // Mention bar above prompt input
-let selectedMentions = [];
+const ENABLE_INLINE_MENTIONS = false; // disable typing @ in prompt to add files
+const selectedContextKeys = new Set(); // stores keys like paths or specials ('current-tabs','current-file')
+let selectedMentions = []; // legacy compatibility
+
+// Resolve a mention key to a valid project file key or recognized special token
+function resolveMentionToFileKey(key) {
+    if (!key) return null;
+    // Specials inserted from dropdown
+    if (key === 'current-tabs' || key === 'current-file') return key;
+    // Exact path match
+    if (projectFiles.has(key)) return key;
+    // Try to resolve by case-insensitive match or by basename match
+    const lower = key.toLowerCase();
+    for (const [k] of projectFiles.entries()) {
+        if (k.toLowerCase() === lower || k.split('/').pop().toLowerCase() === lower) {
+            return k;
+        }
+    }
+    return null;
+}
 
 function createMentionBar() {
     const input = document.getElementById('promptInput');
@@ -776,61 +907,86 @@ function createMentionBar() {
 
     const bar = document.createElement('div');
     bar.id = 'mentionBar';
-    // Use normal document flow above the input wrapper
+    bar.style.display = 'flex';
+    bar.style.alignItems = 'center';
+    bar.style.gap = '8px';
+
+    // Context button
+    const btn = document.createElement('button');
+    btn.id = 'contextBtn';
+    btn.type = 'button';
+    btn.textContent = '+ Context';
+    btn.style.padding = '4px 8px';
+    btn.style.fontSize = '12px';
+    btn.style.borderRadius = '6px';
+    btn.style.border = '1px solid #3333';
+    btn.style.cursor = 'pointer';
+    btn.style.background = '#ffffff0d';
+    btn.style.color = 'inherit';
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showContextFileDropdown(btn);
+    });
+
+    // Chips container
+    const chips = document.createElement('div');
+    chips.id = 'mentionChips';
+    chips.style.display = 'flex';
+    chips.style.flexWrap = 'wrap';
+    chips.style.gap = '6px';
+
+    bar.appendChild(btn);
+    bar.appendChild(chips);
+
     if (container) {
         container.insertBefore(bar, wrapper);
     } else {
-        // Fallback: prepend inside wrapper but before input
         wrapper.prepend(bar);
     }
 }
 
 function renderMentionBar() {
-    const input = document.getElementById('promptInput');
     const bar = document.getElementById('mentionBar');
-    if (!input) return;
-    if (!bar) return;
+    const chips = document.getElementById('mentionChips');
+    if (!bar || !chips) return;
 
-    // Derive mentions present in the input (unique)
-    const text = input.value || '';
-    const allMentions = [];
-    const regex = /@([\w\-./]+(?:\.[A-Za-z0-9]+)?)/g;
-    let m;
-    while ((m = regex.exec(text)) !== null) {
-        const key = m[1].trim();
-        if (key && !allMentions.includes(key)) allMentions.push(key);
-    }
-    selectedMentions = allMentions;
-
-    // Render chips
-    bar.innerHTML = '';
-    selectedMentions.forEach((key) => {
+    chips.innerHTML = '';
+    const keys = Array.from(selectedContextKeys);
+    keys.forEach((key) => {
         const chip = document.createElement('span');
         chip.className = 'mention-chip';
-        chip.textContent = `@${key}`;
+        const display = key === 'current-tabs'
+            ? 'Current Tabs'
+            : (key === 'current-file' ? `current file (${window.activeTab || ''})` : key);
+        chip.textContent = display.startsWith('@') ? display : `@${display}`;
         chip.style.cursor = 'default';
 
         const remove = document.createElement('button');
         remove.textContent = '×';
-        remove.setAttribute('aria-label', 'Remove mention');
+        remove.setAttribute('aria-label', 'Remove context');
         remove.style.marginLeft = '6px';
         remove.style.border = 'none';
         remove.style.background = 'transparent';
         remove.style.color = 'inherit';
         remove.style.cursor = 'pointer';
-        remove.onclick = () => removeMentionFromInput(key);
+        remove.onclick = () => { selectedContextKeys.delete(key); renderMentionBar(); };
 
         chip.appendChild(remove);
-        bar.appendChild(chip);
+        chips.appendChild(chip);
     });
 }
 
-function removeMentionFromInput(key) {
+function removeMentionFromInput(display, key) {
     const input = document.getElementById('promptInput');
     if (!input) return;
     const value = input.value;
-    const pattern = new RegExp(`(^|\\s)@${key.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(?=\\s|$)`, 'g');
-    const newValue = value.replace(pattern, (m, pre) => pre ? pre : '').replace(/\s{2,}/g, ' ').trimStart();
+    // Try removing exact display first (handles @{...} and @... with spaces)
+    let newValue = value.replace(display, '').replace(/\s{2,}/g, ' ').trimStart();
+    if (newValue === value && key) {
+        // Fallback: legacy removal for simple tokens
+        const pattern = new RegExp(`(^|\\s)@${key.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(?=\\s|$)`, 'g');
+        newValue = value.replace(pattern, (m, pre) => pre ? pre : '').replace(/\s{2,}/g, ' ').trimStart();
+    }
     input.value = newValue;
     input.focus();
     renderMentionBar();
@@ -920,6 +1076,7 @@ function setupEventListeners() {
             e.preventDefault();
             handleSendMessage();
         }
+        // Allow all symbols (including '@') to be typed normally; do not trigger mentions automatically
     });
 
     // Inline @mention UX for prompt input
@@ -951,7 +1108,7 @@ function setupEventListeners() {
                     e.preventDefault();
                     const suggestions = getMentionSuggestionsList(fileMentionState.query);
                     const chosen = suggestions[fileMentionState.selectedIndex] || suggestions[0];
-                    if (chosen) insertSelectedMention(chosen.key);
+                    if (chosen) toggleContextSelection(chosen.key);
                     return;
                 }
                 if (e.key === 'Escape') {
@@ -965,27 +1122,10 @@ function setupEventListeners() {
             const pos = this.selectionStart;
             const value = this.value;
 
-            // Find the last '@' before the caret that starts a token
-            let atPos = -1;
-            for (let i = pos - 1; i >= 0; i--) {
-                const ch = value[i];
-                if (ch === '@') { atPos = i; break; }
-                if (/\s/.test(ch)) break; // stop at whitespace
-            }
+            // Do not auto-trigger file mention dropdown from prompt typing
+            hideFileMentionDropdown();
 
-            if (atPos !== -1) {
-                fileMentionState.isActive = true;
-                fileMentionState.startPos = atPos;
-                fileMentionState.query = value.slice(atPos + 1, pos);
-                if (!fileMentionState.files || fileMentionState.files.length === 0) {
-                    try { fileMentionState.files = getFilesForMention(); } catch (_) {}
-                }
-                showFileMentionDropdown(this, fileMentionState.query);
-            } else {
-                hideFileMentionDropdown();
-            }
-
-            // Update mention bar (chips above input)
+            // Update chips
             renderMentionBar();
         });
 
@@ -993,7 +1133,8 @@ function setupEventListeners() {
         document.addEventListener('click', (ev) => {
             const dropdown = document.getElementById('fileMentionDropdown');
             if (!dropdown) return;
-            if (ev.target === promptEl || dropdown.contains(ev.target)) return;
+            const btn = document.getElementById('contextBtn');
+            if (ev.target === promptEl || dropdown.contains(ev.target) || ev.target === btn) return;
             hideFileMentionDropdown();
         });
 
@@ -1008,6 +1149,7 @@ function setupEventListeners() {
     document.getElementById('newFileInExplorerBtn').addEventListener('click', createNewFile);
     document.getElementById('newFolderBtn').addEventListener('click', createNewFolder);
     document.getElementById('refreshBtn').addEventListener('click', refreshFileTree);
+    document.getElementById('assistantToggle').addEventListener('click', toggleAssistantPanel);
 
     // File tree click events
     document.getElementById('fileTree').addEventListener('click', handleFileTreeClick);
@@ -1173,8 +1315,15 @@ async function handleSendMessage() {
     showLoadingOverlay(true);
 
     try {
+        // Build files context from selected context chips (ignore inline @ mentions)
+        const mentionedPaths = Array.from(selectedContextKeys);
+        
+        // Also extract file mentions from the user's prompt text
+        const promptMentions = extractMentionedFilePaths(prompt);
+        const allMentionedPaths = [...new Set([...mentionedPaths, ...promptMentions])];
+        
         // Add user message to chat UI
-        addMessageToChat('user', prompt);
+        addMessageToChat('user', prompt, allMentionedPaths);
         promptInput.value = '';
         promptInput.style.height = '';
         promptInput.style.marginTop = '';
@@ -1190,10 +1339,16 @@ async function handleSendMessage() {
         }
 
         const currentPrompt = prompt;
-
-        // Extract @file mentions and build files context for AI
-        const mentionedPaths = extractMentionedFilePaths(prompt);
-        const mentionedFilesContext = buildMentionedFilesContext(mentionedPaths);
+        
+        const mentionedFilesContext = buildMentionedFilesContext(allMentionedPaths);
+        
+        // Debug logging for mentioned files
+        if (allMentionedPaths.length > 0) {
+            console.log('Files mentioned in request:', allMentionedPaths);
+            if (promptMentions.length > 0) {
+                console.log('Files mentioned in prompt text:', promptMentions);
+            }
+        }
         
         // Send request to Gemini with full context
         const fullPrompt = `
@@ -1212,15 +1367,70 @@ async function handleSendMessage() {
         10. Optimize for readability and maintainability
 
         RESPONSE FORMAT:
-        - Provide a brief explanation of what you're doing (1-2 sentences)
-        - Then provide the complete code
+        1) Provide a brief explanation (1-2 sentences) OUTSIDE of any code block.
+        2) Then provide the complete code inside a fenced block using triple backticks with an explicit language tag, for example:
+           \`\`\`html
+           ...
+           \`\`\`
+        
+        HARD REQUIREMENT FOR CODE BLOCKS:
+        - Code blocks must contain ONLY code. Do NOT include any prose, bullet points, or descriptions inside code fences.
+        - Do NOT include surrounding braces or extra markdown before/after the code inside the fences.
+        - If you need to share notes, place them OUTSIDE of the fenced code.
+        
+        For file-specific code, use this exact format with a fenced block:
+        code : [filename]
+        \`\`\`[language]
+        [complete code content - ONLY code, no explanations]
+        \`\`\`
+        
+        You can specify multiple files like this:
+        code : index.html
+        \`\`\`html
+        <!DOCTYPE html>
+        <html>
+        ...
+        \`\`\`
+        
+        code : styles.css
+        \`\`\`css
+        body {
+        ...
+        }
+        \`\`\`
+        
+        You can create new files by specifying a filename that doesn't exist yet.
+        The file will be automatically created and opened in the editor.
+        
+        When the user mentions specific files in their request, prioritize updating those files.
+        If the user says "update this file" or similar, apply the code to the mentioned files.
+        
+        IMPORTANT: When files are mentioned in the context, use the file-specific code format to apply changes to those files.
+        This ensures the changes are applied to the correct files automatically.
+        
         - End with any important notes or next steps
 
         Current editor language: {language}
         Current code in editor: {currentCode}
 
+        Available project files:
+        ${Array.from(projectFiles.keys()).map(file => `- ${file}`).join('\n')}
+        
+        You can reference existing files or create new ones. When creating new files, use the file-specific code format.
+        
+        FILE REFERENCE CONTEXT:
+        - When the user mentions files using @mentions or the + context feature, those files are specifically highlighted
+        - References like "this file", "that file", "the file", "update it", "modify it" refer to the mentioned files
+        - Always prioritize mentioned files when interpreting ambiguous requests
+        - If multiple files are mentioned, clarify which file the user is referring to if unclear
+
         Attached files via @mentions:
         ${mentionedFilesContext || 'None'}
+        
+        ${allMentionedPaths.length > 0 ? `IMPORTANT: The user has specifically mentioned these files in their request: ${allMentionedPaths.join(', ')}. When the user refers to "this file", "that file", "the file", etc., they are referring to one of these mentioned files. Pay special attention to these files when interpreting the user's request.
+
+Mentioned files summary:
+${buildMentionedFilesSummary(allMentionedPaths)}` : ''}
 
         User request: {userPrompt}
 
@@ -1234,19 +1444,53 @@ async function handleSendMessage() {
         addMessageToChat('assistant', response.explanation);
         contextManager.addMessage('assistant', response.explanation);
 
-        // Auto-apply code if enabled
-        const autoApply = document.getElementById('autoApply').checked;
-        if (autoApply && response.code && editor) {
-            editor.setValue(response.code);
-            showToast('Code updated successfully!', 'success');
+        // Handle file-specific codes first
+        if (response.fileCodes && response.fileCodes.length > 0) {
+            const autoApply = document.getElementById('autoApply').checked;
             
-            // Highlight changes (simple animation)
-            setTimeout(() => {
-                editor.trigger('keyboard', 'editor.action.formatDocument', {});
-            }, 100);
+            if (autoApply) {
+                // Auto-apply all file codes
+                await applyMultipleFileCodes(response.fileCodes);
+                showToast(`Applied code to ${response.fileCodes.length} file(s)!`, 'success');
+            } else {
+                // Show file codes in chat with apply buttons
+                addFileCodesToChat(response.fileCodes);
+            }
+        } else if (response.code && allMentionedPaths.length > 0) {
+            // If there are mentioned files but no file-specific codes, 
+            // try to apply the code to the first mentioned file
+            const autoApply = document.getElementById('autoApply').checked;
+            if (autoApply) {
+                const firstMentionedFile = allMentionedPaths[0];
+                if (firstMentionedFile && firstMentionedFile !== 'current-tabs' && firstMentionedFile !== 'current-file') {
+                    await applyCodeToFile(firstMentionedFile, response.code);
+                    showToast(`Applied code to ${firstMentionedFile}!`, 'success');
+                } else if (editor) {
+                    // Fallback to current editor
+                    editor.setValue(response.code);
+                    showToast('Code updated successfully!', 'success');
+                }
+            } else {
+                // Show code in chat with option to apply to mentioned file
+                const targetFile = allMentionedPaths[0] && allMentionedPaths[0] !== 'current-tabs' && allMentionedPaths[0] !== 'current-file' 
+                    ? allMentionedPaths[0] : null;
+                addCodeToChat(response.code, targetFile);
+            }
         } else if (response.code) {
-            // Show code in chat with option to apply
-            addCodeToChat(response.code);
+            // Handle regular code block (fallback)
+            const autoApply = document.getElementById('autoApply').checked;
+            if (autoApply && editor) {
+                editor.setValue(response.code);
+                showToast('Code updated successfully!', 'success');
+                
+                // Highlight changes (simple animation)
+                setTimeout(() => {
+                    editor.trigger('keyboard', 'editor.action.formatDocument', {});
+                }, 100);
+            } else {
+                // Show code in chat with option to apply
+                addCodeToChat(response.code);
+            }
         }
 
         updateStatus('ready', 'Ready');
@@ -1331,30 +1575,158 @@ async function sendToGemini(fullPrompt, currentCode, currentPrompt) {
     return parseGeminiResponse(fullResponse);
 }
 
+// Clean code content by removing explanatory text and comments
+function cleanCodeContent(code) {
+    if (!code) return code;
+    
+    // Remove common explanatory patterns
+    let cleanedCode = code
+        // Remove lines that start with explanatory text patterns
+        .replace(/^.*?(?:I have added|Here's|This code|The code|This will|This creates|This function|This class|This script|This program|I've added|I've created|I've written|this is the code for you|here is the code|here's the code).*$/gmi, '')
+        // Remove lines that contain explanatory text in braces or parentheses
+        .replace(/^.*?\{[^}]*explain[^}]*\}.*$/gmi, '')
+        .replace(/^.*?\([^)]*explain[^)]*\).*$/gmi, '')
+        // Remove lines that are just explanatory text
+        .replace(/^.*?(?:including the purpose|to explain|to show|to demonstrate|to illustrate|to help|to make|to provide).*$/gmi, '')
+        // Remove lines with common explanatory phrases
+        .replace(/^.*?(?:This adds|This includes|This contains|This provides|This implements|This defines|This declares|This is the code).*$/gmi, '')
+        // Remove lines that are just descriptive text
+        .replace(/^.*?(?:The purpose|The goal|The aim|The objective|The function|The role).*$/gmi, '')
+        // Remove stray markdown fences if present inside captured block
+        .replace(/^```.*$/gmi, '')
+        // Remove empty lines and excessive whitespace
+        .replace(/\n\s*\n\s*\n/g, '\n\n')
+        .trim();
+    
+    // Remove any remaining lines that are just text (not code)
+    const lines = cleanedCode.split('\n');
+    const codeLines = lines.filter(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return false;
+        // Exclude markdown list bullets and numbered lists that are explanations
+        if (/^[-*+]\s+[A-Za-z]/.test(trimmed)) return false;
+        if (/^\d+\.\s+[A-Za-z]/.test(trimmed)) return false;
+        // Keep lines that look like code (contain programming syntax)
+        return (
+            // Contains programming keywords
+            /\b(?:function|class|def|if|else|for|while|return|import|export|const|let|var|public|private|protected|static|final|abstract|interface|enum|try|catch|throw|new|this|super|extends|implements|package|namespace|using|include|require|module|export|default|async|await|yield|break|continue|switch|case|default|do|goto|sizeof|typeof|instanceof|delete|void|null|undefined|true|false|NaN|Infinity)\b/i.test(trimmed) ||
+            // Contains operators/syntax (exclude plain punctuation like . , : ?)
+            /[=+\-*/%<>!&|^~(){}\[\];]/.test(trimmed) ||
+            // Contains variable assignments
+            /\w+\s*=/.test(trimmed) ||
+            // Contains function calls
+            /\w+\s*\(/.test(trimmed) ||
+            // Contains HTML tags
+            /<[^>]+>/.test(trimmed) ||
+            // Contains CSS properties
+            /[a-z-]+\s*:/.test(trimmed) ||
+            // Contains comments (keep these)
+            /^\/\/|^#|^\/\*|\*\/$/.test(trimmed) ||
+            // Contains import/export statements
+            /^(import|export|from|require|include)/.test(trimmed) ||
+            // Contains class/function definitions
+            /^(class|function|def|public|private|protected|static|final|abstract|interface|enum)/.test(trimmed) ||
+            // Contains control structures
+            /^(if|else|for|while|switch|case|try|catch|finally|do|break|continue|return)/.test(trimmed) ||
+            // Contains variable declarations
+            /^(const|let|var|int|float|double|string|boolean|char|byte|short|long|unsigned|signed)/.test(trimmed)
+        );
+    });
+    
+    let result = codeLines.join('\n').trim();
+    
+    // Remove accidental trailing unmatched closing braces added by the model
+    const count = (str, ch) => (str.match(new RegExp(`\\${ch}`,'g'))||[]).length;
+    const opens = count(result, '{');
+    const closes = count(result, '}');
+    if (closes > opens) {
+        const lines = result.split('\n');
+        while (lines.length && closes > opens) {
+            const last = lines[lines.length - 1].trim();
+            if (/^\}*;?$/.test(last)) {
+                lines.pop();
+                // recompute counts after removal
+                result = lines.join('\n');
+                const o2 = count(result, '{');
+                const c2 = count(result, '}');
+                if (c2 <= o2) break;
+            } else {
+                break;
+            }
+        }
+        result = lines.join('\n').trim();
+    }
+    return result;
+}
+
 // Parse Gemini response to extract explanation and code
 function parseGeminiResponse(response) {
-    const codeBlockRegex = /```[\w]*\n([\s\S]*?)\n```/g;
+    const codeBlockRegex = /```[\t ]*([a-zA-Z0-9_-]*)\s*\n([\s\S]*?)\n```/g;
     const codeBlocks = [];
     let match;
     
     while ((match = codeBlockRegex.exec(response)) !== null) {
-        codeBlocks.push(match[1]);
+        const fencedLanguage = (match[1] || '').toLowerCase();
+        const fencedBody = match[2];
+        const cleanedCode = cleanCodeContent(fencedBody);
+        if (cleanedCode) {
+            codeBlocks.push(cleanedCode);
+        }
     }
     
-    // Remove code blocks from explanation
-    const explanation = response.replace(/```[\w]*\n[\s\S]*?\n```/g, '[Code block - see below]').trim();
+    // Check for file-specific code format: code : [filename] [code]
+    const fileCodeRegex = /code\s*:\s*([^\n\r]+?)\s*\n([\s\S]*?)(?=\ncode\s*:|$)/gi;
+    const fileCodeMatches = [];
+    let fileMatch;
     
-    // Use the largest code block as the main code
+    while ((fileMatch = fileCodeRegex.exec(response)) !== null) {
+        const section = fileMatch[2].trim();
+        // Strict: Only accept fenced code blocks inside the section
+        const innerBlockRegex = /```[\t ]*([a-zA-Z0-9_-]*)\s*\n([\s\S]*?)\n```/g;
+        let innerMatch;
+        let emitted = false;
+        while ((innerMatch = innerBlockRegex.exec(section)) !== null) {
+            const onlyCode = cleanCodeContent(innerMatch[2]);
+            if (onlyCode) {
+                fileCodeMatches.push({
+                    filename: fileMatch[1].trim(),
+                    code: onlyCode
+                });
+                emitted = true;
+            }
+        }
+        // No fallback: if no fenced block, ignore this section to avoid capturing prose
+        if (!emitted) {
+            console.warn('Skipping file code section without fenced code for', fileMatch[1].trim());
+        }
+    }
+    
+    // Debug logging
+    if (fileCodeMatches.length > 0) {
+        console.log('Found file-specific codes:', fileCodeMatches.map(fc => fc.filename));
+    }
+    
+    // Remove code blocks and file code specifications from explanation (strict fenced-only)
+    let explanation = response
+        .replace(/```[\t ]*[a-zA-Z0-9_-]*\s*\n[\s\S]*?\n```/g, '[Code block - see below]')
+        .replace(/code\s*:\s*[^\n\r]+?\s*\n[\s\S]*?(?=\ncode\s*:|$)/gi, (m) => {
+            // If this section contains a fenced block, strip it out; otherwise keep prose
+            return /```[\t ]*[a-zA-Z0-9_-]*\s*\n[\s\S]*?\n```/.test(m) ? '[File code - see below]' : m;
+        })
+        .trim();
+    
+    // Use the largest code block as the main code (fallback)
     const code = codeBlocks.length > 0 ? codeBlocks.reduce((a, b) => a.length > b.length ? a : b) : null;
     
     return {
         explanation: explanation || response,
-        code: code
+        code: code,
+        fileCodes: fileCodeMatches.length > 0 ? fileCodeMatches : null
     };
 }
 
 // Add message to chat
-function addMessageToChat(sender, content) {
+function addMessageToChat(sender, content, mentionedFiles = []) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}-message`;
@@ -1374,6 +1746,17 @@ function addMessageToChat(sender, content) {
         return `${pre}<span class="mention-chip">@${p2}</span>`;
     });
     
+    // Add mentioned files indicator if any
+    if (mentionedFiles.length > 0 && sender === 'user') {
+        const filesIndicator = document.createElement('div');
+        filesIndicator.className = 'mentioned-files-indicator';
+        filesIndicator.innerHTML = `
+            <span class="indicator-icon">📁</span>
+            <span class="indicator-text">Referencing: ${mentionedFiles.join(', ')}</span>
+        `;
+        messageDiv.appendChild(filesIndicator);
+    }
+    
     messageContent.innerHTML = formattedContent;
     messageDiv.appendChild(messageContent);
     chatMessages.appendChild(messageDiv);
@@ -1386,7 +1769,7 @@ function addMessageToChat(sender, content) {
 }
 
 // Add code block to chat with apply button
-function addCodeToChat(code) {
+function addCodeToChat(code, targetFile = null) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message assistant-message';
@@ -1395,19 +1778,73 @@ function addCodeToChat(code) {
     messageContent.className = 'message-content';
     
     const codeContainer = document.createElement('div');
-    codeContainer.innerHTML = `
-        <p>Here's the generated code:</p>
-        <pre><code>${escapeHtml(code)}</code></pre>
-        <button class="btn btn-secondary" onclick="applyCode(this)" style="margin-top: 8px;">Apply to Editor</button>
-    `;
+    
+    if (targetFile) {
+        codeContainer.innerHTML = `
+            <p>Here's the code for <strong>${targetFile}</strong>:</p>
+            <pre><code>${escapeHtml(code)}</code></pre>
+            <button class="btn btn-secondary" onclick="applyCode(this)" style="margin-top: 8px;">Apply to ${targetFile}</button>
+        `;
+    } else {
+        codeContainer.innerHTML = `
+            <p>Here's the generated code:</p>
+            <pre><code>${escapeHtml(code)}</code></pre>
+            <button class="btn btn-secondary" onclick="applyCode(this)" style="margin-top: 8px;">Apply to Editor</button>
+        `;
+    }
     
     messageContent.appendChild(codeContainer);
     messageDiv.appendChild(messageContent);
     chatMessages.appendChild(messageDiv);
     
-    // Store code in button for later use
+    // Store code and target file in button for later use
     const applyBtn = messageContent.querySelector('button');
     applyBtn.dataset.code = code;
+    if (targetFile) {
+        applyBtn.dataset.targetFile = targetFile;
+    }
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Add multiple file codes to chat
+function addFileCodesToChat(fileCodes) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message';
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    
+    messageContent.innerHTML = `
+        <p>Here are the generated files:</p>
+        <button class="file-code-apply-btn" onclick="applyMultipleFileCodesFromChat(this)" style="margin-bottom: 12px;">Apply All Files</button>
+    `;
+    
+    fileCodes.forEach((fileCode, index) => {
+        const fileContainer = document.createElement('div');
+        fileContainer.className = 'file-code-container';
+        
+        fileContainer.innerHTML = `
+            <div class="file-code-header">
+                ${fileCode.filename}
+            </div>
+            <div class="file-code-content">
+                <pre><code>${escapeHtml(fileCode.code)}</code></pre>
+            </div>
+            <button class="file-code-apply-btn" onclick="applyCode(this)">Apply to ${fileCode.filename}</button>
+        `;
+        
+        messageContent.appendChild(fileContainer);
+        
+        // Store code and target file in button for later use
+        const applyBtn = fileContainer.querySelector('button');
+        applyBtn.dataset.code = fileCode.code;
+        applyBtn.dataset.targetFile = fileCode.filename;
+    });
+    
+    messageDiv.appendChild(messageContent);
+    chatMessages.appendChild(messageDiv);
     
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -1415,11 +1852,178 @@ function addCodeToChat(code) {
 // Apply code to editor
 function applyCode(button) {
     const code = button.dataset.code;
-    if (editor && code) {
+    const targetFile = button.dataset.targetFile;
+    
+    if (targetFile) {
+        // Apply to specific file
+        applyCodeToFile(targetFile, code);
+    } else if (editor && code) {
+        // Apply to current editor
         editor.setValue(code);
         showToast('Code applied to editor!', 'success');
         button.disabled = true;
         button.textContent = 'Applied ✓';
+    }
+}
+
+// Apply code to a specific file
+async function applyCodeToFile(filename, code) {
+    try {
+        // Validate inputs
+        if (!filename || typeof filename !== 'string') {
+            throw new Error('Invalid filename provided');
+        }
+        
+        if (!code || typeof code !== 'string') {
+            throw new Error('Invalid code provided');
+        }
+        
+        // Check if file exists in project
+        if (!projectFiles.has(filename)) {
+            // Create the file if it doesn't exist
+            const language = detectLanguageFromExtension(filename) || 'plaintext';
+            projectFiles.set(filename, {
+                name: filename,
+                fullPath: filename,
+                language: language,
+                type: 'file',
+                folder: null
+            });
+            
+            // Update file tree to show the new file
+            updateFileTree();
+        }
+        
+        // Check if file is already open in a tab
+        let tabId = filename;
+        if (!openTabs.has(tabId)) {
+            // Open the file in a new tab
+            // Preload content from storage if available to avoid placeholder
+            let initialContent = '';
+            try {
+                const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+                if (savedFiles[filename] && typeof savedFiles[filename].content === 'string') {
+                    initialContent = savedFiles[filename].content;
+                }
+            } catch (_) {}
+            tabId = loadFileIntoTab(filename, initialContent, filename);
+        } else {
+            // Switch to the existing tab
+            switchToTab(tabId);
+        }
+        
+        // Apply the code to the file
+        const tab = openTabs.get(tabId);
+        if (tab) {
+            tab.content = code;
+            tab.originalContent = code;
+            fileContents.set(tabId, code);
+            
+            // Update the editor
+            if (editor) {
+                editor.setValue(code);
+                try { saveFileToLocalStorage(); } catch (_) {}
+            }
+            
+            // Update file context
+            contextManager.updateFileContext(filename, tab.language, code);
+            
+            showToast(`Code applied to ${filename}!`, 'success');
+            
+            // Update button state if called from chat
+            const event = window.event;
+            if (event && event.target && event.target.classList.contains('file-code-apply-btn')) {
+                event.target.textContent = 'Applied ✓';
+                event.target.disabled = true;
+            }
+        }
+        
+        // Update UI
+        updateTabContainer();
+        updateFileTree();
+        
+    } catch (error) {
+        console.error('Error applying code to file:', error);
+        showToast(`Failed to apply code to ${filename}: ${error.message}`, 'error');
+    }
+}
+
+// Apply code to multiple files
+async function applyMultipleFileCodes(fileCodes) {
+    const results = [];
+    
+    for (const fileCode of fileCodes) {
+        try {
+            await applyCodeToFile(fileCode.filename, fileCode.code);
+            results.push({ filename: fileCode.filename, success: true });
+        } catch (error) {
+            console.error(`Error applying code to ${fileCode.filename}:`, error);
+            results.push({ filename: fileCode.filename, success: false, error: error.message });
+        }
+    }
+    
+    // Show summary of results
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    
+    if (failed > 0) {
+        const failedFiles = results.filter(r => !r.success).map(r => r.filename).join(', ');
+        showToast(`Applied to ${successful} files, failed to apply to: ${failedFiles}`, 'error');
+    }
+    
+    return results;
+}
+
+// Apply multiple file codes from chat interface
+async function applyMultipleFileCodesFromChat(button) {
+    const messageDiv = button.closest('.message');
+    const fileCodeButtons = messageDiv.querySelectorAll('.file-code-apply-btn:not([onclick*="applyMultipleFileCodesFromChat"])');
+    
+    const fileCodes = [];
+    fileCodeButtons.forEach(btn => {
+        fileCodes.push({
+            filename: btn.dataset.targetFile,
+            code: btn.dataset.code
+        });
+    });
+    
+    if (fileCodes.length === 0) {
+        showToast('No files to apply', 'error');
+        return;
+    }
+    
+    // Disable all apply buttons during processing
+    const allButtons = messageDiv.querySelectorAll('.file-code-apply-btn');
+    allButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = 'Applying...';
+    });
+    
+    try {
+        await applyMultipleFileCodes(fileCodes);
+        
+        // Update button states
+        allButtons.forEach(btn => {
+            if (btn === button) {
+                btn.textContent = 'All Applied ✓';
+            } else {
+                btn.textContent = 'Applied ✓';
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error applying multiple files:', error);
+        showToast('Failed to apply some files', 'error');
+        
+        // Re-enable buttons on error
+        allButtons.forEach(btn => {
+            btn.disabled = false;
+            if (btn === button) {
+                btn.textContent = 'Apply All Files';
+            } else {
+                btn.textContent = btn.textContent.replace('Apply to ', '');
+            }
+        });
     }
 }
 
@@ -1655,7 +2259,7 @@ function updateTabContainer() {
             <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="${iconColor}">
                 <path d="${iconPath}"/>
             </svg>
-            <span class="tab-name">${tab.name}${tab.isModified ? ' •' : ''}</span>
+            <span class="tab-name">${tab.name}</span>
             <button class="tab-close" title="Close" onclick="closeTab('${tabId}')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -1685,8 +2289,8 @@ function switchToTab(tabId) {
         const currentTab = openTabs.get(activeTab);
         if (currentTab) {
             currentTab.content = currentContent;
-            currentTab.isModified = (currentContent !== currentTab.originalContent);
         }
+        try { saveFileToLocalStorage(); } catch (_) {}
     }
     
     // Switch to new tab
@@ -1696,7 +2300,26 @@ function switchToTab(tabId) {
     
     // Update current language and get the content
     currentLanguage = tab.language || detectLanguageFromExtension(tab.name) || 'plaintext';
-    const content = fileContents.get(tabId) || tab.content || '';
+    // Resolve content in order: in-memory content map -> tab snapshot -> projectFiles -> localStorage
+    let content = '';
+    if (fileContents && fileContents.has(tabId)) {
+        content = fileContents.get(tabId) || '';
+    } else if (tab && typeof tab.content === 'string' && tab.content.length) {
+        content = tab.content;
+    } else if (projectFiles && projectFiles.has(tabId)) {
+        const pf = projectFiles.get(tabId);
+        if (pf && typeof pf.content === 'string') content = pf.content;
+    }
+    if (!content) {
+        try {
+            const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+            if (savedFiles[tabId] && typeof savedFiles[tabId].content === 'string') {
+                content = savedFiles[tabId].content;
+            } else if (savedFiles[tab?.name] && typeof savedFiles[tab?.name].content === 'string') {
+                content = savedFiles[tab.name].content;
+            }
+        } catch (_) {}
+    }
     
     // Update file context
     contextManager.updateFileContext(tab.name, currentLanguage, content);
@@ -1733,15 +2356,17 @@ function closeTab(tabId) {
     const tab = openTabs.get(tabId);
     if (!tab) return;
     
-    // Check if file is modified
-    if (tab.isModified) {
-        const shouldSave = confirm(`${tab.name} has unsaved changes. Do you want to save before closing?`);
-        if (shouldSave) {
-            // In a real app, this would save the file
-            showToast(`${tab.name} saved`, 'success');
+     // Persist latest content before closing
+    try {
+        if (editor && activeTab === tabId) {
+            const currentContent = editor.getValue();
+            fileContents.set(tabId, currentContent);
+            const pf = projectFiles.get(tabId);
+            if (pf) pf.content = currentContent;
+            saveFileToLocalStorage();
         }
-    }
-    
+    } catch (_) {}
+
     openTabs.delete(tabId);
     fileContents.delete(tabId);
 
@@ -2642,6 +3267,38 @@ function deleteItem(path, isFolder) {
     updateFileTree();
 }
 
+// Local storage helpers for delete operations
+function removeFileFromLocalStorage(filePath) {
+    try {
+        const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+        if (savedFiles[filePath]) {
+            delete savedFiles[filePath];
+            localStorage.setItem('fileData', JSON.stringify(savedFiles));
+        }
+    } catch (err) {
+        console.error('Failed to remove file from localStorage:', err);
+    }
+}
+
+function removeFolderTreeFromLocalStorage(folderPath) {
+    try {
+        const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+        let changed = false;
+        const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        for (const key of Object.keys(savedFiles)) {
+            if (key === folderPath || key.startsWith(prefix)) {
+                delete savedFiles[key];
+                changed = true;
+            }
+        }
+        if (changed) {
+            localStorage.setItem('fileData', JSON.stringify(savedFiles));
+        }
+    } catch (err) {
+        console.error('Failed to remove folder tree from localStorage:', err);
+    }
+}
+
 // Delete file
 function deleteFile(filePath) {
     const file = projectFiles.get(filePath);
@@ -2650,9 +3307,18 @@ function deleteFile(filePath) {
     // Remove from project
     projectFiles.delete(filePath);
     
-    // Remove from folder if exists
+    // Remove from folder if exists (support Set/Array/undefined)
     if (file.folder && projectFolders.has(file.folder)) {
-        projectFolders.get(file.folder).files.delete(filePath);
+        const folderData = projectFolders.get(file.folder);
+        if (folderData) {
+            const filesRef = folderData.files;
+            if (filesRef instanceof Set) {
+                filesRef.delete(filePath);
+            } else if (Array.isArray(filesRef)) {
+                const idx = filesRef.indexOf(filePath);
+                if (idx !== -1) filesRef.splice(idx, 1);
+            }
+        }
     }
     
     // Close tab if open
@@ -2662,6 +3328,10 @@ function deleteFile(filePath) {
     
     // Remove content
     fileContents.delete(filePath);
+    // Also remove any openTabs and fileContents keys that refer to derived IDs/paths
+    // Ensure no stale editor content remains
+    // Remove from local storage
+    removeFileFromLocalStorage(filePath);
     
     showToast(`File "${file.name}" deleted`, 'success');
 }
@@ -2670,33 +3340,55 @@ function deleteFile(filePath) {
 function deleteFolder(folderPath) {
     const folder = projectFolders.get(folderPath);
     if (!folder) return;
-    
-    // Delete all files in folder
-    for (const filePath of folder.files) {
+
+    const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+
+    // Collect and delete all files under this folder recursively by path prefix
+    const filesToDelete = [];
+    projectFiles.forEach((_file, path) => {
+        if (path === folderPath || path.startsWith(prefix)) {
+            filesToDelete.push(path);
+        }
+    });
+    for (const filePath of filesToDelete) {
         deleteFile(filePath);
     }
-    
-    // Delete all subfolders
-    for (const subfolderPath of folder.folders) {
-        deleteFolder(subfolderPath);
+
+    // Remove subfolders entries by prefix
+    const foldersToDelete = [];
+    projectFolders.forEach((_f, path) => {
+        if (path === folderPath || path.startsWith(prefix)) {
+            foldersToDelete.push(path);
+        }
+    });
+    // Remove child references from their parents safely
+    for (const path of foldersToDelete) {
+        const f = projectFolders.get(path);
+        if (f && f.parent && projectFolders.has(f.parent)) {
+            const parent = projectFolders.get(f.parent);
+            if (parent) {
+                if (parent.folders instanceof Set) parent.folders.delete(path);
+                else if (Array.isArray(parent.folders)) {
+                    const idx = parent.folders.indexOf(path);
+                    if (idx !== -1) parent.folders.splice(idx, 1);
+                }
+            }
+        }
     }
-    
-    // Remove from parent folder if exists
-    if (folder.parent && projectFolders.has(folder.parent)) {
-        projectFolders.get(folder.parent).folders.delete(folderPath);
+    // Now delete folder map entries
+    for (const path of foldersToDelete) {
+        projectFolders.delete(path);
+        expandedFolders.delete(path);
     }
-    
-    // Remove folder
-    projectFolders.delete(folderPath);
-    
-    // Remove from expanded folders
-    expandedFolders.delete(folderPath);
-    
-    // Update selected folder
+
+    // Update selected folder if needed
     if (selectedFolder === folderPath) {
         selectedFolder = folder.parent || null;
     }
-    
+
+    // Remove from localStorage
+    removeFolderTreeFromLocalStorage(folderPath);
+
     showToast(`Folder "${folder.name}" deleted`, 'success');
 }
 
@@ -2753,19 +3445,428 @@ function openFile() {
     input.click();
 }
 
+// Unified explorer: allows selecting 1..N files and/or folders
+async function openExplorer() {
+    // Try modern directory picker + file picker combination where available.
+    // There is no single native dialog to pick both dirs and files together, so we:
+    // 1) Offer multi-file picker
+    // 2) Also offer multi-folder picker
+    // 3) Merge results
+    const importedAny = await openFilesViaPicker();
+    // If user selected files, don't auto-open a second dialog for folders
+    const importedFolders = importedAny ? false : await openFoldersViaPicker();
+    if (importedAny || importedFolders) {
+        updateFileTree();
+        const last = Array.from(projectFiles.keys()).pop();
+        if (last) {
+            const f = projectFiles.get(last);
+            loadFileIntoTab(f.name, fileContents.get(last) || f.content || '', last);
+        }
+    }
+}
+
+async function openFilesViaPicker() {
+    // Prefer showOpenFilePicker if available; fallback to input[multiple]
+    try {
+        if (window.showOpenFilePicker) {
+            const handles = await window.showOpenFilePicker({
+                multiple: true,
+                types: [
+                    {
+                        description: 'Text/Code Files',
+                        accept: {
+                            'text/plain': ['.txt', '.md'],
+                            'text/css': ['.css'],
+                            'text/html': ['.html'],
+                            'application/json': ['.json'],
+                            'application/javascript': ['.js', '.jsx', '.ts', '.tsx'],
+                        },
+                    },
+                ],
+            });
+            for (const handle of handles) {
+                const file = await handle.getFile();
+                await importSingleLooseFile(file);
+            }
+            // Ensure sidebar updates immediately after import
+            if (typeof updateFileTree === 'function') {
+                updateFileTree();
+            }
+            return handles.length > 0;
+        }
+    } catch (err) {
+        if (err && err.name === 'AbortError') return false;
+        console.error('openFilesViaPicker error:', err);
+    }
+
+    return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.accept = '.js,.jsx,.ts,.tsx,.py,.html,.css,.json,.md,.txt';
+        input.onchange = async function(e) {
+            const files = Array.from(e.target.files || []);
+            for (const file of files) {
+                await importSingleLooseFile(file);
+            }
+            // Ensure sidebar updates immediately after import
+            if (typeof updateFileTree === 'function') {
+                updateFileTree();
+            }
+            resolve(files.length > 0);
+        };
+        input.click();
+    });
+}
+
+async function openFoldersViaPicker() {
+    // Prefer directory picker (single). If supported and successful, do NOT open fallback.
+    if (window.showDirectoryPicker) {
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            // Create a root folder for the selected directory
+            const basePath = selectedFolder ? `${selectedFolder}/${dirHandle.name}` : dirHandle.name;
+            if (!projectFolders.has(basePath)) {
+                projectFolders.set(basePath, {
+                    name: dirHandle.name,
+                    path: basePath,
+                    parent: selectedFolder || null,
+                    files: new Set(),
+                    folders: new Set()
+                });
+                if (selectedFolder && projectFolders.has(selectedFolder)) {
+                    projectFolders.get(selectedFolder).folders.add(basePath);
+                }
+            }
+            // Expand and select the new base folder
+            try { expandedFolders.add(basePath); } catch (_) {}
+            selectedFolder = basePath;
+
+            await importDirectoryHandle(dirHandle, basePath);
+            updateFileTree();
+            const last = Array.from(projectFiles.keys()).pop();
+            if (last) {
+                const f = projectFiles.get(last);
+                loadFileIntoTab(f.name, fileContents.get(last) || f.content || '', last);
+            }
+            return true;
+        } catch (err) {
+            if (err && err.name === 'AbortError') {
+                // User cancelled; don't show another dialog
+                return false;
+            }
+            console.error('openFoldersViaPicker dir-picker error:', err);
+            // Fall through to legacy input only on real errors
+        }
+    }
+
+    // Fallback: allow selecting one or multiple folders via input
+    return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.webkitdirectory = true;
+        input.directory = true;
+        input.multiple = true;
+        input.accept = '.js,.jsx,.ts,.tsx,.py,.html,.css,.json,.md,.txt';
+        input.onchange = async function(e) {
+            const files = Array.from(e.target.files || []);
+            if (files.length) {
+                // Derive main folder root from the first file's webkitRelativePath
+                let basePath = null;
+                const first = files[0];
+                if (first.webkitRelativePath) {
+                    const segments = first.webkitRelativePath.split('/');
+                    if (segments.length > 1) {
+                        basePath = segments[0];
+                    }
+                }
+                if (!basePath) {
+                    basePath = 'imported-folder';
+                }
+                // If there is an active selectedFolder, nest under it
+                const mainRoot = selectedFolder ? `${selectedFolder}/${basePath}` : basePath;
+                if (!projectFolders.has(mainRoot)) {
+                    projectFolders.set(mainRoot, {
+                        name: basePath,
+                        path: mainRoot,
+                        parent: selectedFolder || null,
+                        files: new Set(),
+                        folders: new Set()
+                    });
+                    if (selectedFolder && projectFolders.has(selectedFolder)) {
+                        projectFolders.get(selectedFolder).folders.add(mainRoot);
+                    }
+                }
+                try { expandedFolders.add(mainRoot); } catch (_) {}
+                const prevSelected = selectedFolder;
+                selectedFolder = mainRoot;
+
+                await importFileListAsFolder(files);
+
+                // Restore selection to main root (keep nested)
+                selectedFolder = prevSelected || mainRoot;
+                updateFileTree();
+                const last = Array.from(projectFiles.keys()).pop();
+                if (last) {
+                    const f = projectFiles.get(last);
+                    loadFileIntoTab(f.name, fileContents.get(last) || f.content || '', last);
+                }
+                resolve(true);
+                return;
+            }
+            resolve(false);
+        };
+        input.click();
+    });
+}
+
+// Open multiple files at once
+function openFiles() {
+    // Modern picker with multiple selection if available
+    if (window.showOpenFilePicker) {
+        (async () => {
+            try {
+                const handles = await window.showOpenFilePicker({
+                    multiple: true,
+                    types: [
+                        {
+                            description: 'Text/Code Files',
+                            accept: {
+                                'text/plain': ['.txt', '.md'],
+                                'text/css': ['.css'],
+                                'text/html': ['.html'],
+                                'application/json': ['.json'],
+                                'application/javascript': ['.js', '.jsx', '.ts', '.tsx'],
+                            },
+                        },
+                    ],
+                });
+
+                for (const handle of handles) {
+                    const file = await handle.getFile();
+                    await importSingleLooseFile(file);
+                }
+                updateFileTree();
+                // Open last imported
+                const last = Array.from(projectFiles.keys()).pop();
+                if (last) {
+                    const f = projectFiles.get(last);
+                    loadFileIntoTab(f.name, fileContents.get(last) || f.content || '', last);
+                }
+                showToast('Files imported', 'success');
+                return;
+            } catch (err) {
+                if (err && err.name === 'AbortError') return;
+                console.error('Error opening files:', err);
+            }
+        })();
+        return;
+    }
+
+    // Fallback input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.js,.jsx,.ts,.tsx,.py,.html,.css,.json,.md,.txt';
+    input.onchange = async function(e) {
+        const files = Array.from(e.target.files || []);
+        for (const file of files) {
+            await importSingleLooseFile(file);
+        }
+        updateFileTree();
+        const last = Array.from(projectFiles.keys()).pop();
+        if (last) {
+            const f = projectFiles.get(last);
+            loadFileIntoTab(f.name, fileContents.get(last) || f.content || '', last);
+        }
+        showToast('Files imported', 'success');
+    };
+    input.click();
+}
+
+async function importSingleLooseFile(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const content = ev.target.result;
+            const language = detectLanguageFromExtension(file.name);
+            const fileName = selectedFolder ? `${selectedFolder}/${file.name}` : file.name;
+            const displayName = file.name;
+
+            projectFiles.set(fileName, {
+                name: displayName,
+                fullPath: fileName,
+                language: language,
+                type: 'file',
+                folder: selectedFolder
+            });
+
+            if (selectedFolder && projectFolders.has(selectedFolder)) {
+                projectFolders.get(selectedFolder).files.add(fileName);
+            }
+
+            fileContents.set(fileName, content);
+            resolve();
+        };
+        reader.readAsText(file);
+    });
+}
+
+// Open a folder (or multiple) and import all supported files
+async function openFolder() {
+    try {
+        // Try modern directory picker (single folder) first
+        if (window.showDirectoryPicker) {
+            // Ask whether to pick multiple folders via fallback if needed
+            const singleFolder = await showConfirmToast('Pick a single folder with the system picker?', null, null);
+            if (singleFolder) {
+                const dirHandle = await window.showDirectoryPicker();
+                await importDirectoryHandle(dirHandle);
+                updateFileTree();
+                const first = projectFiles.keys().next();
+                if (!first.done) {
+                    const firstPath = first.value;
+                    const file = projectFiles.get(firstPath);
+                    loadFileIntoTab(file.name, fileContents.get(firstPath) || file.content || '', firstPath);
+                }
+                showToast('Folder imported successfully', 'success');
+                return;
+            }
+            // If user wants multiple folders, use fallback input allowing multi-select
+        }
+    } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        console.error('Error importing folder via directory picker:', err);
+    }
+
+    // Fallback supports selecting one or multiple folders
+    try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.webkitdirectory = true; // Chrome/Edge
+        input.directory = true;       // Safari (legacy)
+        input.multiple = true;        // allow multiple folder selections
+        input.accept = '.js,.ts,.jsx,.tsx,.py,.html,.css,.json,.md,.txt';
+
+        input.onchange = async function(e) {
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+            await importFileListAsFolder(files);
+            updateFileTree();
+            const first = projectFiles.keys().next();
+            if (!first.done) {
+                const firstPath = first.value;
+                const file = projectFiles.get(firstPath);
+                loadFileIntoTab(file.name, fileContents.get(firstPath) || file.content || '', firstPath);
+            }
+            showToast('Folder imported successfully', 'success');
+        };
+        input.click();
+    } catch (error) {
+        console.error('Error importing folder:', error);
+        showToast('Failed to import folder', 'error');
+    }
+}
+
+// Helpers
+async function importDirectoryHandle(dirHandle, parentPath = '') {
+    for await (const entry of dirHandle.values()) {
+        const entryPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+        if (entry.kind === 'directory') {
+            // Register folder if not present
+            if (!projectFolders.has(entryPath)) {
+                projectFolders.set(entryPath, {
+                    name: entry.name,
+                    path: entryPath,
+                    parent: parentPath || null,
+                    files: new Set(),
+                    folders: new Set()
+                });
+                if (parentPath && projectFolders.has(parentPath)) {
+                    projectFolders.get(parentPath).folders.add(entryPath);
+                }
+            }
+            await importDirectoryHandle(entry, entryPath);
+        } else if (entry.kind === 'file') {
+            const file = await entry.getFile();
+            await registerImportedFile(entryPath, file);
+        }
+    }
+}
+
+async function importFileListAsFolder(fileList) {
+    // Create folder tree from relative paths under currently selectedFolder (if any)
+    for (const file of fileList) {
+        // webkitRelativePath preserves subfolder structure when selecting a directory
+        let relPath = file.webkitRelativePath || file.name;
+        // If we have a selectedFolder prefix (like main root), prepend it
+        if (selectedFolder) {
+            relPath = `${selectedFolder}/${relPath}`;
+        }
+        const parentPath = relPath.includes('/') ? relPath.split('/').slice(0, -1).join('/') : null;
+
+        // Ensure folders exist
+        if (parentPath) {
+            const folders = parentPath.split('/');
+            let current = '';
+            for (let i = 0; i < folders.length; i++) {
+                current = current ? `${current}/${folders[i]}` : folders[i];
+                if (!projectFolders.has(current)) {
+                    projectFolders.set(current, {
+                        name: folders[i],
+                        path: current,
+                        parent: i > 0 ? folders.slice(0, i).join('/') : null,
+                        files: new Set(),
+                        folders: new Set()
+                    });
+                    const parent = i > 0 ? folders.slice(0, i).join('/') : null;
+                    if (parent && projectFolders.has(parent)) {
+                        projectFolders.get(parent).folders.add(current);
+                    }
+                }
+            }
+        }
+
+        // Register file
+        await registerImportedFile(relPath, file);
+    }
+}
+
+async function registerImportedFile(path, file) {
+    // Skip unsupported extensions
+    const allowed = ['.js','.jsx','.ts','.tsx','.py','.html','.css','.json','.md','.txt'];
+    const ext = (path.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+    if (ext && !allowed.includes(ext)) return;
+
+    const parent = path.includes('/') ? path.split('/').slice(0, -1).join('/') : null;
+    const content = await file.text();
+    const language = detectLanguageFromExtension(file.name);
+
+    projectFiles.set(path, {
+        name: file.name,
+        fullPath: path,
+        language: language,
+        type: 'file',
+        folder: parent
+    });
+
+    if (parent && projectFolders.has(parent)) {
+        projectFolders.get(parent).files.add(path);
+    }
+
+    // Keep synced stores
+    fileContents.set(path, content);
+}
 function saveAllFiles() {
     let savedCount = 0;
-    
-    openTabs.forEach((tab, tabId) => {
-        if (tab.isModified) {
-            // In a real app, this would save to the file system
-            tab.isModified = false;
-            savedCount++;
-        }
+    const previousActive = activeTab;
+    openTabs.forEach((_, tabId) => {
+        activeTab = tabId;
+        try { saveFileToLocalStorage(); } catch (_) {}
+        savedCount++;
     });
-    
-    updateTabContainer();
-    showToast(`Saved ${savedCount} file(s)`, 'success');
+    activeTab = previousActive;
+    showToast(`Auto-saved ${savedCount} file(s)`, 'success');
 }
 
 function createNewFolder() {
@@ -2832,25 +3933,19 @@ function handleFileTreeClick(e) {
     // Create new tab for existing file
     let content = '';
     const file = projectFiles.get(fileName);
-    
-    if (file) {
-        // Get content based on file name
-        switch (file.name || fileName) {
-            case 'index.html':
-                content = '<!DOCTYPE html>\n<html>\n<head>\n    <title>Document</title>\n</head>\n<body>\n    <h1>Hello World</h1>\n</body>\n</html>';
-                break;
-            case 'styles.css':
-                content = 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n}';
-                break;
-            case 'script.js':
-                content = 'console.log("Hello from script.js");\n\n// Your JavaScript code here';
-                break;
-            case 'README.md':
-                content = '# Project Title\n\nDescription of your project.\n\n## Installation\n\n```bash\nnpm install\n```';
-                break;
-            default:
-                content = '// File content would be loaded from file system';
-        }
+    // Prefer in-memory content if present
+    if (fileContents && fileContents.has(fileName)) {
+        content = fileContents.get(fileName) || '';
+    } else if (file && typeof file.content === 'string') {
+        content = file.content;
+    } else {
+        // Fallback to persisted storage
+        try {
+            const savedFiles = JSON.parse(localStorage.getItem('fileData') || '{}');
+            if (savedFiles[fileName] && typeof savedFiles[fileName].content === 'string') {
+                content = savedFiles[fileName].content;
+            }
+        } catch (_) {}
     }
     
     const newTab = {
@@ -3329,9 +4424,7 @@ async function saveFile() {
             await writable.close();
             
             // Update tab state
-            tab.isModified = false;
             tab.content = content;
-            updateTabContainer();
             
             showToast('File saved successfully', 'success');
         } else {
@@ -3373,7 +4466,6 @@ async function saveAsFile() {
         // Update tab and state
         tab.name = fileHandle.name;
         tab.content = content;
-        tab.isModified = false;
         currentFileHandle = fileHandle;
         
         // Update file in project files if it exists
@@ -3420,28 +4512,29 @@ async function openFile() {
             }
         }
         
-        // Create new tab
+        // Create new tab using file name (and selected folder if any) as the stable key
         const language = detectLanguageFromExtension(file.name);
-        const tabId = `file-${Date.now()}`;
+        const tabId = selectedFolder ? `${selectedFolder}/${file.name}` : file.name;
         const newTab = {
             id: tabId,
             name: file.name,
             language: language,
             content: content,
-            isModified: false
+            isModified: false,
+            folder: selectedFolder || null
         };
         
         // Add to open tabs and project files
         openTabs.set(tabId, newTab);
         fileContents.set(tabId, content);
         
-        // Add to project files
+        // Add to project files under the same key so it appears in the tree immediately
         projectFiles.set(tabId, {
             name: file.name,
-            fullPath: file.name,
+            fullPath: tabId,
             language: language,
             type: 'file',
-            folder: null
+            folder: selectedFolder || null
         });
         
         // Update UI
@@ -3450,9 +4543,8 @@ async function openFile() {
         switchToTab(tabId);
         
         // Set editor content and language
-        if (editor) {
-            editor.setValue(content);
-            monaco.editor.setModelLanguage(editor.getModel(), language);
+        if (editor && editor.getModel && editor.getModel()) {
+            try { monaco.editor.setModelLanguage(editor.getModel(), language); } catch (_) {}
         }
         
         currentFileHandle = fileHandle;
@@ -3720,7 +4812,6 @@ function initializeChatSystem() {
                     if (window.openTabs && window.openTabs.has(tabId)) {
                         const tab = window.openTabs.get(tabId);
                         tab.content = fileContent;
-                        tab.isModified = true;
                         if (window.fileContents) {
                             window.fileContents.set(tabId, fileContent);
                         }
@@ -3732,6 +4823,7 @@ function initializeChatSystem() {
                                 currentModel.setValue(fileContent);
                             }
                         }
+                        try { saveFileToLocalStorage(); } catch (_) {}
                     }
                 }
             }
@@ -3816,12 +4908,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Open button
-    const openBtn = document.getElementById('open-file');
-    if (openBtn) {
-        openBtn.addEventListener('click', (e) => {
+    // Open files button
+    const openFilesBtn = document.getElementById('open-files');
+    if (openFilesBtn) {
+        openFilesBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            openFile();
+            openFilesViaPicker();
+        });
+    }
+
+    // Open folder button
+    const openFolderBtn = document.getElementById('open-folder');
+    if (openFolderBtn) {
+        openFolderBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openFoldersViaPicker();
         });
     }
     
@@ -3936,11 +5037,11 @@ document.addEventListener('DOMContentLoaded', () => {
         editor.onDidChangeModelContent(() => {
             if (activeTab) {
                 const tab = openTabs.get(activeTab);
-                if (tab) {
-                    const currentContent = editor.getValue();
-                    tab.isModified = currentContent !== tab.content;
-                    updateTabContainer();
-                }
+            if (tab && editor) {
+                const currentContent = editor.getValue();
+                tab.content = currentContent;
+                try { saveFileToLocalStorage(); } catch (_) {}
+            }
             }
         });
     }
@@ -4595,8 +5696,13 @@ function updateStatusBar() {
     const currentColumnEl = document.getElementById('currentColumn');
     const totalLinesEl = document.getElementById('totalLines');
     const fileSizeEl = document.getElementById('fileSize');
+    const footerCurrentLineEl = document.getElementById('footerCurrentLine');
+    const footerCurrentColumnEl = document.getElementById('footerCurrentColumn');
+    const footerTotalLinesEl = document.getElementById('footerTotalLines');
+    const footerFileSizeEl = document.getElementById('footerFileSize');
     
-    if (!currentLineEl || !currentColumnEl || !totalLinesEl || !fileSizeEl) {
+    if (!(currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) &&
+        !(footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl)) {
         return;
     }
     
@@ -4606,10 +5712,18 @@ function updateStatusBar() {
     
     // If no active tab or no open tabs, reset to defaults
     if (!activeTab || openTabs.size === 0) {
-        currentLineEl.textContent = line;
-        currentColumnEl.textContent = column;
-        totalLinesEl.textContent = totalLines;
-        fileSizeEl.textContent = fileSize;
+        if (currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) {
+            currentLineEl.textContent = line;
+            currentColumnEl.textContent = column;
+            totalLinesEl.textContent = totalLines;
+            fileSizeEl.textContent = fileSize;
+        }
+        if (footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl) {
+            footerCurrentLineEl.textContent = line;
+            footerCurrentColumnEl.textContent = column;
+            footerTotalLinesEl.textContent = totalLines;
+            footerFileSizeEl.textContent = fileSize;
+        }
         return;
     }
     
@@ -4679,10 +5793,18 @@ function updateStatusBar() {
     }
     
     // Update the status bar elements
-    currentLineEl.textContent = line;
-    currentColumnEl.textContent = column;
-    totalLinesEl.textContent = totalLines;
-    fileSizeEl.textContent = fileSize;
+    if (currentLineEl && currentColumnEl && totalLinesEl && fileSizeEl) {
+        currentLineEl.textContent = line;
+        currentColumnEl.textContent = column;
+        totalLinesEl.textContent = totalLines;
+        fileSizeEl.textContent = fileSize;
+    }
+    if (footerCurrentLineEl && footerCurrentColumnEl && footerTotalLinesEl && footerFileSizeEl) {
+        footerCurrentLineEl.textContent = line;
+        footerCurrentColumnEl.textContent = column;
+        footerTotalLinesEl.textContent = totalLines;
+        footerFileSizeEl.textContent = fileSize;
+    }
 }
 
 function formatFileSize(bytes) {
@@ -4723,7 +5845,7 @@ function formatFileSize(bytes) {
  */
 // Track last save time to prevent excessive saves
 let lastSaveTime = 0;
-const MIN_SAVE_INTERVAL = 1000; // 1 second minimum between saves
+const MIN_SAVE_INTERVAL = 0; // Save on every change
 function saveFileToLocalStorage() {
     // Don't save too frequently
     const now = Date.now();
@@ -5137,11 +6259,11 @@ const aiContextManager = {
             if (window.openTabs && window.openTabs.has(tabId)) {
                 const tab = window.openTabs.get(tabId);
                 tab.content = content;
-                tab.isModified = true;
                 
                 if (window.fileContents) {
                     window.fileContents.set(tabId, content);
                 }
+                try { saveFileToLocalStorage(); } catch (_) {}
                 
                 // Update the editor if this is the active tab
                 if (window.activeTab === tabId && window.editor) {
@@ -5340,6 +6462,47 @@ function hideFileMentionDropdown() {
     fileMentionState.selectedIndex = 0;
 }
 
+function showContextFileDropdown(anchorBtn) {
+    // Initialize list
+    if (!fileMentionState.files || fileMentionState.files.length === 0) {
+        try { fileMentionState.files = getFilesForMention(); } catch (_) {}
+    }
+    fileMentionState.isActive = true;
+    fileMentionState.startPos = 0; // not used for button positioning
+    fileMentionState.query = '';
+    fileMentionState.selectedIndex = 0;
+
+    const dropdown = ensureFileMentionDropdown();
+    dropdown.innerHTML = '';
+    // Reuse rendering with empty query
+    showFileMentionDropdown(anchorBtn, '');
+
+    // Position dropdown relative to the button (as dropup preferred)
+    const rect = anchorBtn.getBoundingClientRect();
+    dropdown.style.display = 'block';
+    dropdown.style.visibility = 'hidden';
+    const ddWidth = dropdown.offsetWidth || 220;
+    const ddHeight = dropdown.offsetHeight || 180;
+    const left = Math.max(8, Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - ddWidth - 8));
+    let top = rect.top + window.scrollY - ddHeight - 6;
+    if (top < window.scrollY + 8) {
+        top = rect.bottom + window.scrollY + 6;
+    }
+    dropdown.style.left = `${left}px`;
+    dropdown.style.top = `${top}px`;
+    dropdown.style.visibility = 'visible';
+}
+
+function toggleContextSelection(key) {
+    const resolved = resolveMentionToFileKey(key) || key; // allow specials
+    if (selectedContextKeys.has(resolved)) {
+        selectedContextKeys.delete(resolved);
+    } else {
+        selectedContextKeys.add(resolved);
+    }
+    renderMentionBar();
+}
+
 // Ensure dropdown element exists
 function ensureFileMentionDropdown() {
     let dropdown = document.getElementById('fileMentionDropdown');
@@ -5347,19 +6510,6 @@ function ensureFileMentionDropdown() {
         dropdown = document.createElement('div');
         dropdown.id = 'fileMentionDropdown';
         dropdown.classList.add('file-mention-dropdown');
-        dropdown.style.position = 'absolute';
-        dropdown.style.zIndex = '10000';
-        dropdown.style.background = '#1e1e1e';
-        dropdown.style.color = '#ddd';
-        dropdown.style.border = '1px solid #333';
-        dropdown.style.borderRadius = '6px';
-        dropdown.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
-        dropdown.style.padding = '6px 0';
-        dropdown.style.maxHeight = '240px';
-        dropdown.style.overflowY = 'auto';
-        dropdown.style.minWidth = '280px';
-        dropdown.style.display = 'none';
-        // Append to body so we can position at caret coordinates like context menu
         document.body.appendChild(dropdown);
     }
     return dropdown;
@@ -5414,8 +6564,8 @@ function getTextareaCharPagePosition(textarea, charIndex) {
 // Build suggestions list including specials and files
 function getMentionSuggestionsList(query) {
     const suggestions = [];
-    // Special: editor buffer
-    suggestions.push({ label: 'editor (current editor buffer)', key: 'editor', type: 'special' });
+    // Special: Current Tabs (all open tabs)
+    suggestions.push({ label: 'Current Tabs', key: 'current-tabs', type: 'special' });
     // Special: current file
     if (window.activeTab) {
         suggestions.push({ label: `current file (${window.activeTab})`, key: 'current-file', type: 'special' });
@@ -5445,48 +6595,107 @@ function showFileMentionDropdown(anchorEl, query) {
         item.style.display = 'flex';
         item.style.alignItems = 'center';
         item.style.gap = '8px';
+        item.style.fontSize = '12px';
+        // Selected state
+        const isSelected = selectedContextKeys.has(s.key);
+        item.style.background = idx === fileMentionState.selectedIndex ? 'var(--main-bg)' : (isSelected ? 'var(--main-bg)' : 'transparent');
+        item.style.opacity = isSelected ? '0.9' : '1';
         if (idx === fileMentionState.selectedIndex) {
-            item.style.background = '#2a2a2a';
+            item.style.background = 'var(--main-bg)';
         }
-        const typeTag = s.type === 'special' ? '•' : '–';
+        const typeTag = s.type === 'special' ? '•' : (isSelected ? '✔' : '–');
         item.innerHTML = `<span style="opacity:.7">${typeTag}</span><span>${s.label}</span>`;
         item.addEventListener('mouseenter', () => {
             fileMentionState.selectedIndex = idx;
-            showFileMentionDropdown(anchorEl, query);
+            // Update highlight without re-rendering/repositioning
+            const children = Array.from(dropdown.children);
+            children.forEach((child, i) => {
+                const s2 = suggestions[i];
+                const isSel = selectedContextKeys.has(s2.key);
+                child.style.background = i === fileMentionState.selectedIndex ? 'var(--main-bg)' : (isSel ? 'var(--main-bg)' : 'transparent');
+            });
         });
         item.addEventListener('mousedown', (e) => {
             e.preventDefault(); // prevent textarea blur
-            insertSelectedMention(s.key);
+            const wasSelected = selectedContextKeys.has(s.key);
+            toggleContextSelection(s.key);
+            // Update this item's checkmark and background without re-rendering
+            const nowSelected = !wasSelected;
+            const typeTagNow = s.type === 'special' ? '•' : (nowSelected ? '✔' : '–');
+            item.innerHTML = `<span style="opacity:.7">${typeTagNow}</span><span>${s.label}</span>`;
+            const isRowSelected = suggestions.indexOf(s) === fileMentionState.selectedIndex;
+            item.style.background = isRowSelected ? 'var(--main-bg)' : (nowSelected ? 'var(--main-bg)' : 'transparent');
         });
         dropdown.appendChild(item);
     });
-    // Position at the '@' character location like a context menu
+    // Position at the '@' character location like a context menu (dropup preferred)
     if (suggestions.length && typeof fileMentionState.startPos === 'number' && fileMentionState.startPos >= 0) {
         const anchorPos = getTextareaCharPagePosition(anchorEl, fileMentionState.startPos);
-        // place dropdown just below the '@'
-        dropdown.style.left = `${Math.max(8, Math.min(anchorPos.x, window.scrollX + window.innerWidth - dropdown.offsetWidth - 8))}px`;
-        dropdown.style.top = `${anchorPos.y + parseFloat(getComputedStyle(anchorEl).lineHeight || '18')}px`;
-        dropdown.style.display = 'block';
+        // Make sure we can measure size once per open
+        if (dropdown.dataset.locked !== 'true') {
+            dropdown.style.display = 'block';
+            dropdown.style.visibility = 'hidden';
+            // Smaller dropdown footprint
+            dropdown.style.maxHeight = '180px';
+            dropdown.style.minWidth = '220px';
+            dropdown.style.fontSize = '12px';
+            const ddWidth = dropdown.offsetWidth || 220; // fallback
+            const ddHeight = dropdown.offsetHeight || 180; // fallback
+
+            // Horizontal position clamped to viewport
+            const left = Math.max(8, Math.min(anchorPos.x, window.scrollX + window.innerWidth - ddWidth - 8));
+
+            // Try to place ABOVE the caret (dropup)
+            const spacing = 4;
+            let top = anchorPos.y - ddHeight - spacing;
+
+            // If not enough space above, fallback to below
+            const minTop = window.scrollY + 8;
+            if (top < minTop) {
+                top = anchorPos.y + parseFloat(getComputedStyle(anchorEl).lineHeight || '18');
+            }
+
+            dropdown.style.left = `${left}px`;
+            dropdown.style.top = `${top}px`;
+            dropdown.style.visibility = 'visible';
+            dropdown.dataset.locked = 'true';
+        }
     } else {
         dropdown.style.display = 'none';
+        delete dropdown.dataset.locked;
     }
 }
 
 // Insert chosen mention into the prompt input
 function insertSelectedMention(key) {
-    const promptEl = document.getElementById('promptInput');
-    if (!promptEl) return;
-    const value = promptEl.value;
-    const end = promptEl.selectionStart;
-    const start = fileMentionState.startPos >= 0 ? fileMentionState.startPos : end;
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    const insertion = `@${key}`;
-    const needsSpace = after.length === 0 || !/^\s/.test(after) ? ' ' : '';
-    promptEl.value = before + insertion + needsSpace + after;
-    const newCaret = (before + insertion + needsSpace).length;
-    promptEl.setSelectionRange(newCaret, newCaret);
-    hideFileMentionDropdown();
-    // Trigger input event for any bindings
-    promptEl.dispatchEvent(new Event('input'));
+    // Deprecated: now using selectedContextKeys and chips; keep for backward-compat if called elsewhere
+    toggleContextSelection(key);
+}
+
+
+function toggleAssistantPanel() {
+    // Desktop-only behavior
+    if (window.innerWidth <= 900) return;
+    // Reuse existing layout logic so middle pane width updates correctly
+    if (typeof toggleDiv === 'function') {
+        toggleDiv('rightDiv');
+    } else {
+        const rightDiv = document.getElementById('rightDiv');
+        const leftDiv = document.getElementById('leftDiv');
+        const middleDiv = document.getElementById('middleDiv');
+        const willShow = rightDiv.style.display === 'none';
+        rightDiv.style.display = willShow ? 'block' : 'none';
+        // Fallback width adjustment mirroring toggleDiv desktop logic
+        const leftHidden = leftDiv && leftDiv.style.display === 'none';
+        const rightHidden = rightDiv.style.display === 'none';
+        if (middleDiv) {
+            if (leftHidden && rightHidden) {
+                middleDiv.style.width = '100%';
+            } else if (leftHidden || rightHidden) {
+                middleDiv.style.width = '75%';
+            } else {
+                middleDiv.style.width = '30%';
+            }
+        }
+    }
 }

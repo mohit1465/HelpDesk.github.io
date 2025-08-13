@@ -26,6 +26,11 @@
     --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     --gradient-bg-background-color: rgb(255, 255, 255);
     --chat-input-container: linear-gradient(#ffffff, #ffffff);
+    --border-color: #c4c4c480;
+    --code-bg: #f8f9fa;
+    --accent-color: #fa6441;
+    --accent-hover: #e55a3a;
+    --disabled-color: #6c757d;
   }
   
   [data-theme="dark"] {
@@ -50,6 +55,11 @@
     --header-left-btn-hover: #ffffff19;
     --gradient-bg-background-color: #151a28;
     --chat-input-container: linear-gradient(to bottom, #171e2d, #1f263b);
+    --border-color: #eeeeee11;
+    --code-bg: #1e1e1e;
+    --accent-color: #fa6441;
+    --accent-hover: #e55a3a;
+    --disabled-color: #6c757d;
   }
   
 
@@ -545,7 +555,70 @@ body{
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
+}
+
+.app-footer {
+    height: 25px;
+    background: var(--main-bg);
+    border-top: 1px solid var(--main-br);
+    display: flex;
+    align-items: center;
+}
+
+.app-footer .footer-status {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 0 10px;
+}
+
+/* Place assistant control at the far right */
+.footerControl {
+    margin-left: auto;
+    padding-right: 8px;
+}
+
+/* Compact padding so a larger icon fits in a 25px footer */
+.footerControl .btn-icon {
+    padding-top: 13px;
+    background: var(--text-color);
+    color: var(--text-color-dark);
+}
+
+.footerControl .btn-icon:hover{
+    background: var(--buttons-bg);
+    color: #ffffff;
+}
+
+/* Increase assistant icon size */
+.footerControl .btn-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+@media (max-width: 900px) {
+    .footerControl .btn-icon {
+        display: none;
+    }
+}
+
+.app-footer .status-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-color);
+    font-family: 'Courier New', monospace;
+}
+
+/* Hide sidebar status bar and reclaim height */
+.sidebar-status-bar {
+    display: none !important;
+}
+
+.sidebar .file-tree {
+    height: 100% !important;
 }
 
 /* Buttons */
@@ -569,6 +642,13 @@ body{
 
 .btn-welcome:hover{
     transform: translateY(2px);
+}
+
+.btn{
+    padding: 5px 10px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-primary {
@@ -597,21 +677,20 @@ body{
 }
 
 .btn-text {
-    background: transparent;
+    background: rgba(0, 122, 204, 0.197);
     border: none;
     color: #007acc;
     cursor: pointer;
     font-size: 12px;
     padding: 4px;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .btn-text:hover {
-    background: rgba(0, 122, 204, 0.1);
+    background: rgba(204, 0, 0, 0.21);
+    color: #cc0000;
 }
-
-
 
 /* Main Content */
 .main-content {
@@ -1071,7 +1150,8 @@ body{
     min-height: 0; /* This forces flex to work properly */
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 16px;
+    height: 90%;
+    padding: 5px;
     padding-bottom: 150px;
     display: flex;
     flex-direction: column;
@@ -1101,7 +1181,6 @@ body{
 
 .assistant-message .message-content {
     color: var(--text-color);
-    margin-right: 10px;
     border-bottom-left-radius: 4px;
 }
 
@@ -1127,29 +1206,23 @@ body{
     display: inline-flex;
     align-items: center;
     padding: 2px 6px;
-    margin: 0 1px;
-    border-radius: 6px;
-    background: rgb(255, 255, 255);
-    color: inherit;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-[data-theme="dark"] .mention-chip {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
+    margin: 0 2px;
+    background-image: var(--chat-input-container);
+    border: var(--main-br) 1px solid;
+    box-shadow: 5px 12px 16px rgba(0, 0, 0, 0.245);
+    color: var(--text-color);
+    border-radius: 8px;
+    font-size: 12px; /* match + Context button size */
+    line-height: 1.2;
 }
 
 /* Prompt input highlighter overlay inherits container styles */
 #promptInputMirror .mention-chip {
-    background: rgba(255, 255, 255, 0.912);
-    color: #151a28;
-    border: 1px solid rgba(0,0,0,0.08);
-}
-
-[data-theme="dark"] #promptInputMirror .mention-chip {
-    background: rgb(255, 255, 255);
-    color: #f4f9f9;
-    border-color: rgba(255, 255, 255, 0.22);
+    background-image: var(--chat-input-container);
+    color: var(--text-color);
+    border: var(--main-br) 1px solid;
+    box-shadow: 5px 12px 16px rgba(0, 0, 0, 0.245);
+    border-radius: 8px;
 }
 
 /* Mention bar layout */
@@ -1174,6 +1247,7 @@ body{
 }
 .message-content pre {
     background: #1e1e1e;
+    color: #ffffff;
     padding: 12px;
     border-radius: 6px;
     overflow-x: auto;
@@ -1184,6 +1258,84 @@ body{
 .message-content pre code {
     background: none;
     padding: 0;
+}
+
+/* File-specific code blocks */
+.file-code-container {
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--main-bg);
+}
+
+.file-code-header {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-code-header::before {
+    content: "📄";
+    font-size: 14px;
+}
+
+.file-code-content {
+    margin: 8px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.file-code-content pre {
+    margin: 0;
+    background: var(--code-bg);
+    border: 1px solid var(--border-color);
+}
+
+.file-code-apply-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.file-code-apply-btn:hover {
+    background: var(--accent-hover);
+}
+
+.file-code-apply-btn:disabled {
+    background: var(--disabled-color);
+    cursor: not-allowed;
+}
+
+/* Mentioned files indicator */
+.mentioned-files-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.indicator-icon {
+    font-size: 14px;
+}
+
+.indicator-text {
+    opacity: 0.9;
 }
 
 /* Chat Input */
@@ -1215,6 +1367,31 @@ body{
 .file-mention-dropdown{
     z-index: 2; /* above mirror and input */
     margin-bottom: 0;
+    position: absolute;
+    z-index: 10000;
+    background-image: var(--chat-input-container);
+    border: var(--main-br) 1px solid;
+    box-shadow: 3px 10px 10px rgba(0, 0, 0, 0.073);
+    border-radius: 6px;
+    padding: 6px 0;
+    max-height: 240px;
+    overflow-y: auto;
+    min-width: 220px;
+    display: none;
+}
+
+.file-mention-dropdown:hover{
+    background-color: var(--main-bg);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.071);
+    border-top: 1px solid var(--main-br);
+    border-bottom: 1px solid var(--main-br);
+}
+
+.file-mention-dropdown:selected{
+    background-color: var(--main-bg);
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.071);
+    border-top: 1px solid var(--main-br);
+    border-bottom: 1px solid var(--main-br);
 }
 
 #promptInput {
