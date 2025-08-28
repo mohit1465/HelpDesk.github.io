@@ -638,7 +638,7 @@ if (typeof initializeMonacoEditor === 'function') {
 
 // Configuration
 const CONFIG = {
-    GEMINI_API_KEY: 'AIzaSyBhj1DwaWsftdvpOh5CLHvyCT7yAqAMHrk',
+    GEMINI_API_KEY: 'AIzaSyCWOH-XMoalAnisVQRcMYr1Gwes0R4gbYY',
     GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
     DEFAULT_LANGUAGE: 'javascript',
     DEFAULT_CODE: '// Welcome to AI Code Editor\n// Start by describing what you want to build in the chat panel!\n\nconsole.log("Hello, World!");'

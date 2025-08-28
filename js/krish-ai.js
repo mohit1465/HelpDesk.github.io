@@ -1929,7 +1929,7 @@ toggleSidebar.addEventListener('click', () => {
 });
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
+    const GEMINI_API_KEY = "AIzaSyCWOH-XMoalAnisVQRcMYr1Gwes0R4gbYY"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
     const temperature = 0.4; // Or your preferred value
 
@@ -1991,7 +1991,7 @@ async function analyzeImageWithGemini(base64Image, mimeType) {
 
 // Add Gemini image generation function
 async function generateImageWithGemini(promptText, images = []) {
-    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
+    const GEMINI_API_KEY = "AIzaSyDzVG89oddrTWqWC-B1vSQGLNnkb51cCwM";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
     const parts = [];
     if (promptText) {
