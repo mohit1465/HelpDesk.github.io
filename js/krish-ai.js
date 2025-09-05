@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle AI response
 async function handleResponse(userInput) {
-    const apiKey = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
+    const apiKey = 'AIzaSyBsQNCNCIa1hj2M3eWpirnO-VrULh0AAUg';//"AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
 
     try {
@@ -1929,7 +1929,7 @@ toggleSidebar.addEventListener('click', () => {
 });
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-    const GEMINI_API_KEY = "AIzaSyCWOH-XMoalAnisVQRcMYr1Gwes0R4gbYY"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
+    const GEMINI_API_KEY = "AIzaSyBsQNCNCIa1hj2M3eWpirnO-VrULh0AAUg";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
     const temperature = 0.4; // Or your preferred value
 

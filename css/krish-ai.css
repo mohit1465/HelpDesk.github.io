@@ -472,7 +472,7 @@ body {
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 50px;
+    padding: 50px 200px;
     padding-bottom: 60px;
     display: flex;
     flex-direction: column;
@@ -512,7 +512,7 @@ body {
     align-items: flex-end;
     border-radius: 25px;
     padding: 10px 5px;
-    margin: 15px 90px;
+    margin: 0px 200px;
     margin-bottom: 25px;
     position: relative;
     background-image: var(--chat-input-container);
@@ -521,7 +521,18 @@ body {
     overflow: hidden;
 }
 
-/* Removed .chat-input-container::before, .chat-input-container::after, and .chat-input-container:focus-within rules to eliminate border animation */
+@media screen and (max-width: 1200px) {
+    .chat-messages {
+        padding: 50px 100px;
+        padding-bottom: 60px;
+    }
+
+    .chat-input-container {
+        margin: 0px 90px;
+        margin-bottom: 25px;
+    }
+    
+}
 
 #chat-input {
     font-family: "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell;
