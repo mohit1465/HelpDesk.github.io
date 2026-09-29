@@ -1,30 +1,41 @@
-@import url('unified-theme.css');
-
 :root {
-    --primary-color: #ffffff;
-    --secondary-color: #a1a1aa;
-    --success-color: #ffffff;
-    --background-color: #070709;
-    --text-color: #ffffff;
-    --border-radius: 20px;
-    --shadow-sm: 0 0 15px rgba(255, 255, 255, 0.05);
-    --shadow-md: 0 0 25px rgba(255, 255, 255, 0.1);
+    --primary-color: #2563eb;
+    --secondary-color: #1e40af;
+    --success-color: #059669;
+    --background-color: #f8fafc;
+    --text-color: #1e293b;
+    --border-radius: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
     --max-width: 1200px;
     --mobile: 480px;
     --tablet: 768px;
     --laptop: 1024px;
     --desktop: 1200px;
-    --gradient-bg-background-color: #070709;
+    --gradient-bg-background-color: hsla(240,0%,100%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 1% 21%, hsla(60,100%,50%,0.01) 0px, transparent 50%),
+        radial-gradient(at 62% 100%, hsla(60,100%,50%,0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(60,100%,50%,0.04) 0px, transparent 50%);
 }
 
 [data-theme="dark"] {
-    --gradient-bg-background-color: #070709;
+    --gradient-bg-background-color: hsla(240,100%,18%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 40% 20%, hsla(270,0%,7%,0.61) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(71,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 33% 50%, hsla(236,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(222,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(264,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 72% 87%, hsla(124,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, hsla(225,0%,7%,1) 0px, transparent 50%);
 }
 
 body {
-    font-family: var(--font-sans);
-    background-color: #070709;
-    color: #ffffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--gradient-bg-background-color);
+    background-image: var(--gradient-bg-background-image);
+    color: var(--text-color);
     line-height: 1.6;
 }
 
@@ -35,21 +46,18 @@ body {
     box-sizing: border-box;
 }
 
+/* Add these new styles after your existing CSS reset */
+
 .app-container {
     display: flex;
     min-height: 100vh;
-    background-color: #070709;
+    background-color: #f8f9fe;
 }
 
-/* Sidebar Styles - Apple Glass Sidebar */
+/* Sidebar Styles */
 .sidebar {
-    width: 260px;
-    background: #101014;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-}
+    width: 20vw;
+    background: linear-gradient(to bottom, #F4F4FF, #E5E5FF);
     border: 1px solid #d2d2ff;
     border-radius: 25px;
     height: calc(100vh - 35px);

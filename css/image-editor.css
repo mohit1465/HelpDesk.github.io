@@ -1,27 +1,37 @@
-@import url('unified-theme.css');
-
 :root {
-    --background-color: #070709;
-    --text-color: #ffffff;
-    --text-color-dark: #a1a1aa;
-    --buttons-bg: #ffffff;
-    --header-border: rgba(255, 255, 255, 0.08);
-    --header-bg: rgba(14, 14, 18, 0.85);
-    --header-left: #101014;
-    --header-left-btn-hover: rgba(255, 255, 255, 0.08);
-    --gradient-bg-background-color: #070709;
+    --background-color: #f4f9f9;
+    --text-color: #000f1c;
+    --text-color-dark: #f4f9f9;
+    --buttons-bg: #fa6441;
+    --header-border: #cbcbcb;
+    --header-bg: #F0F0F0;
+    --header-left: #f6f6f6d7;
+    --header-left-btn-hover: #ffffffb6;
+    --gradient-bg-background-color: hsla(240,0%,100%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 1% 21%, hsla(60,100%,50%,0.01) 0px, transparent 50%),
+        radial-gradient(at 62% 100%, hsla(60,100%,50%,0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(60,100%,50%,0.04) 0px, transparent 50%);
 }
 
 [data-theme="dark"] {
-    --background-color: #070709;
-    --text-color: #ffffff;
-    --text-color-dark: #a1a1aa;
-    --buttons-bg: #ffffff;
-    --header-border: rgba(255, 255, 255, 0.08);
-    --header-bg: rgba(14, 14, 18, 0.85);
-    --header-left: #101014;
-    --header-left-btn-hover: rgba(255, 255, 255, 0.08);
-    --gradient-bg-background-color: #070709;
+    --background-color: #000f1c;
+    --text-color: #ecf0f1;
+    --text-color-dark: #000f1c;
+    --buttons-bg: #fa6441;
+    --header-border: #283745;
+    --header-bg: #00172b;
+    --header-left: #00172bd9;
+    --header-left-btn-hover: #ffffff19;
+    --gradient-bg-background-color: hsla(240,100%,18%,1);
+    --gradient-bg-background-image:
+        radial-gradient(at 40% 20%, hsla(270,0%,7%,0.61) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(71,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 33% 50%, hsla(236,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(222,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(264,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 72% 87%, hsla(124,0%,7%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, hsla(225,0%,7%,1) 0px, transparent 50%);
 }
 
 * {
@@ -30,10 +40,11 @@
     box-sizing: border-box;
 }
 
-body {
-    background-color: #070709;
-    color: #ffffff;
-    font-family: var(--font-sans);
+body{
+    background-color: var(--gradient-bg-background-color);
+    background-image: var(--gradient-bg-background-image);
+    color: var(--text-color);
+    font-family: 'Quicksand', sans-serif;
 }
 
 .header {

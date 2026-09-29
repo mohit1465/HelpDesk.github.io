@@ -1,41 +1,54 @@
-@import url('unified-theme.css');
-
 :root {
-    --background-color: #070709;
-    --text-color: #ffffff;
+    --background-color: #f4f9f9;
+    --text-color: #000f1c;
     --text-color-light: #ffffff;
-    --accent-color: #ffffff;
-    --primary-color: #ffffff;
-    --input-bg: #16161c;
-    --input-border: rgba(255, 255, 255, 0.08);
-    --btn-border-bg: #ffffff;
-    --input-shadow: rgba(255, 255, 255, 0.06);
-    --gradient-bg-background-color: #070709;
+    --accent-color: #e1e1e1;
+    --primary-color: #000f1c;
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    --btn-border-bg: #f96441;
+    --input-border: rgba(188,188,188,1);
+    --input-shadow: rgba(0, 0, 0, 0.06);
+    --gradient-bg-background-color: hsla(240,0%,100%,1);
+    --gradient-bg-background-image:
+      radial-gradient(at 1% 21%, hsla(60,100%,50%,0.01) 0px, transparent 50%),
+      radial-gradient(at 62% 100%, hsla(60,100%,50%,0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(60,100%,50%,0.04) 0px, transparent 50%);
 }
 
 [data-theme="dark"] {
-    --background-color: #070709;
-    --text-color: #ffffff;
-    --text-color-light: #ffffff;
-    --input-bg: #16161c;
-    --input-border: rgba(255, 255, 255, 0.08);
-    --btn-border-bg: #ffffff;
-    --gradient-bg-background-color: #070709;
+    --background-color: #000f1c;
+    --text-color: #ecf0f1;
+    --text-color-light: #000f1c;
+    --input-bg: #2b2e4a;
+    --input-border: #34495e;
+    --btn-border-bg: #f96441;
+    --gradient-bg-background-color: hsla(240,100%,18%,1);
+    --gradient-bg-background-image:
+      radial-gradient(at 40% 20%, hsla(270,0%,7%,0.61) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(71,0%,7%,1) 0px, transparent 50%),
+      radial-gradient(at 33% 50%, hsla(236,0%,7%,1) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(222,0%,7%,1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(264,0%,7%,1) 0px, transparent 50%),
+      radial-gradient(at 72% 87%, hsla(124,0%,7%,1) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, hsla(225,0%,7%,1) 0px, transparent 50%);
 }
 
-* {
+*{
   box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: var(--font-sans);
-    background-color: #070709;
-    color: #ffffff;
+    font-family: 'Raleway', sans-serif;
+    background-color: var(--gradient-bg-background-color);
+    background-image: var(--gradient-bg-background-image);
+    color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100vh;
+    transition: background-color var(--transition-speed);
 }
 
 
