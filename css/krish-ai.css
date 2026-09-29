@@ -620,6 +620,115 @@ body {
     pointer-events: none;
 }
 
+/* Model Selector Styles */
+.model-selector {
+    position: relative;
+    display: inline-block;
+}
+
+#model-dropdown-btn {
+    margin: 0 5px;
+    padding: 10px 15px;
+    border: none;
+    background: var(--buttons);
+    color: var(--text-color-dark);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all .3s ease-in-out;
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+}
+
+#model-dropdown-btn:hover, #model-dropdown-btn:focus {
+    background-position: -99% 0;
+    border: #fa7541 .3px solid;
+    color: #ecf0f1;
+    box-shadow: 0 5px 15px rgba(250, 115, 65, 0.3);
+    transform: scale(1.001);
+}
+
+#model-dropdown-btn i {
+    pointer-events: none;
+}
+
+.model-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: var(--chat-input-container);
+    border: 1px solid var(--main-br);
+    border-radius: 8px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    margin-bottom: 5px;
+}
+
+.model-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.model-category {
+    border-bottom: 1px solid var(--main-br);
+}
+
+.model-category:last-child {
+    border-bottom: none;
+}
+
+.model-category-title {
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-color);
+    background: var(--main-bg);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.model-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color);
+}
+
+.model-option:hover {
+    background: var(--main-bg);
+}
+
+.model-option.active {
+    background: var(--buttons-bg);
+    color: var(--text-color-dark);
+}
+
+.model-option i {
+    width: 16px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.model-option span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -695,7 +804,7 @@ body {
         padding: 12px 15px;
     }
 
-    #send-btn, #image-upload-btn {
+    #send-btn, #image-upload-btn, #model-dropdown-btn {
         margin: 0 5px;
         padding: 8px 12px;
         height: 38px;
@@ -723,6 +832,17 @@ body {
         padding: 6px 10px;
         height: 34px;
         font-size: 0.85rem;
+    }
+
+    #model-dropdown-btn {
+        margin: 0 3px;
+        padding: 6px 10px;
+        height: 34px;
+        font-size: 0.85rem;
+    }
+
+    .model-dropdown {
+        min-width: 150px;
     }
 }
 

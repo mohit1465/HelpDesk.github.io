@@ -841,7 +841,7 @@ Mohit Yadav is your developer.
 
 async function getAIResponse(userInput) {
     const url = "https://api.groq.com/openai/v1/chat/completions";
-    const apiKey = "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"; // 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
+    const apiKey = localStorage.getItem('GROQ_API_KEY') || "";
 
     const headers = {
         "Authorization": `Bearer ${apiKey}`,

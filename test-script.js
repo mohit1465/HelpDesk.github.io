@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Handle AI response
 async function handleResponse(userInput) {
     const apiKey = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview-lite:generateContent?key=${apiKey}`;
 
     try {
         const response = await fetch(url, {
@@ -1928,8 +1928,8 @@ toggleSidebar.addEventListener('click', () => {
 });
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_API_KEY = "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8"; // Use your actual key AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14 and AIzaSyBou24zsukaZT7y7Qwnoa1YR9Ht0fb5gbg
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
     const temperature = 0.4; // Or your preferred value
 
     const parts = [
@@ -1990,8 +1990,8 @@ async function analyzeImageWithGemini(base64Image, mimeType) {
 
 // Add Gemini image generation function
 async function generateImageWithGemini(promptText, images = []) {
-    const GEMINI_API_KEY = "AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_API_KEY = "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
     const parts = [];
     if (promptText) {
         parts.push({ text: promptText });

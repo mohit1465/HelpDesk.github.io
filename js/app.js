@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAuRv2uCN4mITyc2Y21iQkkUTv_SCzE_qQ",
+    apiKey: "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8",
     authDomain: "website-10efd.firebaseapp.com",
     projectId: "website-10efd",
     storageBucket: "website-10efd.appspot.com",

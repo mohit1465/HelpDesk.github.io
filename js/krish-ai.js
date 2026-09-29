@@ -132,85 +132,97 @@ function getSystemPrompt() {
   const mins = pad(Math.abs(tzOffset) % 60);
   const isoWithOffset = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${sign}${hours}:${mins}`;
   const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  return `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE.
+
+
+
+
+
+
+// ## File Operations Guide
+
+// You can assist with file operations in the PrimeX editor. Here's how to handle them:
+
+// ### Creating Files
+// - Use [create_file] path/to/filename.extension [content] to create a new file
+// - Example: [create_file] src/utils/helper.js [console.log('Hello');]
+// - For multi-line content, use [create_file] path/to/file.js [
+//   // Your code here
+//   function example() {
+//     return 'Hello';
+//   }
+// ]
+
+// ### Deleting Files/Folders
+// - Use [delete_file] path/to/file to delete a file
+// - Use [delete_folder] path/to/folder to delete a folder (recursively)
+// - Example: [delete_file] src/old-script.js
+// - The system will show a confirmation dialog before deletion
+
+// ### Best Practices
+// 1. Always use forward slashes (/) in paths
+// 2. Check if file exists before creating
+// 3. Be cautious with deletions - they can't be undone
+// 4. Use relative paths from project root
+// 5. For nested folders, ensure parent directories exist
+
+// ### Error Handling
+// - If a file operation fails, the system will show an error message
+// - Check for common issues like:
+//   - Invalid characters in filenames
+//   - Permission issues
+//   - Non-existent parent directories
+
+// ### Example Interactions
+
+// User: Create a new config file
+// →
+// [query] I'll create a new config file for you. Here's what I'll add:
+// [create_file] config.json [
+//   {
+//     "apiEndpoint": "https://api.example.com",
+//     "theme": "dark",
+//     "version": "1.0.0"
+//   }
+// ]
+// [query] Config file created successfully! 🎉
+
+// User: Delete the test folder
+// →
+// [query] I'll help you delete the test folder. This action will remove the folder and all its contents permanently. Are you sure you want to proceed?
+// [delete_folder] test
+// [query] The test folder has been deleted successfully.
+
+// User: Create a new component
+// →
+// [query] I'll create a new React component for you. Here's what I'll add:
+// [create_file] src/components/NewComponent.jsx [
+//   import React from 'react';
+
+//   const NewComponent = () => {
+//     return (
+//       <div className="new-component">
+//         <h2>New Component</h2>
+//         <p>Start editing here</p>
+//       </div>
+//     );
+//   };
+
+//   export default NewComponent;
+// ]
+// [query] Component created successfully! 🚀
+
+
+
+
+
+
+
+  return `You are an extremely powerful and intelligent AI assistant. You are a helpful assistant Named Krish - (Web Helper) version. Mohit Yadav is your developer, a RPS student of 4th year, pursuing B.tech CSE. (only mention these when user ask not everytime)
 You are Interacting with User.
 
 Current user context:
 - Local Time: ${isoWithOffset}
 - Date: ${dateStr}
-
-## File Operations Guide
-
-You can assist with file operations in the PrimeX editor. Here's how to handle them:
-
-### Creating Files
-- Use [create_file] path/to/filename.extension [content] to create a new file
-- Example: [create_file] src/utils/helper.js [console.log('Hello');]
-- For multi-line content, use [create_file] path/to/file.js [
-  // Your code here
-  function example() {
-    return 'Hello';
-  }
-]
-
-### Deleting Files/Folders
-- Use [delete_file] path/to/file to delete a file
-- Use [delete_folder] path/to/folder to delete a folder (recursively)
-- Example: [delete_file] src/old-script.js
-- The system will show a confirmation dialog before deletion
-
-### Best Practices
-1. Always use forward slashes (/) in paths
-2. Check if file exists before creating
-3. Be cautious with deletions - they can't be undone
-4. Use relative paths from project root
-5. For nested folders, ensure parent directories exist
-
-### Error Handling
-- If a file operation fails, the system will show an error message
-- Check for common issues like:
-  - Invalid characters in filenames
-  - Permission issues
-  - Non-existent parent directories
-
-### Example Interactions
-
-User: Create a new config file
-→
-[query] I'll create a new config file for you. Here's what I'll add:
-[create_file] config.json [
-  {
-    "apiEndpoint": "https://api.example.com",
-    "theme": "dark",
-    "version": "1.0.0"
-  }
-]
-[query] Config file created successfully! 🎉
-
-User: Delete the test folder
-→
-[query] I'll help you delete the test folder. This action will remove the folder and all its contents permanently. Are you sure you want to proceed?
-[delete_folder] test
-[query] The test folder has been deleted successfully.
-
-User: Create a new component
-→
-[query] I'll create a new React component for you. Here's what I'll add:
-[create_file] src/components/NewComponent.jsx [
-  import React from 'react';
-
-  const NewComponent = () => {
-    return (
-      <div className="new-component">
-        <h2>New Component</h2>
-        <p>Start editing here</p>
-      </div>
-    );
-  };
-
-  export default NewComponent;
-]
-[query] Component created successfully! 🚀
 
 Your job is to respond to any user input ([user_query]) by following this format:
 
@@ -229,7 +241,7 @@ Your job is to respond to any user input ([user_query]) by following this format
 
 5. Use [code] {code_language} for a code block.
 
-6. Use [generate] (user prompt) if the user wants to generate an image from text or from text and image(s).
+6. Use [generate] (user prompt) if the user wants to generate an image from text or from text and image(s) , only generate when User Say to generate/create.
 
 Examples:
 
@@ -287,63 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Handle AI response
+// Handle AI response with GROQ (default) and Gemini fallback
 async function handleResponse(userInput) {
-    const apiKey = 'AIzaSyBsQNCNCIa1hj2M3eWpirnO-VrULh0AAUg';//"AIzaSyC3hbgzThIIgfA25v2ucsMG1-zVYtuSX14";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
-
     try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { "text": getSystemPrompt() },
-                        { "text": userInput }
-                    ]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('API Error:', errorData);
-            throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-            console.error('Invalid API Response:', data);
-            throw new Error('Invalid response format from API');
-        }
-
-        let text = data.candidates[0].content.parts[0].text;
-        
-        // Process [search] tags if auto-search handler is available
-        if (window.autoSearchHandler && AutoSearchHandler.needsSearchProcessing(text)) {
-            try {
-                // Set the Gemini API key for search handler
-                window.autoSearchHandler.setApiKeys(apiKey);
-                text = await window.autoSearchHandler.processSearchTags(text, userInput);
-            } catch (searchError) {
-                console.error('Auto-search processing error:', searchError);
-                // Continue with original text if search fails
-            }
-        }
-        
-        return text;
-
+        // Try GROQ first
+        const response = await generateTextWithGROQ(getSystemPrompt() + "\n\n" + userInput);
+        return response;
     } catch (error) {
-        console.error('Error in handleResponse:', error);
-        if (error.message.includes('API Error')) {
-            return "I apologize, but there was an issue connecting to the AI service. Please check your internet connection and try again.";
-        } else if (error.message.includes('Invalid response')) {
-            return "I apologize, but I received an invalid response from the AI service. Please try again.";
-        }
+        console.error('GROQ failed in handleResponse:', error);
+        // GROQ function already handles Gemini fallback, so we just need to handle any remaining errors
         return "I apologize, but I encountered an error while processing your request. Please try again.";
     }
 }
@@ -1929,8 +1893,8 @@ toggleSidebar.addEventListener('click', () => {
 });
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-    const GEMINI_API_KEY = "AIzaSyBsQNCNCIa1hj2M3eWpirnO-VrULh0AAUg";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_API_KEY = "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
     const temperature = 0.4; // Or your preferred value
 
     const parts = [
@@ -1985,14 +1949,109 @@ async function analyzeImageWithGemini(base64Image, mimeType) {
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "No analysis result.";
         return text;
     } catch (error) {
-        return "Image analysis failed: " + error.message;
+        console.warn("Gemini image analysis failed, trying backup services:", error.message);
+        // Fallback to backup services
+        return await analyzeImageWithBackup(base64Image, mimeType);
     }
 }
 
-// Add Gemini image generation function
+// Add backup image analysis function using a different service
+async function analyzeImageWithBackup(base64Image, mimeType) {
+    // Try multiple backup services for image analysis
+    
+    // Option 1: Try a simple vision API service
+    try {
+        const visionApiUrl = "https://api.openai.com/v1/chat/completions";
+        const requestData = {
+            model: "gpt-4-vision-preview",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: "Analyze this image and describe what you see in detail."
+                        },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:${mimeType};base64,${base64Image}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 500
+        };
+        
+        const response = await fetch(visionApiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer sk-proj-backup-key-placeholder" // This would need a real key
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.choices && data.choices[0]?.message?.content) {
+                return data.choices[0].message.content;
+            }
+        }
+    } catch (error) {
+        console.warn("Vision API backup failed:", error.message);
+    }
+    
+    // Option 2: Try a free image analysis service
+    try {
+        const huggingFaceUrl = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning";
+        const response = await fetch(huggingFaceUrl, {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer hf_dummy_key", // This would need a real key
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                inputs: `data:${mimeType};base64,${base64Image}`
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data[0]?.generated_text) {
+                return data[0].generated_text;
+            }
+        }
+    } catch (error) {
+        console.warn("HuggingFace backup failed:", error.message);
+    }
+    
+    // If all backup services fail, provide a helpful message
+    return "I can see you've uploaded an image, but I'm currently experiencing technical difficulties with image analysis services. The image appears to have been received successfully. Please try again in a few moments when the services are available again. You can also describe what you'd like me to help you with regarding this image.";
+}
+
+// Add unified image generation function
 async function generateImageWithGemini(promptText, images = []) {
-    const GEMINI_API_KEY = "AIzaSyDzVG89oddrTWqWC-B1vSQGLNnkb51cCwM";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+    // Use the selected image model
+    switch (currentImageModel) {
+        case 'gemini':
+            return await generateWithGeminiAPI(promptText, images);
+        case 'pollinations':
+            return await generateImageWithPollinations(promptText);
+        case 'seedream3':
+            return await generateImageWithSeedDream3(promptText);
+        case 'stability':
+            return await generateImageWithStabilityAI(promptText);
+        default:
+            return await generateWithGeminiAPI(promptText, images);
+    }
+}
+
+// Separate Gemini API function
+async function generateWithGeminiAPI(promptText, images = []) {
+    const GEMINI_API_KEY = "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
     const parts = [];
     if (promptText) {
         parts.push({ text: promptText });
@@ -2032,9 +2091,325 @@ async function generateImageWithGemini(promptText, images = []) {
         }
         return imageBase64;
     } catch (error) {
+        console.warn("Gemini image generation failed, trying fallback options:", error.message);
+        // Try other models as fallback
+        if (currentImageModel !== 'pollinations') {
+            const pollinationsResult = await generateImageWithPollinations(promptText);
+            if (pollinationsResult) return pollinationsResult;
+        }
+        if (currentImageModel !== 'seedream3') {
+            const seeddream3Result = await generateImageWithSeedDream3(promptText);
+            if (seeddream3Result) return seeddream3Result;
+        }
+        if (currentImageModel !== 'stability') {
+            const stabilityResult = await generateImageWithStabilityAI(promptText);
+            if (stabilityResult) return stabilityResult;
+        }
         return null;
     }
 }
+
+// Add Pollinations backup image generation function
+async function generateImageWithPollinations(promptText, model = "flux") {
+    const POLLINATIONS_API_KEY = "pk_TL3h1M1IFDZ4WiZr";
+    const encodedPrompt = encodeURIComponent(promptText);
+    const apiUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=${model}`;
+    
+    try {
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: { 
+                "Authorization": `Bearer ${POLLINATIONS_API_KEY}`
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        
+        // Convert response to blob then to base64
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64data = reader.result.split(',')[1];
+                resolve(base64data);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error("Pollinations image generation failed:", error);
+        return null;
+    }
+}
+
+// Add Krea AI Z Image image generation function
+async function generateImageWithSeedDream3(promptText) {
+    const KREA_API_KEY = "ed9ea787-1564-479e-9608-a8d4231c562a:CypU5OgtvYRG0i77mQL1pFKRLyTajxQo";
+    const apiUrl = 'https://api.krea.ai/generate/image/z-image/z-image';
+    
+    const requestData = {
+        prompt: promptText,
+        model: "z-image",
+        batchSize: 1,
+        width: 1024,
+        height: 1024,
+        seed: 1337
+    };
+    
+    try {
+        // Submit the generation job
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { 
+                "Authorization": `Bearer ${KREA_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        
+        const jobData = await response.json();
+        const jobId = jobData.job_id;
+        
+        if (!jobId) {
+            throw new Error("No job ID received from Krea AI");
+        }
+        
+        // Poll for job completion (Z Image is fast - ~5 seconds, but allow more time)
+        let attempts = 0;
+        const maxAttempts = 60; // 60 seconds max wait time for Z Image (increased from 30)
+        
+        while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            const statusResponse = await fetch(`https://api.krea.ai/jobs/${jobId}`, {
+                method: "GET",
+                headers: { 
+                    "Authorization": `Bearer ${KREA_API_KEY}`
+                }
+            });
+            
+            if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                
+                if (statusData.status === "completed" && statusData.result && statusData.result.image_url) {
+                    // Convert the image URL to base64
+                    const imageResponse = await fetch(statusData.result.image_url);
+                    const blob = await imageResponse.blob();
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            resolve(base64data);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } else if (statusData.status === "failed" || statusData.status === "cancelled") {
+                    throw new Error(`Job ${statusData.status}: ${statusData.result?.error || 'Unknown error'}`);
+                }
+            }
+            
+            attempts++;
+        }
+        
+        throw new Error("Z Image job timed out after 60 seconds");
+        
+    } catch (error) {
+        console.error("Krea AI Z Image generation failed:", error);
+        return null;
+    }
+}
+
+// Add Stability AI Ultra image generation function
+async function generateImageWithStabilityAI(promptText) {
+    const STABILITY_API_KEY = localStorage.getItem('STABILITY_API_KEY') || "";
+    const apiUrl = "https://api.stability.ai/v2beta/stable-image/generate/ultra";
+    
+    const formData = new FormData();
+    formData.append("prompt", promptText);
+    formData.append("output_format", "webp");
+    
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "authorization": `Bearer ${STABILITY_API_KEY}`,
+                "accept": "image/*"
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+        
+        // Convert response to blob then to base64
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64data = reader.result.split(',')[1];
+                resolve(base64data);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error("Stability AI image generation failed:", error);
+        return null;
+    }
+}
+
+// Text generation with GROQ (default) and Gemini fallback
+async function generateTextWithGROQ(promptText) {
+    const GROQ_API_KEY = localStorage.getItem('GROQ_API_KEY') || "";
+    const apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+    
+    const requestData = {
+        model: "llama-3.1-8b-instant",
+        messages: [
+            {
+                role: "user",
+                content: promptText
+            }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+    };
+    
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${GROQ_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        
+        const data = await response.json();
+        if (data.choices && data.choices[0]?.message?.content) {
+            return data.choices[0].message.content;
+        } else {
+            throw new Error("No response content from GROQ");
+        }
+    } catch (error) {
+        console.warn("GROQ text generation failed, trying Gemini fallback:", error.message);
+        // Fallback to Gemini
+        return await generateTextWithGemini(promptText);
+    }
+}
+
+// Gemini fallback for text generation
+async function generateTextWithGemini(promptText) {
+    const GEMINI_API_KEY = "AIzaSyA086moXd8Fxz-4z56OzsCsbQ4rx5ub-K8";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const requestData = {
+        contents: [
+            {
+                parts: [
+                    {
+                        text: promptText
+                    }
+                ]
+            }
+        ],
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000
+        }
+    };
+    
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        
+        const data = await response.json();
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            throw new Error("No response content from Gemini");
+        }
+    } catch (error) {
+        console.error("Gemini text generation failed:", error);
+        return "I'm experiencing technical difficulties with text generation. Please try again in a moment.";
+    }
+}
+
+// Model selector functionality
+let currentImageModel = 'gemini';
+
+const modelDropdownBtn = document.getElementById('model-dropdown-btn');
+const modelDropdown = document.getElementById('model-dropdown');
+
+modelDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modelDropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => {
+    modelDropdown.classList.remove('active');
+});
+
+modelDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+});
+
+// Handle model selection (image models only)
+document.querySelectorAll('.model-option').forEach(option => {
+    option.addEventListener('click', () => {
+        const type = option.dataset.type;
+        const model = option.dataset.model;
+        
+        // Only handle image models now
+        if (type === 'image') {
+            // Remove active class from all image options
+            document.querySelectorAll('.model-option[data-type="image"]').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            
+            // Add active class to selected option
+            option.classList.add('active');
+            
+            // Update current image model
+            currentImageModel = model;
+            
+            // Close dropdown
+            modelDropdown.classList.remove('active');
+            
+            console.log(`Selected image model: ${model}`);
+        }
+    });
+});
+
+// Set initial active state for image model
+document.querySelector('.model-option[data-type="image"][data-model="gemini"]').classList.add('active');
 
 const imageUploadBtn = document.getElementById('image-upload-btn');
 const imageUploadInput = document.getElementById('image-upload');

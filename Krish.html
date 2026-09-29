@@ -129,6 +129,32 @@
         <button id="image-upload-btn" title="Upload Image">
             <i class="fas fa-image"></i>
         </button>
+        <div class="model-selector">
+            <button id="model-dropdown-btn" title="Select Image Model">
+                <i class="fas fa-image"></i>
+            </button>
+            <div id="model-dropdown" class="model-dropdown">
+                <div class="model-category">
+                    <div class="model-category-title">Image Models</div>
+                    <div class="model-option" data-type="image" data-model="gemini">
+                        <i class="fas fa-gem"></i>
+                        <span>Gemini</span>
+                    </div>
+                    <div class="model-option" data-type="image" data-model="pollinations">
+                        <i class="fas fa-cloud"></i>
+                        <span>Pollinations</span>
+                    </div>
+                    <div class="model-option" data-type="image" data-model="seedream3">
+                        <i class="fas fa-bolt"></i>
+                        <span>Z Image</span>
+                    </div>
+                    <div class="model-option" data-type="image" data-model="stability">
+                        <i class="fas fa-bolt"></i>
+                        <span>Stability AI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <textarea id="chat-input" placeholder="Type your message here..." rows="1"></textarea>
         <button id="send-btn">
             <i class="fas fa-paper-plane"></i>
