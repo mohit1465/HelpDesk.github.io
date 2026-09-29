@@ -1,48 +1,40 @@
+@import url('unified-theme.css');
+
 :root {
-    --background-color: #f4f9f9;
-    --text-color: #000f1c;
-    --text-color-dark: #f4f9f9;
-    --buttons-bg: #fa6441;
-    --header-bg: #f0f0f0;
-    --header-border: #cbcbcb;
-    --header-left: #f6f6f6d7;
-    --header-left-btn-hover: #ffffffb6;
-    --primary-color: #000f1c;
-    --footer-bg: #f4f9f9;
-    --primary-section-color: #fa6441;
-    --secondary-color: #4a7bfc;
-    --border-radius: 15px;
-    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-    --feature-gradient: linear-gradient(135deg, var(--primary-section-color), var(--buttons-bg));
-    --cta-gradient: linear-gradient(135deg, var(--buttons-bg), var(--primary-section-color));
-    --gradient-bg-background-color: hsla(240,0%,100%,1);
-    --gradient-bg-background-image:
-      radial-gradient(at 1% 21%, hsla(60,100%,50%,0.01) 0px, transparent 50%),
-      radial-gradient(at 62% 100%, hsla(60,100%,50%,0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(60,100%,50%,0.04) 0px, transparent 50%);
+    --background-color: #070709;
+    --text-color: #ffffff;
+    --text-color-dark: #a1a1aa;
+    --buttons-bg: #ffffff;
+    --header-bg: rgba(14, 14, 18, 0.85);
+    --header-border: rgba(255, 255, 255, 0.08);
+    --header-left: #101014;
+    --header-left-btn-hover: rgba(255, 255, 255, 0.08);
+    --primary-color: #ffffff;
+    --footer-bg: #050507;
+    --primary-section-color: #ffffff;
+    --secondary-color: #a1a1aa;
+    --border-radius: 20px;
+    --box-shadow: 0 0 20px rgba(255, 255, 255, 0.06);
+    --transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    --card-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+    --feature-gradient: linear-gradient(135deg, #ffffff, #a1a1aa);
+    --cta-gradient: linear-gradient(135deg, #ffffff, #f4f4f5);
+    --gradient-bg-background-color: #070709;
 }
 
 [data-theme="dark"] {
-  --primary-color: #f4f9f9;
-  --footer-bg: #000000;
-    --background-color: #000f1c;
-    --text-color: #ecf0f1;
-    --text-color-dark: #000f1c;
-    --buttons-bg: #fa6441;
-    --header-border: #283745;
-    --header-bg: #00172b;
-    --header-left: #00172bd9;
-    --header-left-btn-hover: #ffffff19;
-    --gradient-bg-background-color: hsla(240,100%,18%,1);
-    --gradient-bg-background-image:
-      radial-gradient(at 40% 20%, hsla(270,0%,7%,0.61) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(71,0%,7%,1) 0px, transparent 50%),
-      radial-gradient(at 33% 50%, hsla(236,0%,7%,1) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsla(222,0%,7%,1) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(264,0%,7%,1) 0px, transparent 50%),
-      radial-gradient(at 72% 87%, hsla(124,0%,7%,1) 0px, transparent 50%),
+  --primary-color: #ffffff;
+  --footer-bg: #050507;
+  --background-color: #070709;
+  --text-color: #ffffff;
+  --text-color-dark: #a1a1aa;
+  --buttons-bg: #ffffff;
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(14, 14, 18, 0.85);
+  --header-left: #101014;
+  --header-left-btn-hover: rgba(255, 255, 255, 0.08);
+  --gradient-bg-background-color: #070709;
+}
       radial-gradient(at 0% 0%, hsla(225,0%,7%,1) 0px, transparent 50%);
 }
 
